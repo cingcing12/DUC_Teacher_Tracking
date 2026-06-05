@@ -19,6 +19,13 @@ app.use("/api", scheduleRoutes);
 app.use("/api", trackingRoutes);
 app.use("/api", adminRoutes);
 
+app.get("/", (req, res) => {
+  res.status(200).json({ 
+    success: true, 
+    message: "DUC Tracking API is awake and running perfectly!" 
+  });
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Secure Server running on http://localhost:${PORT}`);
