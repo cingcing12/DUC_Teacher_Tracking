@@ -10,6 +10,7 @@ import ProfileView from '../views/ProfileView.vue'
 import SystemMappingsView from '../views/SystemMappingsView.vue';
 import AdminTrackingCenterView from '../views/AdminTrackingCenterView.vue';
 import AdminSettingsView from '../views/AdminSettingsView.vue';
+import NotFoundView from '../views/NotFoundView.vue'
 
 const routes = [
   { 
@@ -94,6 +95,12 @@ const routes = [
     name: 'admin-settings',
     component: AdminSettingsView,
     meta: { requiresAdmin: true }
+  },
+
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFoundView
   }
 ]
 
