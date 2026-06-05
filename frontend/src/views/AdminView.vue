@@ -289,7 +289,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/api/departments');
+    const response = await fetch('https://duc-teacher-tracking.onrender.com/api/departments');
     const result = await response.json();
     if (result.success) departments.value = result.data;
   } catch (error) {
@@ -312,7 +312,7 @@ const selectDepartment = async (deptName) => {
   allTeachersInDept.value = [];
 
   try {
-    const response = await fetch(`http://localhost:3000/api/teachers?tab=${encodeURIComponent(deptName)}`);
+    const response = await fetch(`https://duc-teacher-tracking.onrender.com/api/teachers?tab=${encodeURIComponent(deptName)}`);
     const result = await response.json();
     if (result.success) allTeachersInDept.value = result.data;
   } catch (error) {

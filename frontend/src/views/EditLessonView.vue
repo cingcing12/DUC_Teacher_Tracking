@@ -206,7 +206,7 @@ const submitEdit = async () => {
       notes: form.value.notes
     };
 
-    const res = await fetch('http://localhost:3000/api/class-history', {
+    const res = await fetch('https://duc-teacher-tracking.onrender.com/api/class-history', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

@@ -296,7 +296,7 @@ const submitTrackingData = async () => {
   };
 
   try {
-    const res = await fetch('http://localhost:3000/api/track-lesson', {
+    const res = await fetch('https://duc-teacher-tracking.onrender.com/api/track-lesson', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

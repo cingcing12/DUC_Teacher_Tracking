@@ -334,7 +334,7 @@ const fetchHistory = async () => {
     const token = localStorage.getItem('duc_teacher_token');
     const teacherName = token ? JSON.parse(token).nameKh || '' : '';
 
-    const url = new URL('http://localhost:3000/api/class-history');
+    const url = new URL('https://duc-teacher-tracking.onrender.com/api/class-history');
     url.searchParams.append('cohort', classData.value.group);
     url.searchParams.append('subject', classData.value.subject);
     
@@ -369,7 +369,7 @@ onMounted(async () => {
   fetchHistory();
 
   try {
-    const res = await fetch('http://localhost:3000/api/majors');
+    const res = await fetch('https://duc-teacher-tracking.onrender.com/api/majors');
     const data = await res.json();
     if (data.success) {
       const majorsMap = data.data;
@@ -460,7 +460,7 @@ const executeDelete = async (weekNum) => {
     const token = localStorage.getItem('duc_teacher_token');
     const teacherName = token ? JSON.parse(token).nameKh || '' : '';
 
-    const url = new URL('http://localhost:3000/api/class-history');
+    const url = new URL('https://duc-teacher-tracking.onrender.com/api/class-history');
     url.searchParams.append('cohort', classData.value.group);
     url.searchParams.append('week', weekNum);
     url.searchParams.append('subject', classData.value.subject);

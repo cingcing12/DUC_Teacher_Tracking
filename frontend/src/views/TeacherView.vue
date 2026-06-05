@@ -281,7 +281,7 @@ const refreshTeacherData = async () => {
     hasError.value = false;
     
     try {
-      const res = await fetch(`http://localhost:3000/api/my-schedule?name=${encodeURIComponent(teacher.value.nameKh)}`);
+      const res = await fetch(`https://duc-teacher-tracking.onrender.com/api/my-schedule?name=${encodeURIComponent(teacher.value.nameKh)}`);
       
       if (!res.ok) throw new Error('Network response was not ok');
       

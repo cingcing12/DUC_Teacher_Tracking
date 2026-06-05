@@ -285,7 +285,7 @@ const selectAppAvatar = async (url) => {
   isUploadingAvatar.value = true;
   
   try {
-    const res = await fetch('http://localhost:3000/api/update-avatar-url', {
+    const res = await fetch('https://duc-teacher-tracking.onrender.com/api/update-avatar-url', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -327,7 +327,7 @@ const handleImageUpload = async (event) => {
   formData.append('phone', teacher.value.phone);
 
   try {
-    const res = await fetch('http://localhost:3000/api/upload-avatar', { method: 'POST', body: formData });
+    const res = await fetch('https://duc-teacher-tracking.onrender.com/api/upload-avatar', { method: 'POST', body: formData });
     const data = await res.json();
     if (data.success) {
       teacher.value.avatarUrl = data.imageUrl;
