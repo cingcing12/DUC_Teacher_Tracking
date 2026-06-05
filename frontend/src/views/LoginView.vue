@@ -29,7 +29,7 @@
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
               </div>
-              <input v-model="teacherForm.name" type="text" required class="w-full pl-11 pr-4 py-3.5 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm font-bold text-slate-800 placeholder-slate-300" placeholder="e.g. សុវណ្ណរដ្ឋ">
+              <input v-model="teacherForm.name" type="text" required class="w-full pl-11 pr-4 py-3.5 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm font-bold text-slate-800 placeholder-slate-300" placeholder="e.g. សុខភ័ក្ត">
             </div>
           </div>
 
