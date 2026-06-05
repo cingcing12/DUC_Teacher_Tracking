@@ -8,9 +8,9 @@
     <div class="w-full max-w-md relative z-10">
       
       <div class="text-center mb-8 animate-fade-in-up">
-        <div class="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center mb-6">
-  <img src="../assets/DUC.png" alt="DUC Logo" class="w-full h-full object-contain drop-shadow-md" />
-</div>
+        <div :class="['w-20 h-20 mx-auto rounded-3xl flex items-center justify-center mb-6']">
+          <img src="../assets/DUC.png" alt="DUC Logo" class="w-full h-full object-contain drop-shadow-md" />
+        </div>
         <h1 class="text-3xl font-black text-slate-800 tracking-tight">
           {{ isTeacherMode ? 'Digital Faculty' : 'System Administration' }}
         </h1>
@@ -39,7 +39,13 @@
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
               </div>
-              <input v-model="teacherForm.phone" type="password" required class="w-full pl-11 pr-4 py-3.5 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm font-bold text-slate-800 placeholder-slate-300" placeholder="••••••••">
+              
+              <input v-model="teacherForm.phone" :type="showTeacherPassword ? 'text' : 'password'" required class="w-full pl-11 pr-12 py-3.5 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm font-bold text-slate-800 placeholder-slate-300" placeholder="••••••••">
+              
+              <button type="button" @click="showTeacherPassword = !showTeacherPassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-indigo-500 transition-colors focus:outline-none">
+                <svg v-if="!showTeacherPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+              </button>
             </div>
           </div>
 
@@ -65,7 +71,13 @@
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-500 transition-colors">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
               </div>
-              <input v-model="adminPassword" type="password" required class="w-full pl-11 pr-4 py-3.5 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all outline-none text-sm font-bold text-slate-800 placeholder-slate-300" placeholder="••••••••••••">
+              
+              <input v-model="adminPassword" :type="showAdminPassword ? 'text' : 'password'" required class="w-full pl-11 pr-12 py-3.5 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all outline-none text-sm font-bold text-slate-800 placeholder-slate-300" placeholder="••••••••••••">
+              
+              <button type="button" @click="showAdminPassword = !showAdminPassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-cyan-500 transition-colors focus:outline-none">
+                <svg v-if="!showAdminPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+              </button>
             </div>
           </div>
 
@@ -96,18 +108,23 @@ import { useRouter, useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 
-// Check URL dynamically: if the path is exactly '/admin/login', show Admin mode!
 const isTeacherMode = computed(() => route.path !== '/admin/login');
 
 const isLoading = ref(false);
 const errorMsg = ref('');
 
+// Password Visibility States
+const showTeacherPassword = ref(false);
+const showAdminPassword = ref(false);
+
 const teacherForm = ref({ name: '', phone: '' });
 const adminPassword = ref('');
 
-// Clear errors when URL changes
+// Clear errors and reset eye icons when URL changes
 watch(isTeacherMode, () => {
   errorMsg.value = '';
+  showTeacherPassword.value = false;
+  showAdminPassword.value = false;
 });
 
 const handleTeacherLogin = async () => {
@@ -119,13 +136,16 @@ const handleTeacherLogin = async () => {
   isLoading.value = true;
   errorMsg.value = '';
 
+  // 🔥 Format phone: Automatically strips out any spaces the user typed
+  const formattedPhone = teacherForm.value.phone.replace(/\s+/g, '');
+
   try {
     const response = await fetch('https://duc-teacher-tracking.onrender.com/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: teacherForm.value.name,
-        phone: teacherForm.value.phone
+        name: teacherForm.value.name.trim(), // Strip accidental spaces from name
+        phone: formattedPhone
       })
     });
 
