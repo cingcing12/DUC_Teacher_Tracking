@@ -3,7 +3,15 @@ const router = express.Router();
 const { google, auth, SPREADSHEETS } = require("../config/googleClient");
 
 // ==========================================
-// GET: TEACHER SCHEDULE (WITH SMART GRID SCANNER & DEPARTMENT EXTRACTOR)
+// HELPER: FUZZY MATCHER
+// Removes all spaces and casing to guarantee a perfect match
+// ==========================================
+const normalize = (str) => {
+  return String(str || "").replace(/\s+/g, '').toLowerCase();
+};
+
+// ==========================================
+// GET: TEACHER SCHEDULE (WITH DEEP ROW SCANNER)
 // ==========================================
 router.get("/my-schedule", async (req, res) => {
   try {
@@ -11,9 +19,8 @@ router.get("/my-schedule", async (req, res) => {
     if (!teacherName) return res.status(400).json({ success: false, message: "Teacher name required" });
 
     const cleanSearchName = teacherName
-      .replace("លោកគ្រូ", "").replace("អ្នកគ្រូ", "")
-      .replace("បណ្ឌិត", "").replace("សាស្ត្រាចារ្យ", "")
-      .replace("Dr.", "").trim();
+      .replace(/លោកគ្រូ|អ្នកគ្រូ|បណ្ឌិត|សាស្ត្រាចារ្យ|Dr\./g, "")
+      .trim().toLowerCase();
 
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
@@ -27,9 +34,9 @@ router.get("/my-schedule", async (req, res) => {
       range: `'${tab}'!A7:Q200`,
     });
 
-    const rows = scheduleData.data.values;
+    const rows = scheduleData.data.values || [];
 
-    if (rows && rows.length > 0) {
+    if (rows.length > 0) {
       const rooms = rows[0];
       let currentDay = "Unknown";
 
@@ -44,7 +51,7 @@ router.get("/my-schedule", async (req, res) => {
 
         for (let c = 3; c <= 16; c++) {
           const cellValue = row[c];
-          if (cellValue && cellValue.includes(cleanSearchName)) {
+          if (cellValue && cellValue.toLowerCase().includes(cleanSearchName)) {
             const lines = cellValue.split("\n").map((l) => l.trim()).filter((l) => l);
             const roomName = rooms[c] || `DUC${c - 2}`;
             const group = lines[0] || "";
@@ -62,19 +69,20 @@ router.get("/my-schedule", async (req, res) => {
               subject: subject,
               year: "?",       
               semester: "?",   
-              department: "?" // Default placeholder
+              department: "?"  
             });
           }
         }
       }
     }
 
-    // 🔥 2. SMART GRID SCANNER: CROSS-REFERENCE TEACHER DATABASE
+    // 🔥 2. SMART GRID SCANNER: CROSS-REFERENCE TEACHER DATABASE HEADERS & DATA ROWS
     try {
       const teacherMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TEACHER });
       const teacherTabs = teacherMeta.data.sheets.map(s => s.properties.title);
       
-      const ranges = teacherTabs.map(t => `'${t}'!A1:BM100`);
+      // INCREASED RANGE: We must read all the way down to get the subjects inside the teacher rows!
+      const ranges = teacherTabs.map(t => `'${t}'!A1:BM200`); 
       const teacherDataRes = await sheets.spreadsheets.values.batchGet({
         spreadsheetId: SPREADSHEETS.TEACHER,
         ranges: ranges
@@ -84,47 +92,73 @@ router.get("/my-schedule", async (req, res) => {
       const khmerToArabic = {'១':'1','២':'2','៣':'3','៤':'4','៥':'5','៦':'6'};
 
       teacherDataRes.data.valueRanges.forEach((rangeData, index) => {
-        const tabName = teacherTabs[index]; // 🔥 GRABS THE EXACT SHEET TAB NAME
+        const tabName = teacherTabs[index]; 
         const tRows = rangeData.values || [];
-        if (tRows.length < 5) return;
+        if (tRows.length < 4) return;
 
-        const yearRow = tRows[1] || [];
-        const semRow = tRows[2] || [];
-        const headerRow = tRows[3] || [];
+        // DYNAMICALLY find which row holds Year, Semester, and Subject Headers
+        let yearRowIdx = -1;
+        let semRowIdx = -1;
+        let headerRowIdx = -1;
+
+        for (let r = 0; r < Math.min(8, tRows.length); r++) {
+          const rowStr = normalize(tRows[r].join(""));
+          if (yearRowIdx === -1 && (rowStr.includes("ឆ្នាំទី") || rowStr.includes("year"))) yearRowIdx = r;
+          if (semRowIdx === -1 && (rowStr.includes("ឆមាសទី") || rowStr.includes("sem"))) semRowIdx = r;
+          if (headerRowIdx === -1 && (rowStr.includes("មុខវិជ្ជា") || rowStr.includes("english") || rowStr.includes("khmer"))) headerRowIdx = r;
+        }
+
+        // Fallbacks
+        if (yearRowIdx === -1) yearRowIdx = 1;
+        if (semRowIdx === -1) semRowIdx = 2;
+        if (headerRowIdx === -1) headerRowIdx = 3;
+
+        const yearRow = tRows[yearRowIdx] || [];
+        const semRow = tRows[semRowIdx] || [];
+        const headerRow = tRows[headerRowIdx] || [];
 
         let currentYear = "?";
         let currentSem = "?";
-        const columnMap = {};
+        const columnMeta = {};
 
         const maxCols = Math.max(yearRow.length, semRow.length, headerRow.length);
 
+        // Step A: Map out what each column represents (Year, Semester, and is it a Subject column?)
         for (let c = 0; c < maxCols; c++) {
-          if (yearRow[c] && yearRow[c].includes("ឆ្នាំទី")) {
-            const ym = yearRow[c].match(/ឆ្នាំទី\s*([១-៩1-9])/);
+          if (yearRow[c] && yearRow[c].includes("ឆ្នាំ")) {
+            const ym = yearRow[c].match(/([១-៩1-9])/);
             if (ym) currentYear = khmerToArabic[ym[1]] || ym[1];
           }
           
-          if (semRow[c] && semRow[c].includes("ឆមាសទី")) {
-            const sm = semRow[c].match(/ឆមាសទី\s*([១-៩1-9])/);
+          if (semRow[c] && semRow[c].includes("ឆមាស")) {
+            const sm = semRow[c].match(/([១-៩1-9])/);
             if (sm) currentSem = khmerToArabic[sm[1]] || sm[1];
           }
+
+          const hCell = normalize(headerRow[c]);
+          const isSubjectColumn = hCell.includes("មុខវិជ្ជា") || hCell.includes("english") || hCell.includes("khmer") || hCell.includes("subject");
           
-          columnMap[c] = { year: currentYear, semester: currentSem };
+          columnMeta[c] = {
+            year: currentYear,
+            semester: currentSem,
+            isSubject: isSubjectColumn
+          };
         }
 
-        for (let r = 4; r < tRows.length; r++) {
-          const tRow = tRows[r];
-          if (!tRow) continue;
-          
-          for (let c = 0; c < tRow.length; c++) {
-            if (headerRow[c] && headerRow[c].includes("មុខវិជ្ជា")) {
-              const cellVal = (tRow[c] || "").trim();
+        // Step B: Loop through ALL teacher rows to grab the actual subject names!
+        for (let r = headerRowIdx + 1; r < tRows.length; r++) {
+          const row = tRows[r];
+          if (!row) continue;
+
+          for (let c = 0; c < row.length; c++) {
+            if (columnMeta[c] && columnMeta[c].isSubject) {
+              const subName = String(row[c] || "").trim();
               
-              if (cellVal.length > 2) {
-                courseInfoMap[cellVal.toUpperCase()] = { 
-                  year: columnMap[c]?.year || "?", 
-                  semester: columnMap[c]?.semester || "?",
-                  department: tabName // 🔥 SAVES THE EXACT SHEET TAB NAME (e.g. មហាវិទ្យាល័យឧស្សាហកម្ម...)
+              if (subName.length > 2) {
+                courseInfoMap[normalize(subName)] = { 
+                  year: columnMeta[c].year, 
+                  semester: columnMeta[c].semester, 
+                  department: tabName 
                 };
               }
             }
@@ -132,13 +166,13 @@ router.get("/my-schedule", async (req, res) => {
         }
       });
 
-      // 3. INJECT EXACT DATA INTO SCHEDULE
+      // 3. INJECT EXACT DATA INTO SCHEDULE CLASSES
       myClasses.forEach(cls => {
-        const cleanSubj = cls.subject.toUpperCase();
+        const cleanSubj = normalize(cls.subject);
         if (courseInfoMap[cleanSubj]) {
           cls.year = courseInfoMap[cleanSubj].year;
           cls.semester = courseInfoMap[cleanSubj].semester;
-          cls.department = courseInfoMap[cleanSubj].department; // 🔥 INJECTS IT TO THE FRONTEND!
+          cls.department = courseInfoMap[cleanSubj].department; 
         }
       });
 
@@ -148,6 +182,7 @@ router.get("/my-schedule", async (req, res) => {
 
     res.json({ success: true, data: myClasses });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: "Error reading schedule" });
   }
 });
