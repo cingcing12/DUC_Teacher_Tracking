@@ -1,6 +1,34 @@
 <template>
-  <div class="min-h-screen bg-[#F4F7FA] dark:bg-[#0B1120] font-sans text-slate-800 dark:text-slate-100 selection:bg-indigo-500 selection:text-white transition-colors duration-500">
+  <div class="min-h-screen bg-[#F4F7FA] dark:bg-[#0B1120] font-sans text-slate-800 dark:text-slate-100 selection:bg-indigo-500 selection:text-white transition-colors duration-500 relative">
     
+    <transition name="fade-overlay">
+      <div v-if="isSaving" class="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md flex flex-col items-center justify-center">
+        <div class="relative w-24 h-24 mb-6">
+          <div class="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <svg class="w-8 h-8 text-indigo-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          </div>
+        </div>
+        <h3 class="text-xl font-black text-white tracking-widest uppercase">Syncing to Google Sheets</h3>
+        <p class="text-indigo-300 text-sm font-medium mt-2">Please do not close the window...</p>
+      </div>
+    </transition>
+
+    <transition name="toast">
+      <div v-if="toast.show" class="fixed bottom-8 right-8 z-[300] flex items-center gap-4 px-6 py-4 rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl border"
+           :class="toast.type === 'success' ? 'bg-emerald-500/95 border-emerald-400/50 text-white' : 'bg-rose-500/95 border-rose-400/50 text-white'">
+        <div class="p-2 rounded-full bg-white/20 shrink-0">
+          <svg v-if="toast.type === 'success'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </div>
+        <div>
+          <p class="font-black text-sm uppercase tracking-wider">{{ toast.type === 'success' ? 'Update Successful' : 'Action Failed' }}</p>
+          <p class="text-sm opacity-90 mt-0.5">{{ toast.message }}</p>
+        </div>
+      </div>
+    </transition>
+
     <header class="relative bg-slate-900 pt-16 pb-32 overflow-hidden isolate">
       <div class="absolute top-0 right-0 -mr-20 -mt-20 w-[40rem] h-[40rem] bg-indigo-600 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-pulse-slow"></div>
       <div class="absolute bottom-0 left-10 w-[30rem] h-[30rem] bg-cyan-500 rounded-full mix-blend-screen filter blur-[100px] opacity-20"></div>
@@ -9,7 +37,7 @@
       <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
         <div class="flex items-center gap-6">
           <div class="w-20 h-20  from-indigo-500 via-purple-500 to-cyan-500 rounded-3xl flex items-center justify-center shadow-2xl">
-            <img src="../assets/DUC.png" class="w-20 h-20 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></img>
+            <img src="../assets/DUC.png" class="w-20 h-20 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></img>
           </div>
           <div>
             <h1 class="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-lg">Digital University</h1>
@@ -80,10 +108,10 @@
               Class Groups / Sections
             </h4>
             <div class="flex flex-wrap gap-2.5 z-10">
-              <button @click="activeClassGroup = 'ALL'" :class="['px-5 py-2.5 rounded-xl font-khmer font-bold transition-all text-sm', activeClassGroup === 'ALL' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']">
+              <button @click="activeClassGroup = 'ALL'" :class="['px-5 py-2.5 rounded-xl font-khmer font-bold transition-all text-sm hover:scale-105', activeClassGroup === 'ALL' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']">
                 បង្ហាញទាំងអស់ (All)
               </button>
-              <button v-for="group in uniqueClassGroups" :key="group" @click="activeClassGroup = group" :class="['px-5 py-2.5 rounded-xl font-khmer font-bold transition-all text-sm', activeClassGroup === group ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400']">
+              <button v-for="group in uniqueClassGroups" :key="group" @click="activeClassGroup = group" :class="['px-5 py-2.5 rounded-xl font-khmer font-bold transition-all text-sm hover:scale-105', activeClassGroup === group ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400']">
                 {{ group }}
               </button>
             </div>
@@ -124,14 +152,14 @@
             
             <div class="flex-grow w-full min-w-0 overflow-x-auto custom-scrollbar pb-1 lg:pb-0">
               <div class="flex items-center gap-1.5 w-max px-2">
-                <div class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 w-8 h-8 rounded-full flex items-center justify-center mr-2">
+                <div class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 w-8 h-8 rounded-full flex items-center justify-center mr-2 shrink-0">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 </div>
                 
                 <button 
                   @click="activeMajor = 'ALL'"
                   :class="[
-                    'px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center gap-2',
+                    'px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center gap-2 shrink-0',
                     activeMajor === 'ALL' ? 'bg-slate-900 dark:bg-indigo-500 text-white shadow-md' : 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                   ]"
                 >
@@ -139,14 +167,14 @@
                   <span :class="activeMajor === 'ALL' ? 'bg-slate-700 dark:bg-indigo-700 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'" class="px-2 py-0.5 rounded-full text-[10px]">{{ teachersInSelectedTime.length }}</span>
                 </button>
 
-                <div class="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                <div class="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-1 shrink-0"></div>
 
                 <button 
                   v-for="major in majorStats" 
                   :key="major.name"
                   @click="activeMajor = major.name"
                   :class="[
-                    'px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center gap-2',
+                    'px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center gap-2 shrink-0',
                     activeMajor === major.name ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                   ]"
                 >
@@ -207,6 +235,7 @@
               v-for="teacher in filteredTeachers" 
               :key="teacher.id" 
               :teacher="teacher" 
+              @edit="openEditModal" 
             />
           </div>
 
@@ -226,6 +255,7 @@
                     v-for="teacher in filteredTeachers" 
                     :key="teacher.id" 
                     :teacher="teacher" 
+                    @edit="openEditModal"
                   />
                 </tbody>
               </table>
@@ -234,6 +264,13 @@
 
         </div>
       </transition>
+
+      <EditTeacherModal 
+        :is-open="isEditModalOpen" 
+        :teacher-data="selectedTeacherForEdit"
+        @close="isEditModalOpen = false"
+        @save="handleSaveTeacher"
+      />
 
     </main>
   </div>
@@ -245,6 +282,7 @@ import { useRouter } from 'vue-router';
 
 import TeacherCard from '../components/TeacherCard.vue';
 import TeacherRow from '../components/TeacherRow.vue';
+import EditTeacherModal from '../components/EditTeacherModal.vue';
 
 const router = useRouter();
 
@@ -262,6 +300,57 @@ const searchQuery = ref('');
 const isLoadingDepartments = ref(true);
 const isLoadingTeachers = ref(false);
 
+// 🔥 State Variables for saving and toast
+const isSaving = ref(false);
+const isEditModalOpen = ref(false);
+const selectedTeacherForEdit = ref(null);
+
+const toast = ref({ show: false, message: '', type: 'success' });
+
+const showToast = (message, type = 'success') => {
+  toast.value = { show: true, message, type };
+  setTimeout(() => { toast.value.show = false; }, 4000);
+};
+
+const openEditModal = (teacher) => {
+  selectedTeacherForEdit.value = teacher;
+  isEditModalOpen.value = true;
+};
+
+const handleSaveTeacher = async (updatedData) => {
+  try {
+    isSaving.value = true; // Show loading overlay
+    const tabName = activeDepartment.value || updatedData.department;
+    
+    const response = await fetch('https://duc-teacher-tracking.onrender.com/api/update-teacher', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tab: tabName,
+        teacher: updatedData
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Update local UI state
+      const index = allTeachersInDept.value.findIndex(t => t.id === updatedData.id);
+      if (index !== -1) {
+         allTeachersInDept.value[index] = { ...allTeachersInDept.value[index], ...updatedData };
+      }
+      showToast("Teacher information successfully synced to Google Sheets.", "success");
+    } else {
+      showToast(result.message || "Failed to update database.", "error");
+    }
+  } catch (error) {
+    console.error("Error calling update API:", error);
+    showToast("Server communication error. Please try again.", "error");
+  } finally {
+    isSaving.value = false; // Hide loading overlay
+  }
+};
+
 const getColorClass = (index) => {
   const colors = [
     'bg-gradient-to-br from-indigo-500 to-purple-600',
@@ -274,7 +363,6 @@ const getColorClass = (index) => {
 };
 
 onMounted(async () => {
-  // Ensure theme logic applies globally on load so nothing resets unexpectedly
   const savedTheme = localStorage.getItem('theme') || 'system';
   if (savedTheme === 'dark' || (savedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     document.documentElement.classList.add('dark');
@@ -398,13 +486,9 @@ const filteredTeachers = computed(() => {
 @import url('https://fonts.googleapis.com/css2?family=Siemreap&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
 
 .font-sans { font-family: 'Inter', sans-serif; }
-
-/* 2. Updated the font-khmer class to apply Siemreap */
 .font-khmer { font-family: 'Siemreap', sans-serif; }
-
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-/* Global Override to instantly kill all animations when toggle is off */
 html.disable-animations *, html.disable-animations *::before, html.disable-animations *::after {
   animation-duration: 0s !important;
   animation-iteration-count: 1 !important;
@@ -419,7 +503,6 @@ html.dark body {
   background-color: #0B1120;
 }
 
-/* Scrollbar */
 .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -428,7 +511,6 @@ html.dark body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Animations */
 @keyframes pulse-slow {
   0%, 100% { opacity: 0.2; transform: scale(1); }
   50% { opacity: 0.3; transform: scale(1.05); }
@@ -448,4 +530,12 @@ html.dark body {
 .fade-scale-enter-active, .fade-scale-leave-active { transition: all 0.4s ease; }
 .fade-scale-enter-from { opacity: 0; transform: scale(0.97) translateY(10px); }
 .fade-scale-leave-to { opacity: 0; transform: scale(1.03) translateY(-10px); }
+
+/* 🔥 Toast & Overlay Animation styles */
+.toast-enter-active, .toast-leave-active { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+.toast-enter-from { opacity: 0; transform: translateX(50px) scale(0.9); }
+.toast-leave-to { opacity: 0; transform: translateX(50px) scale(0.9); }
+
+.fade-overlay-enter-active, .fade-overlay-leave-active { transition: opacity 0.3s ease; }
+.fade-overlay-enter-from, .fade-overlay-leave-to { opacity: 0; }
 </style>
