@@ -2,35 +2,30 @@ const express = require("express");
 const router = express.Router();
 const { google, auth, SPREADSHEETS } = require("../config/googleClient");
 require("dotenv").config();
-// Image Upload Dependencies
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 
-// 🔥 Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY,
   api_secret: process.env.API_SECRET
 });
 
-// Setup Multer for temporary file storage
 const upload = multer({ dest: 'uploads/' });
 
 // ==========================================
-// 🔥 SMART PHONE NORMALIZERS
+// SMART PHONE NORMALIZERS
 // ==========================================
-// Strips spaces and leading zeros for a single number
 const normalizePhone = (phone) => {
   if (!phone) return "";
   return String(phone).replace(/\s+/g, '').replace(/^0+/, '');
 };
 
-// Splits a cell by slash or comma and normalizes all numbers inside it
 const getNormalizedPhoneArray = (phoneStr) => {
   if (!phoneStr) return [];
   return String(phoneStr)
-    .split(/[\/,;|]/) // Splits by slash, comma, semicolon, or pipe
+    .split(/[\/,;|]/) 
     .map(p => normalizePhone(p))
     .filter(p => p !== "");
 };
@@ -47,15 +42,12 @@ async function getAvatarUrl(sheets, nameKh, phone) {
     const rows = res.data.values;
     if (!rows) return null;
 
-    // Normalize incoming data
     const inputPhones = getNormalizedPhoneArray(phone);
     const cleanInputName = nameKh ? String(nameKh).trim() : "";
 
     for (const row of rows) {
       const sheetNameKh = row[0] ? String(row[0]).trim() : "";
       const sheetPhones = getNormalizedPhoneArray(row[1]);
-      
-      // Check if ANY phone matches
       const hasPhoneMatch = inputPhones.some(p => sheetPhones.includes(p));
 
       if (sheetNameKh === cleanInputName && hasPhoneMatch) {
@@ -67,6 +59,19 @@ async function getAvatarUrl(sheets, nameKh, phone) {
     return null; 
   }
 }
+
+// ==========================================
+// HELPER: PARSE YEAR & SEMESTER
+// ==========================================
+const parseYearSem = (text) => {
+  if (!text) return null;
+  const str = String(text).toUpperCase().replace(/\s+/g,'');
+  if (str.includes('IV') || str.includes('៤') || str.includes('4')) return 4;
+  if (str.includes('III') || str.includes('៣') || str.includes('3')) return 3;
+  if (str.includes('II') || str.includes('២') || str.includes('2')) return 2;
+  if (str.includes('I') || str.includes('១') || str.includes('1')) return 1;
+  return null;
+};
 
 // ==========================================
 // GET DEPARTMENTS
@@ -90,7 +95,7 @@ router.get("/departments", async (req, res) => {
 });
 
 // ==========================================
-// GET TEACHERS (WITH BULLETPROOF DYNAMIC SCANNER & CREDIT/HOUR)
+// GET TEACHERS (DEEP HEADER SCANNER + MERGED ROW FIX)
 // ==========================================
 router.get("/teachers", async (req, res) => {
   try {
@@ -116,98 +121,67 @@ router.get("/teachers", async (req, res) => {
       allAvatars = avatarRes.data.values || [];
     } catch(e) {}
 
-    let yearRowIdx = -1;
-    let semRowIdx = -1;
-    let headerRowIdx = -1;
-
-    for (let r = 1; r < Math.min(8, rows.length); r++) {
-        const rowStr = rows[r].join("").replace(/\s+/g, '').toLowerCase();
-        
-        if (yearRowIdx === -1 && (rowStr.includes("ឆ្នាំទី") || rowStr.includes("year1") || rowStr.includes("yeari"))) yearRowIdx = r;
-        if (semRowIdx === -1 && (rowStr.includes("ឆមាសទី") || rowStr.includes("sem1") || rowStr.includes("semester1"))) semRowIdx = r;
-        if (headerRowIdx === -1 && (rowStr.includes("អង់គ្លេស") || rowStr.includes("english") || rowStr.includes("មុខវិជ្ជា"))) headerRowIdx = r;
-    }
-
-    if (yearRowIdx === -1) yearRowIdx = 1;
-    if (semRowIdx === -1) semRowIdx = 2;
-    if (headerRowIdx === -1) headerRowIdx = 3;
-
-    const yearRow = rows[yearRowIdx] || []; 
-    const semRow = rows[semRowIdx] || [];  
-    const headerRow = rows[headerRowIdx] || []; 
-
-    const parseYearSem = (text) => {
-        if (!text) return null;
-        const str = String(text).toUpperCase();
-        if (str.includes('IV') || str.includes('៤') || str.includes('4')) return 4;
-        if (str.includes('III') || str.includes('៣') || str.includes('3')) return 3;
-        if (str.includes('II') || str.includes('២') || str.includes('2')) return 2;
-        if (str.includes('I') || str.includes('១') || str.includes('1')) return 1;
-        return null;
-    };
-
     const dynamicSubjectColumns = [];
     let currentYear = 1;
     let currentSem = 1;
 
     for (let c = 7; c < 65; c++) {
-        const yText = yearRow[c] ? String(yearRow[c]).replace(/\s+/g, '') : "";
-        const sText = semRow[c] ? String(semRow[c]).replace(/\s+/g, '') : "";
-        const hText = headerRow[c] ? String(headerRow[c]).replace(/\s+/g, '').toLowerCase() : "";
+      let yText = "";
+      let sText = "";
+      let hText = "";
 
-        if (yText.includes("ឆ្នាំទី") || yText.toLowerCase().includes("year")) {
-            const y = parseYearSem(yText);
-            if (y) currentYear = y;
+      for (let r = 0; r < Math.min(5, rows.length); r++) {
+        const cellText = rows[r][c] ? String(rows[r][c]).toLowerCase().replace(/\s+/g, '') : "";
+        if (cellText.includes("ឆ្នាំ") || cellText.includes("year")) yText += cellText;
+        if (cellText.includes("ឆមាស") || cellText.includes("sem")) sText += cellText;
+        hText += cellText;
+      }
+
+      const y = parseYearSem(yText);
+      if (y) currentYear = y;
+
+      const s = parseYearSem(sText);
+      if (s) currentSem = s;
+
+      if ((hText.includes("អង់គ្លេស") || hText.includes("english") || hText.includes("eng") || hText.includes("មុខវិជ្ជា")) && !hText.includes("ខ្មែរ") && !hText.includes("khmer")) {
+          
+        let engCol = c;
+        let khCol = c + 1;
+        let creditCol = c + 2;
+        let hourCol = c + 3;
+
+        for(let offset = 0; offset <= 5; offset++) {
+          let scanText = "";
+          for(let r = 0; r < Math.min(5, rows.length); r++) {
+            if (rows[r][c + offset]) scanText += String(rows[r][c + offset]).toLowerCase().replace(/\s+/g, '');
+          }
+          if(scanText.includes("ខ្មែរ") || scanText.includes("khmer")) khCol = c + offset;
+          if(scanText.includes("ក្រេឌីត") || scanText.includes("credit") || scanText.includes("ក្រេឌិត")) creditCol = c + offset;
+          if(scanText.includes("ម៉ោង") || scanText.includes("hour")) hourCol = c + offset;
         }
-        if (sText.includes("ឆមាសទី") || sText.toLowerCase().includes("sem")) {
-            const s = parseYearSem(sText);
-            if (s) currentSem = s;
+
+        if (!dynamicSubjectColumns.some(col => col.cols[0] === engCol)) {
+          dynamicSubjectColumns.push({
+            cols: [engCol, khCol], 
+            creditCol: creditCol,
+            hourCol: hourCol,
+            year: currentYear,
+            sem: currentSem
+          });
         }
-
-        // 🔥 FIX: Only trigger on the starting Subject Column (Ignore Khmer to prevent duplicates)
-        if ((hText.includes("អង់គ្លេស") || hText.includes("english") || hText.includes("eng") || hText.includes("មុខវិជ្ជា")) && !hText.includes("ខ្មែរ") && !hText.includes("khmer")) {
-            
-            let engCol = c;
-            let khCol = c + 1;
-            let creditCol = c + 2;
-            let hourCol = c + 3;
-
-            // 🔥 FIX: Smartly scan the next 5 columns to find the EXACT position of Credit and Hour
-            for(let offset = 0; offset <= 5; offset++) {
-                const scanText = String(headerRow[c + offset] || "").replace(/\s+/g, '').toLowerCase();
-                if(scanText.includes("ខ្មែរ") || scanText.includes("khmer")) khCol = c + offset;
-                if(scanText.includes("ក្រេឌីត") || scanText.includes("credit") || scanText.includes("ក្រេឌិត")) creditCol = c + offset;
-                if(scanText.includes("ម៉ោង") || scanText.includes("hour")) hourCol = c + offset;
-            }
-
-            if (!dynamicSubjectColumns.some(col => col.cols[0] === engCol)) {
-                dynamicSubjectColumns.push({
-                    cols: [engCol, khCol], 
-                    creditCol: creditCol,
-                    hourCol: hourCol,
-                    year: currentYear,
-                    sem: currentSem
-                });
-            }
-            
-            // 🔥 FIX: Fast-forward the loop so it doesn't accidentally read the Khmer/Credit columns as a new subject!
-            c = Math.max(khCol, creditCol, hourCol);
-        }
+          
+        c = Math.max(khCol, creditCol, hourCol);
+      }
     }
 
     const subjectColumns = dynamicSubjectColumns.length > 0 ? dynamicSubjectColumns : [
       { cols: [7, 8], creditCol: 9, hourCol: 10, year: 1, sem: 1 },
-      { cols: [12, 13], creditCol: 14, hourCol: 15, year: 1, sem: 2 },
-      { cols: [17, 18], creditCol: 19, hourCol: 20, year: 2, sem: 1 },
-      { cols: [22, 23], creditCol: 24, hourCol: 25, year: 2, sem: 2 },
-      { cols: [29, 30], creditCol: 31, hourCol: 32, year: 3, sem: 1 },
-      { cols: [34, 35], creditCol: 36, hourCol: 37, year: 3, sem: 2 },
-      { cols: [39, 40], creditCol: 41, hourCol: 42, year: 4, sem: 1 },
-      { cols: [44, 45], creditCol: 46, hourCol: 47, year: 4, sem: 2 },
+      { cols: [12, 13], creditCol: 14, hourCol: 15, year: 1, sem: 2 }
     ];
 
     const teachers = [];
     let currentClassGroup = "General";
+    let lastTeacher = null; 
 
     for (let i = 4; i < rows.length; i++) {
       const row = rows[i];
@@ -226,6 +200,7 @@ router.get("/teachers", async (req, res) => {
 
       if (potentialHeader && !isJustANumber && !colC && !colD && !colE && !colF && colB !== "ឈ្មោះគ្រូបង្រៀន") {
         currentClassGroup = potentialHeader;
+        lastTeacher = null; 
         continue;
       }
 
@@ -247,17 +222,15 @@ router.get("/teachers", async (req, res) => {
         subjectColumns.forEach(({ cols, creditCol, hourCol, year, sem }) => {
           const eng = row[cols[0]] ? String(row[cols[0]]).trim() : "";
           const kh = row[cols[1]] ? String(row[cols[1]]).trim() : "";
-          
           const credit = row[creditCol] ? String(row[creditCol]).trim() : "";
           const hour = row[hourCol] ? String(row[hourCol]).trim() : "";
 
-          // Only save if there's actually a subject name
           if ((eng || kh) && (isNaN(eng) || isNaN(kh))) {
               subjects.push({ eng, kh, credit, hour, year, sem });
           }
         });
 
-        teachers.push({
+        const newTeacherObj = {
           id: colA,
           nameKh: colB,
           nameEn: colC,
@@ -268,9 +241,26 @@ router.get("/teachers", async (req, res) => {
           avatarUrl: avatarUrl,
           subjects,
           classGroup: currentClassGroup,
+        };
+
+        teachers.push(newTeacherObj);
+        lastTeacher = newTeacherObj; 
+
+      } 
+      else if (!colB && lastTeacher) {
+        subjectColumns.forEach(({ cols, creditCol, hourCol, year, sem }) => {
+          const eng = row[cols[0]] ? String(row[cols[0]]).trim() : "";
+          const kh = row[cols[1]] ? String(row[cols[1]]).trim() : "";
+          const credit = row[creditCol] ? String(row[creditCol]).trim() : "";
+          const hour = row[hourCol] ? String(row[hourCol]).trim() : "";
+
+          if ((eng || kh) && (isNaN(eng) || isNaN(kh))) {
+              lastTeacher.subjects.push({ eng, kh, credit, hour, year, sem });
+          }
         });
       }
     }
+    
     res.json({ success: true, data: teachers });
   } catch (error) {
     console.error(error);
@@ -279,7 +269,7 @@ router.get("/teachers", async (req, res) => {
 });
 
 // ==========================================
-// 🔥 NEW: API UPDATE ROUTE FOR TEACHERS (Profile & Curriculum)
+// 🔥 UPDATE ROUTE FOR TEACHERS (DYNAMIC INSERT & AUTO-MERGE)
 // ==========================================
 router.post("/update-teacher", async (req, res) => {
   try {
@@ -291,7 +281,12 @@ router.post("/update-teacher", async (req, res) => {
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
-    // 1. Fetch the sheet to find the exact row
+    // 1. Fetch the exact Sheet ID needed for merging cells later
+    const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TEACHER });
+    const targetSheet = sheetInfo.data.sheets.find(s => s.properties.title === tab);
+    if (!targetSheet) return res.status(404).json({ success: false, message: "Sheet tab not found" });
+    const sheetId = targetSheet.properties.sheetId;
+
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEETS.TEACHER,
       range: `'${tab}'!A1:BM500`,
@@ -299,7 +294,7 @@ router.post("/update-teacher", async (req, res) => {
     const rows = response.data.values;
     if (!rows) return res.status(404).json({ success: false, message: "Sheet not found" });
 
-    // 2. Find the target row by matching the Khmer Name
+    // 2. Find the starting row
     let targetRowIdx = -1;
     for (let i = 4; i < rows.length; i++) {
       const rowNameKh = rows[i][1] ? String(rows[i][1]).trim() : "";
@@ -310,74 +305,123 @@ router.post("/update-teacher", async (req, res) => {
     }
     if (targetRowIdx === -1) return res.status(404).json({ success: false, message: "Teacher not found in spreadsheet" });
 
-    // 3. Scan Headers to map out every single available column for Year/Semester
-    let yearRowIdx = -1, semRowIdx = -1, headerRowIdx = -1;
-    for (let r = 0; r < Math.min(8, rows.length); r++) {
-      const rowStr = rows[r].join("").replace(/\s+/g, '').toLowerCase();
-      if (yearRowIdx === -1 && (rowStr.includes("ឆ្នាំទី") || rowStr.includes("year"))) yearRowIdx = r;
-      if (semRowIdx === -1 && (rowStr.includes("ឆមាសទី") || rowStr.includes("sem"))) semRowIdx = r;
-      if (headerRowIdx === -1 && (rowStr.includes("អង់គ្លេស") || rowStr.includes("english") || rowStr.includes("មុខវិជ្ជា"))) headerRowIdx = r;
+    // 3. Identify current block size
+    let teacherBlockIndices = [targetRowIdx];
+    for (let i = targetRowIdx + 1; i < rows.length; i++) {
+      const colA = rows[i][0] ? String(rows[i][0]).trim() : "";
+      const colB = rows[i][1] ? String(rows[i][1]).trim() : "";
+      if (colB !== "" || (colA !== "" && isNaN(colA))) break;
+      teacherBlockIndices.push(i);
     }
 
-    if (yearRowIdx === -1) yearRowIdx = 1;
-    if (semRowIdx === -1) semRowIdx = 2;
-    if (headerRowIdx === -1) headerRowIdx = 3;
-
-    const yearRow = rows[yearRowIdx] || [];
-    const semRow = rows[semRowIdx] || [];
-    const headerRow = rows[headerRowIdx] || [];
-
-    const parseYS = (txt) => {
-        const str = String(txt||"").toUpperCase().replace(/\s+/g,'');
-        const match = str.match(/([១-៩1-9IV+])/);
-        if (!match) return null;
-        let val = match[1];
-        const khToAr = {'១':'1','២':'2','៣':'3','៤':'4','៥':'5','៦':'6'};
-        if (khToAr[val]) return khToAr[val];
-        if (val === 'IV') return '4'; if (val === 'III') return '3'; if (val === 'II') return '2'; if (val === 'I') return '1';
-        return val;
-    };
-
-    // slots object stores empty columns grouped by year and semester
     const slots = {}; 
     let currentYear = 1, currentSem = 1;
 
     for (let c = 7; c < 65; c++) {
-      if (yearRow[c] && yearRow[c].includes("ឆ្នាំ")) currentYear = parseYS(yearRow[c]) || currentYear;
-      if (semRow[c] && semRow[c].includes("ឆមាស")) currentSem = parseYS(semRow[c]) || currentSem;
+      let yText = "", sText = "", hText = "";
+      for (let r = 0; r < Math.min(5, rows.length); r++) {
+        const cellText = rows[r][c] ? String(rows[r][c]).toLowerCase().replace(/\s+/g, '') : "";
+        if (cellText.includes("ឆ្នាំ") || cellText.includes("year")) yText += cellText;
+        if (cellText.includes("ឆមាស") || cellText.includes("sem")) sText += cellText;
+        hText += cellText;
+      }
 
-      const hText = String(headerRow[c]||"").replace(/\s+/g, '').toLowerCase();
+      const y = parseYearSem(yText);
+      if (y) currentYear = y;
+      const s = parseYearSem(sText);
+      if (s) currentSem = s;
+
       if ((hText.includes("អង់គ្លេស") || hText.includes("english") || hText.includes("eng") || hText.includes("មុខវិជ្ជា")) && !hText.includes("ខ្មែរ") && !hText.includes("khmer")) {
-          let engCol = c, khCol = c + 1, creditCol = c + 2, hourCol = c + 3;
-          for(let offset = 0; offset <= 5; offset++) {
-              const scanText = String(headerRow[c + offset] || "").replace(/\s+/g, '').toLowerCase();
-              if(scanText.includes("ខ្មែរ") || scanText.includes("khmer")) khCol = c + offset;
-              if(scanText.includes("ក្រេឌីត") || scanText.includes("credit") || scanText.includes("ក្រេឌិត")) creditCol = c + offset;
-              if(scanText.includes("ម៉ោង") || scanText.includes("hour")) hourCol = c + offset;
+        let engCol = c, khCol = c + 1, creditCol = c + 2, hourCol = c + 3;
+        for(let offset = 0; offset <= 5; offset++) {
+          let scanText = "";
+          for(let r = 0; r < Math.min(5, rows.length); r++) {
+            if (rows[r][c + offset]) scanText += String(rows[r][c + offset]).toLowerCase().replace(/\s+/g, '');
           }
+          if(scanText.includes("ខ្មែរ") || scanText.includes("khmer")) khCol = c + offset;
+          if(scanText.includes("ក្រេឌីត") || scanText.includes("credit") || scanText.includes("ក្រេឌិត")) creditCol = c + offset;
+          if(scanText.includes("ម៉ោង") || scanText.includes("hour")) hourCol = c + offset;
+        }
 
-          if (!slots[currentYear]) slots[currentYear] = {};
-          if (!slots[currentYear][currentSem]) slots[currentYear][currentSem] = [];
-
+        if (!slots[currentYear]) slots[currentYear] = {};
+        if (!slots[currentYear][currentSem]) slots[currentYear][currentSem] = [];
+        if (!slots[currentYear][currentSem].some(slot => slot.engCol === engCol)) {
           slots[currentYear][currentSem].push({ engCol, khCol, creditCol, hourCol });
-          c = Math.max(khCol, creditCol, hourCol); 
+        }
+        c = Math.max(khCol, creditCol, hourCol); 
       }
     }
 
-    // 4. Build the new pristine row! Wipe curriculum but save the user's basic info
-    const newRowData = new Array(65).fill("");
-    const oldRow = rows[targetRowIdx];
-    
-    // Write new Basic Information (Cols 0-6)
-    newRowData[0] = teacher.id || oldRow[0] || "";
-    newRowData[1] = teacher.nameKh || oldRow[1] || "";
-    newRowData[2] = teacher.nameEn || oldRow[2] || "";
-    newRowData[3] = teacher.gender || oldRow[3] || "";
-    newRowData[4] = teacher.degree || oldRow[4] || "";
-    newRowData[5] = teacher.major || oldRow[5] || "";
-    newRowData[6] = teacher.phone || oldRow[6] || "";
+    // 4. Calculate if we need MORE rows than the teacher currently has
+    let maxRowsNeeded = teacherBlockIndices.length;
+    const slotCounts = {};
+    if (teacher.subjects && Array.isArray(teacher.subjects)) {
+      for (const sub of teacher.subjects) {
+        const y = String(sub.year).trim();
+        const s = String(sub.sem).trim();
+        if (slots[y] && slots[y][s]) {
+          const key = `${y}-${s}`;
+          slotCounts[key] = (slotCounts[key] || 0) + 1;
+          const hAvail = slots[y][s].length;
+          const required = Math.ceil(slotCounts[key] / hAvail);
+          if (required > maxRowsNeeded) maxRowsNeeded = required;
+        }
+      }
+    }
 
-    // 5. Fill in the subjects exactly where they belong!
+    let blockData = teacherBlockIndices.map(idx => {
+      let r = [...rows[idx]];
+      while(r.length < 65) r.push("");
+      return r;
+    });
+
+    // 🔥 5. Dynamically insert missing rows into Google Sheets to push other teachers down
+    const rowsToAdd = maxRowsNeeded - blockData.length;
+    if (rowsToAdd > 0) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEETS.TEACHER,
+        requestBody: {
+          requests: [{
+            insertDimension: {
+              range: {
+                sheetId: sheetId,
+                dimension: "ROWS",
+                startIndex: targetRowIdx + blockData.length,
+                endIndex: targetRowIdx + blockData.length + rowsToAdd
+              },
+              inheritFromBefore: true
+            }
+          }]
+        }
+      });
+      // Expand our local block memory to match
+      for (let i = 0; i < rowsToAdd; i++) blockData.push(new Array(65).fill(""));
+    }
+
+    // 6. Wipe only the curriculum columns within this block
+    for (let r = 0; r < blockData.length; r++) {
+      for (const y in slots) {
+        for (const s in slots[y]) {
+          slots[y][s].forEach(slot => {
+            blockData[r][slot.engCol] = "";
+            blockData[r][slot.khCol] = "";
+            blockData[r][slot.creditCol] = "";
+            blockData[r][slot.hourCol] = "";
+          });
+        }
+      }
+    }
+
+    // 7. Update basic info on the TOP row only
+    blockData[0][0] = teacher.id || blockData[0][0] || "";
+    blockData[0][1] = teacher.nameKh || blockData[0][1] || "";
+    blockData[0][2] = teacher.nameEn || blockData[0][2] || "";
+    blockData[0][3] = teacher.gender || blockData[0][3] || "";
+    blockData[0][4] = teacher.degree || blockData[0][4] || "";
+    blockData[0][5] = teacher.major || blockData[0][5] || "";
+    blockData[0][6] = teacher.phone || blockData[0][6] || "";
+
+    // 8. Safely loop and stack subjects dynamically
     const usedSlots = {};
     if (teacher.subjects && Array.isArray(teacher.subjects)) {
       for (const sub of teacher.subjects) {
@@ -385,35 +429,69 @@ router.post("/update-teacher", async (req, res) => {
         const s = String(sub.sem).trim();
         
         if (slots[y] && slots[y][s]) {
-          if (!usedSlots[`${y}-${s}`]) usedSlots[`${y}-${s}`] = 0;
-          const slotIdx = usedSlots[`${y}-${s}`];
+          const key = `${y}-${s}`;
+          if (!usedSlots[key]) usedSlots[key] = 0;
+          const currentSlotIndex = usedSlots[key];
           
-          if (slotIdx < slots[y][s].length) {
-            const slot = slots[y][s][slotIdx];
-            newRowData[slot.engCol] = sub.eng || "";
-            newRowData[slot.khCol] = sub.kh || "";
-            newRowData[slot.creditCol] = sub.credit || "";
-            newRowData[slot.hourCol] = sub.hour || "";
-            
-            usedSlots[`${y}-${s}`]++;
+          const hAvail = slots[y][s].length;
+          const hIndex = currentSlotIndex % hAvail;
+          const vIndex = Math.floor(currentSlotIndex / hAvail);
+          
+          if (vIndex < blockData.length) {
+            const slot = slots[y][s][hIndex];
+            blockData[vIndex][slot.engCol] = sub.eng || "";
+            blockData[vIndex][slot.khCol] = sub.kh || "";
+            blockData[vIndex][slot.creditCol] = sub.credit || "";
+            blockData[vIndex][slot.hourCol] = sub.hour || "";
+            usedSlots[key]++;
           }
         }
       }
     }
 
-    // Preserve any trailing data past col 65 if it exists in the original sheet
-    for(let i=65; i<oldRow.length; i++) {
-       newRowData.push(oldRow[i]);
-    }
-
-    // 6. Blast the updated row into Google Sheets
-    const sheetRowNumber = targetRowIdx + 1; // Convert array index to Google Sheets row number
+    // 9. Blast the Data Updates
+    const startRow = targetRowIdx + 1; 
+    const endRow = targetRowIdx + blockData.length; 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEETS.TEACHER,
-      range: `'${tab}'!A${sheetRowNumber}:BM${sheetRowNumber}`,
+      range: `'${tab}'!A${startRow}:BM${endRow}`,
       valueInputOption: "USER_ENTERED",
-      requestBody: { values: [newRowData] }
+      requestBody: { values: blockData }
     });
+
+    // 🔥 10. Automatically MERGE Columns A through G vertically for the teacher
+    if (blockData.length > 1) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEETS.TEACHER,
+        requestBody: {
+          requests: [
+            {
+              unmergeCells: {
+                range: {
+                  sheetId: sheetId,
+                  startRowIndex: targetRowIdx,
+                  endRowIndex: targetRowIdx + blockData.length,
+                  startColumnIndex: 0,
+                  endColumnIndex: 7
+                }
+              }
+            },
+            {
+              mergeCells: {
+                range: {
+                  sheetId: sheetId,
+                  startRowIndex: targetRowIdx,
+                  endRowIndex: targetRowIdx + blockData.length,
+                  startColumnIndex: 0,
+                  endColumnIndex: 7
+                },
+                mergeType: "MERGE_COLUMNS"
+              }
+            }
+          ]
+        }
+      }).catch(e => console.log("Merge completed or skipped if identical."));
+    }
 
     res.json({ success: true, message: "Teacher updated perfectly in Google Sheets!" });
   } catch(error) {
@@ -485,7 +563,6 @@ router.post("/upload-avatar", upload.single("image"), async (req, res) => {
     const { nameKh, phone } = req.body; 
     if (!req.file) return res.status(400).json({ success: false, message: "No image provided" });
 
-    // Normalize inputs
     const inputPhones = getNormalizedPhoneArray(phone);
     const cleanInputName = nameKh ? String(nameKh).trim() : "";
 
@@ -527,10 +604,8 @@ router.post("/upload-avatar", upload.single("image"), async (req, res) => {
     for (let i = 0; i < rows.length; i++) {
       const sheetNameKh = rows[i][0] ? String(rows[i][0]).trim() : "";
       const sheetPhones = getNormalizedPhoneArray(rows[i][1]);
-      
       const hasPhoneMatch = inputPhones.some(p => sheetPhones.includes(p));
 
-      // 🔥 Exact bulletproof matching prevents duplication
       if (sheetNameKh === cleanInputName && hasPhoneMatch) {
         rowIndex = i + 2; 
         break;
@@ -567,7 +642,6 @@ router.post("/update-avatar-url", async (req, res) => {
     const { nameKh, phone, avatarUrl } = req.body;
     if (!nameKh || !phone || !avatarUrl) return res.status(400).json({ success: false, message: "Missing data" });
 
-    // Normalize inputs
     const inputPhones = getNormalizedPhoneArray(phone);
     const cleanInputName = nameKh ? String(nameKh).trim() : "";
 
@@ -605,10 +679,8 @@ router.post("/update-avatar-url", async (req, res) => {
     for (let i = 0; i < rows.length; i++) {
       const sheetNameKh = rows[i][0] ? String(rows[i][0]).trim() : "";
       const sheetPhones = getNormalizedPhoneArray(rows[i][1]);
-      
       const hasPhoneMatch = inputPhones.some(p => sheetPhones.includes(p));
 
-      // 🔥 Exact bulletproof matching prevents duplication
       if (sheetNameKh === cleanInputName && hasPhoneMatch) {
         rowIndex = i + 2; 
         break;
