@@ -51,7 +51,7 @@
                  title="Filter by Year and Month"
                />
                <button v-if="filterMonthYear" @click="filterMonthYear = ''" class="ml-2 text-slate-400 hover:text-rose-500 transition-colors p-1" title="Clear Filter">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                </button>
             </div>
           </div>
@@ -338,13 +338,25 @@ const fetchHistory = async () => {
     url.searchParams.append('cohort', classData.value.group);
     url.searchParams.append('subject', classData.value.subject);
     
+    // 🔥 If the teacher JUST saved data, send the fresh override signal!
+    if (localStorage.getItem('force_fresh') === 'true') {
+      url.searchParams.append('fresh', 'true');
+      localStorage.removeItem('force_fresh'); // Clean it up so it uses RAM next time
+    }
+
     if (isAdmin.value && classData.value.teacher) {
       url.searchParams.append('teacher', classData.value.teacher);
     } else if (!isAdmin.value) {
       url.searchParams.append('teacher', teacherName);
     }
 
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: {
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache'
+      }
+    });
+    
     const data = await res.json();
     if (data.success) {
       historyData.value = data.data;

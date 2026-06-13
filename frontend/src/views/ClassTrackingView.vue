@@ -306,7 +306,11 @@ const submitTrackingData = async () => {
     isSubmitting.value = false; 
 
     if (data.success) {
-      triggerAlert('success', 'Database updated successfully. Great job today!');
+      // 🔥 Tell the history page to bypass the cache!
+      localStorage.setItem('force_fresh', 'true');
+      
+      triggerAlert('success', 'Lesson recorded successfully!');
+    
     } else {
       triggerAlert('error', data.message || 'Something went wrong.');
     }
