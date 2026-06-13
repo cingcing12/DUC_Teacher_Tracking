@@ -93,7 +93,7 @@
                     <button @click="goToEditPage(lesson)" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 transition-all" title="Edit">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                     </button>
-                    <button @click="promptDelete(lesson.week)" :disabled="isDeleting === lesson.week" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 transition-all disabled:opacity-50" title="Delete">
+                    <button @click="promptDelete(lesson)" :disabled="isDeleting === lesson.week" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 transition-all disabled:opacity-50" title="Delete">
                       <span v-if="isDeleting === lesson.week" class="w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></span>
                       <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
@@ -458,23 +458,27 @@ const executeConfirm = () => {
   closeAlert();
 };
 
-const promptDelete = (weekNum) => {
+const promptDelete = (lesson) => {
   triggerAlert(
     'confirm', 
-    `You are about to delete the record for Week ${weekNum}. This action cannot be undone.`,
-    () => executeDelete(weekNum)
+    `You are about to delete Lesson ${lesson.lessonNo} on ${lesson.date}. This action cannot be undone.`,
+    () => executeDelete(lesson)
   );
 };
 
-const executeDelete = async (weekNum) => {
-  isDeleting.value = weekNum;
+const executeDelete = async (lesson) => {
+  isDeleting.value = lesson.week;
   try {
     const token = localStorage.getItem('duc_teacher_token');
     const teacherName = token ? JSON.parse(token).nameKh || '' : '';
 
     const url = new URL('https://duc-teacher-tracking.onrender.com/api/class-history');
     url.searchParams.append('cohort', classData.value.group);
-    url.searchParams.append('week', weekNum);
+    url.searchParams.append('week', lesson.week);
+    
+    // 🔥 Sends the exact date to the backend!
+    url.searchParams.append('date', lesson.date); 
+    
     url.searchParams.append('subject', classData.value.subject);
     
     if (isAdmin.value && classData.value.teacher) {
@@ -487,14 +491,21 @@ const executeDelete = async (weekNum) => {
     const data = await res.json();
     
     if (data.success) {
-      fetchHistory(); 
-      triggerAlert('success', `Week ${weekNum} was successfully deleted.`);
+      triggerAlert('success', `The lesson on ${lesson.date} was successfully deleted.`);
+      
+      // 🔥 THE FIX: Tell the fetcher to bypass cache, and give Google 1.5 seconds to actually delete it!
+      localStorage.setItem('force_fresh', 'true');
+      setTimeout(() => {
+        fetchHistory(); 
+        isDeleting.value = null; // Stop the loading spinner after the new data arrives
+      }, 1500);
+      
     } else {
       triggerAlert('error', data.message || "Failed to delete the record.");
+      isDeleting.value = null;
     }
   } catch (error) {
     triggerAlert('error', "Failed to connect to the server.");
-  } finally {
     isDeleting.value = null;
   }
 };

@@ -2,3 +2,4 @@
 .env
 google-credentials.json 
 seed.js
+migrateData.js

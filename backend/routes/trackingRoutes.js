@@ -246,7 +246,8 @@ router.put("/class-history", noCache, async (req, res) => {
 // ==========================================
 router.delete("/class-history", noCache, async (req, res) => {
   try {
-    const { cohort, week, subject, teacher } = req.query;
+    // 🔥 ADDED 'date' TO THE QUERY SO WE KNOW EXACTLY WHICH ONE TO KILL
+    const { cohort, week, subject, teacher, date } = req.query;
     
     const pureCohort = extractPureCohort(cohort).trim().toLowerCase();
     const querySubject = String(subject || "").trim().toLowerCase();
@@ -262,9 +263,15 @@ router.delete("/class-history", noCache, async (req, res) => {
       const dbCohort = String(rows[i][6] || "").trim().toLowerCase();
       const dbSubject = String(rows[i][5] || "").trim().toLowerCase();
       const dbTeacher = String(rows[i][7] || "");
+      const dbDate = String(rows[i][9] || "").replace(/'/g, "").trim(); // Removes the ' from the sheet date
 
+      // 🔥 IT NOW CHECKS THE EXACT WEEK *AND* EXACT DATE!
       if (dbCohort === pureCohort && dbSubject === querySubject && String(rows[i][8]) == String(week)) {
-          if (!targetTeacher || dbTeacher.includes(targetTeacher)) {
+          let isMatch = true;
+          if (targetTeacher && !dbTeacher.includes(targetTeacher)) isMatch = false;
+          if (date && dbDate !== String(date).trim()) isMatch = false; // Ensures it's the exact same day
+
+          if (isMatch) {
               rowIndex = i + 2; 
               break;
           }
