@@ -503,12 +503,22 @@ router.post("/update-teacher", async (req, res) => {
 // ==========================================
 // SECURE LOGIN
 // ==========================================
+// 🔥 NEW HELPER: Strips out the prefixes and invisible spaces for a perfect match!
+const cleanTeacherName = (str) => {
+  if (!str) return "";
+  return String(str)
+    .replace(/លោកគ្រូ|អ្នកគ្រូ/g, "") // Removes Mr/Ms Teacher
+    .replace(/\u200B/g, "")          // Removes sneaky invisible Khmer zero-width spaces
+    .trim();
+};
+
 router.post("/login", async (req, res) => {
   try {
     const { name, phone } = req.body;
     if (!name || !phone) return res.status(400).json({ success: false, message: "Name and Phone required" });
 
-    const cleanInputName = name.trim();
+    // 🔥 1. Clean the user's input before checking!
+    const cleanInputName = cleanTeacherName(name).toLowerCase();
     const cleanInputPhone = normalizePhone(phone);
 
     const authClient = await auth.getClient();
@@ -532,16 +542,24 @@ router.post("/login", async (req, res) => {
       if (!rows) continue;
 
       for (const row of rows) {
-        const nameKh = row[1] ? row[1].trim() : "";
-        const nameEn = row[2] ? row[2].trim() : "";
+        // Keep the original names safe so we can send them to the Vue frontend later
+        const originalNameKh = row[1] ? row[1].trim() : "";
+        const originalNameEn = row[2] ? row[2].trim() : "";
+        
+        // 🔥 2. Clean the database names so they match the input!
+        const dbNameKh = cleanTeacherName(originalNameKh).toLowerCase();
+        const dbNameEn = cleanTeacherName(originalNameEn).toLowerCase();
+        
         const rawRowPhone = row[6] ? String(row[6]).trim() : "";
         const sheetPhones = getNormalizedPhoneArray(rawRowPhone);
 
-        if ((nameKh === cleanInputName || nameEn.toLowerCase() === cleanInputName.toLowerCase()) && sheetPhones.includes(cleanInputPhone)) {
+        // 🔥 3. Compare the completely cleaned names!
+        if ((dbNameKh === cleanInputName || dbNameEn === cleanInputName) && sheetPhones.includes(cleanInputPhone)) {
           
-          const avatarUrl = await getAvatarUrl(sheets, nameKh, rawRowPhone);
+          const avatarUrl = await getAvatarUrl(sheets, originalNameKh, rawRowPhone);
 
-          loggedInTeacher = { nameKh, nameEn, department: tab, phone: rawRowPhone, avatarUrl };
+          // We send back 'originalNameKh' so the UI still displays "លោកគ្រូ..." nicely!
+          loggedInTeacher = { nameKh: originalNameKh, nameEn: originalNameEn, department: tab, phone: rawRowPhone, avatarUrl };
           break;
         }
       }
