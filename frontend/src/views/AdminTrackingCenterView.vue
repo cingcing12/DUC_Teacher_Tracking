@@ -303,7 +303,7 @@ onMounted(async () => {
 
   isFetchingDirectory.value = true;
   try {
-    const res = await fetch('http://localhost:3000/api/tracking-directory');
+    const res = await fetch('https://duc-teacher-tracking.onrender.com/api/tracking-directory');
     const data = await res.json();
     if (data.success) trackingDirectory.value = data.data;
   } catch (err) {
