@@ -1,119 +1,112 @@
 <template>
-  <div class="min-h-screen bg-[#F4F7FA] dark:bg-[#050B14] font-sans text-slate-900 dark:text-slate-50 selection:bg-indigo-500 selection:text-white relative overflow-x-hidden transition-colors duration-700 flex items-center justify-center py-12">
+  <div class="w-full h-full relative">
     
-    <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
-      <div class="absolute inset-0 bg-[radial-gradient(#CBD5E1_1px,transparent_1.5px)] dark:bg-[radial-gradient(#ffffff_1px,transparent_1.5px)] [background-size:40px_40px] opacity-[0.15] dark:opacity-[0.03] transition-opacity"></div>
-      <div class="absolute top-[5%] right-[15%] w-[45vw] h-[45vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[140px] opacity-50 dark:opacity-20 animate-blob bg-cyan-300 dark:bg-cyan-700 transition-colors duration-700"></div>
-      <div class="absolute bottom-[5%] left-[10%] w-[55vw] h-[55vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[160px] opacity-50 dark:opacity-20 animate-blob animation-delay-2000 bg-indigo-300 dark:bg-indigo-800 transition-colors duration-700"></div>
-      <div class="absolute top-[40%] left-[40%] w-[30vw] h-[30vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-30 dark:opacity-10 animate-blob animation-delay-4000 bg-purple-300 dark:bg-fuchsia-800 transition-colors duration-700"></div>
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(244,247,250,0.85)_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(5,11,20,0.9)_100%)] transition-colors duration-700"></div>
-    </div>
-
-    <main class="relative z-10 w-full max-w-md px-4 sm:px-6 animate-fade-in-up">
-      
-      <div class="flex justify-center mb-8">
-        <button @click="goBack" class="group flex items-center gap-3 px-5 py-2.5 bg-white/60 dark:bg-slate-800/40 hover:bg-white dark:bg-slate-800 backdrop-blur-xl rounded-full text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/80 dark:border-slate-700/50 hover:scale-105">
-          <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+    <main class="relative z-10 w-full max-w-[28rem] sm:max-w-xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12 flex flex-col items-center">
+        
+      <div class="w-full flex justify-start mb-6 sm:mb-8">
+        <button @click="goBack" class="group flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 sm:py-2.5 bg-white/60 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 backdrop-blur-xl rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300 shadow-sm border border-white/80 dark:border-slate-700/50 hover:scale-105 animate-fade-in-up">
+          <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
           Return to Workspace
         </button>
       </div>
 
-      <div class="group/card relative w-full bg-white/40 dark:bg-[#0A0F1A]/60 backdrop-blur-3xl rounded-[3rem] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.1)] dark:shadow-[0_30px_80px_-20px_rgba(99,102,241,0.2)] overflow-hidden border border-white dark:border-white/10 flex flex-col z-10 p-3 ring-1 ring-black/5 dark:ring-white/5 transition-all duration-500">
+      <div class="group/card relative w-full bg-white/60 dark:bg-[#0B1120]/80 backdrop-blur-3xl rounded-[2.5rem] sm:rounded-[3rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_100px_-20px_rgba(99,102,241,0.25)] border border-white dark:border-slate-700/50 flex flex-col items-center px-5 sm:px-8 pb-8 pt-6 sm:pt-8 z-10 transition-all duration-500 animate-fade-in-up overflow-hidden" style="animation-delay: 0.1s;">
         
-        <div class="absolute inset-0 z-50 pointer-events-none overflow-hidden rounded-[3rem]">
+        <div class="absolute inset-0 z-50 pointer-events-none overflow-hidden rounded-[2.5rem] sm:rounded-[3rem]">
           <div class="absolute top-0 bottom-0 w-[200%] bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent -skew-x-12 translate-x-[-150%] group-hover/card:animate-shimmer-fast"></div>
         </div>
 
-        <div class="h-56 relative rounded-[2.5rem] overflow-hidden bg-slate-900 shadow-inner group-hover/card:shadow-[inset_0_0_40px_rgba(0,0,0,0.5)] transition-all duration-500">
-          <div class="absolute top-[-50%] right-[-20%] w-[120%] h-[150%] bg-[conic-gradient(at_center,_var(--tw-gradient-stops))] from-indigo-500 via-fuchsia-600 to-cyan-400 opacity-80 mix-blend-screen animate-spin-slow origin-center blur-2xl"></div>
-          <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQPSI4Ij4KPHJlY3Qgd2lkdGg9IjgiIGhlaWdodD0iOCIgZmlsbD0ibm9uZSIvPgo8Y2lyY2xlIGN4PSIxIiBjeT0iMSIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjE1KSIvPgo8L3N2Zz4=')] opacity-50 mix-blend-overlay"></div>
+        <div class="absolute inset-0 flex items-center justify-center opacity-10 dark:opacity-20 pointer-events-none z-0">
+          <img src="../assets/DUC.png" class="w-3/4 h-3/4 object-contain scale-110 drop-shadow-2xl" alt="DUC Watermark" />
+        </div>
+
+        <div class="absolute top-[-50%] right-[-20%] w-[120%] h-[150%] bg-[conic-gradient(at_center,_var(--tw-gradient-stops))] from-indigo-500/30 via-fuchsia-600/30 to-cyan-400/30 opacity-60 mix-blend-screen animate-spin-slow origin-center blur-3xl z-0 pointer-events-none"></div>
+
+        <div class="w-full flex items-center justify-between z-10 mb-6">
+          <div class="flex items-center gap-2 sm:gap-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-3 py-1.5 sm:py-2 rounded-xl border border-white/50 dark:border-slate-700/50 shadow-sm">
+             <img src="../assets/DUC.png" class="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-sm" alt="DUC Logo" />
+             <span class="text-[9px] sm:text-[10px] font-black tracking-widest text-slate-800 dark:text-white uppercase letter-spacing-2">Digital Badge</span>
+          </div>
           
-          <div class="absolute top-6 left-6 right-6 flex items-center justify-between z-10">
-            <div class="flex items-center gap-2.5">
-               <div class="w-10 h-10 backdrop-blur-md rounded-xl flex items-center justify-center">
-                 <img src="../assets/DUC.png" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></img>
-               </div>
-               <span class="text-[10px] font-black tracking-widest text-white/90 uppercase letter-spacing-2">Digital ID</span>
-            </div>
-            
-            <div class="w-10 h-8 rounded-lg border border-white/30 bg-gradient-to-br from-amber-200/40 via-yellow-400/20 to-transparent flex items-center justify-center overflow-hidden relative shadow-[0_0_15px_rgba(251,191,36,0.3)]">
-              <div class="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.4)_50%,transparent_75%)] bg-[length:200%_200%] animate-hologram"></div>
-              <svg class="w-4 h-4 text-amber-100 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-            </div>
+          <div class="w-10 h-7 sm:w-12 sm:h-8 rounded-lg border border-amber-300/50 dark:border-amber-500/30 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-500/20 dark:to-yellow-600/10 flex items-center justify-center overflow-hidden relative shadow-[0_0_15px_rgba(251,191,36,0.3)] backdrop-blur-md">
+            <div class="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.6)_50%,transparent_75%)] bg-[length:200%_200%] animate-hologram"></div>
+            <svg class="w-4 h-4 text-amber-500 dark:text-amber-200 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+          </div>
+        </div>
+          
+        <div class="relative z-30 mb-5 sm:mb-6 animate-fade-in-up" style="animation-delay: 0.2s;">
+           <input type="file" ref="fileInput" @change="handleImageUpload" class="hidden" accept="image/png, image/jpeg, image/jpg, image/webp" />
+           
+           <div @click="!isUploadingAvatar && (showAvatarMenu = true)" class="w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] rounded-full bg-white/40 dark:bg-slate-900/50 backdrop-blur-2xl p-2.5 sm:p-3 shadow-[0_15px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_0_40px_rgba(99,102,241,0.3)] ring-4 ring-white/60 dark:ring-white/10 transition-transform duration-500 hover:-translate-y-2 group cursor-pointer relative">
+              
+              <div class="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 w-6 h-6 sm:w-7 sm:h-7 bg-emerald-400 dark:bg-emerald-500 border-[3px] sm:border-4 border-white dark:border-[#0B1120] rounded-full z-40 shadow-lg flex items-center justify-center transition-colors duration-300">
+                <div class="absolute inset-0 rounded-full border-2 border-emerald-300 animate-ping opacity-75"></div>
+              </div>
+
+              <div class="w-full h-full bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center shadow-inner border-2 border-white/80 dark:border-slate-600 overflow-hidden relative">
+                
+                <img v-if="teacher?.avatarUrl" :src="teacher.avatarUrl" class="w-full h-full object-cover object-center" alt="Profile Image" />
+                <img v-else src="../assets/DUC.png" class="w-1/2 h-1/2 object-contain opacity-70 drop-shadow-md scale-110" alt="DUC Logo Placeholder" />
+                
+                <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center">
+                  <div class="flex gap-2 mb-1">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                  </div>
+                  <span class="text-[10px] font-black uppercase tracking-widest text-white mt-1 shadow-sm">Manage</span>
+                </div>
+
+                <div v-if="isUploadingAvatar" class="absolute inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50">
+                   <div class="w-8 h-8 border-[3px] sm:border-4 border-indigo-400 border-t-white rounded-full animate-spin"></div>
+                </div>
+              </div>
+           </div>
+        </div>
+
+        <div class="text-center mb-8 w-full animate-fade-in-up relative z-20" style="animation-delay: 0.3s;">
+          <h2 class="text-3xl sm:text-[2.5rem] font-black font-khmer text-slate-900 dark:text-white leading-tight tracking-tight mb-2 drop-shadow-md">
+            {{ teacher?.nameKh }}
+          </h2>
+          <div class="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50/80 dark:bg-indigo-500/20 border border-indigo-100 dark:border-indigo-500/30 backdrop-blur-md shadow-sm">
+            <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
+            <p class="text-[10px] sm:text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">
+              {{ teacher?.nameEn || 'Faculty Instructor' }}
+            </p>
           </div>
         </div>
 
-        <div class="flex justify-center -mt-24 relative z-20">
-           <input type="file" ref="fileInput" @change="handleImageUpload" class="hidden" accept="image/png, image/jpeg, image/jpg, image/webp" />
+        <div class="w-full flex flex-col gap-3 sm:gap-4 mb-8 relative z-20">
            
-           <div @click="!isUploadingAvatar && (showAvatarMenu = true)" class="w-40 h-40 rounded-[2.5rem] bg-white/40 dark:bg-[#0B1120]/60 backdrop-blur-2xl p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/80 dark:border-white/10 transition-all duration-700 hover:-translate-y-2 relative group cursor-pointer">
-              
-              <div class="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white dark:border-[#0B1120] rounded-full z-30 shadow-lg flex items-center justify-center">
-                <div class="absolute inset-0 rounded-full border-2 border-emerald-400 animate-ping opacity-75"></div>
-              </div>
-
-              <div class="w-full h-full bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-[2rem] flex items-center justify-center text-6xl font-black text-slate-800 dark:text-white shadow-[inset_0_2px_15px_rgba(255,255,255,0.8)] dark:shadow-[inset_0_2px_20px_rgba(255,255,255,0.05)] border border-white dark:border-slate-700/50 overflow-hidden relative">
-                
-                <img v-if="teacher?.avatarUrl" :src="teacher.avatarUrl" class="w-full h-full object-cover object-center" alt="Profile Image" />
-                <span v-else>{{ getInitials(teacher?.nameEn, teacher?.nameKh) }}</span>
-                
-                <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center">
-                  <div class="flex gap-2 mb-1">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
-                  </div>
-                  <span class="text-[10px] font-black uppercase tracking-widest text-white mt-1">Manage</span>
-                </div>
-
-                <div v-if="isUploadingAvatar" class="absolute inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center">
-                   <div class="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
-                </div>
-
-              </div>
+           <div class="w-full bg-white/70 dark:bg-slate-800/60 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-4 group/panel hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: 0.4s;">
+             <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30 flex items-center justify-center text-white shrink-0 group-hover/panel:scale-110 group-hover/panel:rotate-3 transition-transform duration-300 ring-2 ring-white/50 dark:ring-white/10">
+               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+             </div>
+             <div class="text-left flex-grow overflow-hidden">
+               <p class="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Faculty Department</p>
+               <p class="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">{{ teacher?.department || 'N/A' }}</p>
+             </div>
            </div>
+           
+           <div class="w-full bg-white/70 dark:bg-slate-800/60 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-4 group/panel hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: 0.5s;">
+             <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-emerald-500 shadow-lg shadow-cyan-500/30 flex items-center justify-center text-white shrink-0 group-hover/panel:scale-110 group-hover/panel:-rotate-3 transition-transform duration-300 ring-2 ring-white/50 dark:ring-white/10">
+               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+             </div>
+             <div class="text-left flex-grow overflow-hidden">
+               <p class="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                 Secure Comms PIN <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+               </p>
+               <p class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-mono tracking-widest">{{ formatPhone(teacher?.phone) }}</p>
+             </div>
+           </div>
+
         </div>
 
-        <div class="pt-6 pb-5 px-6 text-center flex-grow flex flex-col relative z-20">
-           <div class="mb-8">
-              <h2 class="text-3xl font-khmer leading-normal py-2 tracking-tight mb-1 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-white dark:via-indigo-100 dark:to-slate-300 drop-shadow-sm">
-  {{ teacher?.nameKh }}
-</h2>
-              <p class="text-xs font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest flex items-center justify-center gap-2 mt-2">
-                {{ teacher?.nameEn || 'Faculty Instructor' }}
-              </p>
-           </div>
+        <button @click="promptLogout" class="relative z-20 w-full py-4 sm:py-5 bg-white/90 dark:bg-slate-800/90 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-2xl sm:rounded-[2rem] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-500/50 shadow-md hover:shadow-lg hover:shadow-rose-500/20 flex justify-center items-center gap-2.5 group/logout animate-fade-in-up" style="animation-delay: 0.6s;">
+          <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-100 dark:bg-rose-500/20 group-hover/logout:bg-rose-500 group-hover/logout:text-white text-rose-500 dark:text-rose-400 flex items-center justify-center transition-colors duration-300">
+            <svg class="w-3.5 h-3.5 transform group-hover/logout:translate-x-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          </div>
+          Terminate Session
+        </button>
 
-           <div class="grid grid-cols-1 gap-3 mb-8">
-             <div class="bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 p-5 rounded-[2rem] border border-white dark:border-white/10 backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 flex items-center gap-4 group/bento cursor-default">
-               <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/20 border border-indigo-100 dark:border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover/bento:scale-110 group-hover/bento:rotate-3 transition-transform duration-300">
-                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-               </div>
-               <div class="text-left flex-grow">
-                 <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Faculty Department</p>
-                 <p class="text-sm font-bold text-slate-800 dark:text-slate-200 line-clamp-2 leading-snug">{{ teacher?.department }}</p>
-               </div>
-             </div>
-             
-             <div class="bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 p-5 rounded-[2rem] border border-white dark:border-white/10 backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 flex items-center gap-4 group/bento cursor-default relative overflow-hidden">
-               <div class="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/5 to-transparent -translate-x-full group-hover/bento:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-               
-               <div class="w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-500/20 border border-cyan-100 dark:border-cyan-500/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0 group-hover/bento:scale-110 group-hover/bento:-rotate-3 transition-transform duration-300">
-                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-               </div>
-               <div class="text-left flex-grow">
-                 <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Secure Comms PIN</p>
-                 <p class="text-base font-black text-slate-800 dark:text-white font-mono tracking-widest">{{ formatPhone(teacher?.phone) }}</p>
-               </div>
-             </div>
-           </div>
-
-           <button @click="promptLogout" class="mt-auto w-full py-5 bg-white/80 dark:bg-[#0B1120]/80 hover:bg-rose-500 dark:hover:bg-rose-600 text-rose-600 hover:text-white rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all duration-300 border border-rose-100 dark:border-rose-900/50 shadow-sm hover:shadow-[0_15px_30px_rgba(225,29,72,0.3)] flex justify-center items-center gap-3 group/logout">
-             <div class="w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-500/20 group-hover/logout:bg-white/20 flex items-center justify-center transition-colors">
-               <svg class="w-3 h-3 transform group-hover/logout:translate-x-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-             </div>
-             Terminate Session
-           </button>
-        </div>
       </div>
     </main>
 
@@ -121,31 +114,31 @@
       <div v-if="showAvatarMenu" class="fixed inset-0 z-[110] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md transition-opacity" @click="showAvatarMenu = false"></div>
         
-        <div class="relative w-full max-w-xs bg-white dark:bg-[#0A0F1A] rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 p-6 flex flex-col gap-3 ring-1 ring-black/5 dark:ring-white/5">
-          <h3 class="text-center text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Profile Photo</h3>
+        <div class="relative w-full max-w-xs bg-white dark:bg-[#0A0F1A] rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 p-5 sm:p-6 flex flex-col gap-2 sm:gap-3 ring-1 ring-black/5 dark:ring-white/5">
+          <h3 class="text-center text-[10px] sm:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Profile Photo</h3>
 
-          <button v-if="teacher?.avatarUrl" @click="viewFullscreenImage" class="group/btn flex items-center gap-4 w-full p-4 rounded-[1.5rem] bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300">
-            <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover/btn:scale-110 transition-transform">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+          <button v-if="teacher?.avatarUrl" @click="viewFullscreenImage" class="group/btn flex items-center gap-3 sm:gap-4 w-full p-3 sm:p-4 rounded-xl sm:rounded-[1.5rem] bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover/btn:scale-110 transition-transform">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
             </div>
-            <span class="text-sm font-bold">View Picture</span>
+            <span class="text-xs sm:text-sm font-bold">View Picture</span>
           </button>
 
-          <button @click="openAppAvatarsModal" class="group/btn flex items-center gap-4 w-full p-4 rounded-[1.5rem] bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300">
-            <div class="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover/btn:scale-110 transition-transform">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <button @click="openAppAvatarsModal" class="group/btn flex items-center gap-3 sm:gap-4 w-full p-3 sm:p-4 rounded-xl sm:rounded-[1.5rem] bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-cyan-100 dark:bg-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover/btn:scale-110 transition-transform">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <span class="text-sm font-bold">Choose App Avatar</span>
+            <span class="text-xs sm:text-sm font-bold">Choose App Avatar</span>
           </button>
 
-          <button @click="triggerFileInputFromMenu" class="group/btn flex items-center gap-4 w-full p-4 rounded-[1.5rem] bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300">
-            <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover/btn:scale-110 transition-transform">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+          <button @click="triggerFileInputFromMenu" class="group/btn flex items-center gap-3 sm:gap-4 w-full p-3 sm:p-4 rounded-xl sm:rounded-[1.5rem] bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover/btn:scale-110 transition-transform">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
             </div>
-            <span class="text-sm font-bold">Upload Custom</span>
+            <span class="text-xs sm:text-sm font-bold">Upload Custom</span>
           </button>
 
-          <button @click="showAvatarMenu = false" class="mt-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 py-3 transition-colors">
+          <button @click="showAvatarMenu = false" class="mt-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 py-2 sm:py-3 transition-colors">
             Cancel
           </button>
         </div>
@@ -156,16 +149,16 @@
       <div v-if="showAppAvatarsModal" class="fixed inset-0 z-[115] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md transition-opacity" @click="showAppAvatarsModal = false"></div>
         
-        <div class="relative w-full max-w-sm bg-white dark:bg-[#0A0F1A] rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 p-6 flex flex-col ring-1 ring-black/5 dark:ring-white/5">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Select Avatar</h3>
+        <div class="relative w-full max-w-sm bg-white dark:bg-[#0A0F1A] rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 p-5 sm:p-6 flex flex-col ring-1 ring-black/5 dark:ring-white/5">
+          <div class="flex justify-between items-center mb-5 sm:mb-6">
+            <h3 class="text-xs sm:text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Select Avatar</h3>
             <button @click="showAppAvatarsModal = false" class="text-slate-400 hover:text-rose-500 transition-colors">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
 
-          <div class="grid grid-cols-3 gap-4 mb-2 max-h-[50vh] overflow-y-auto pr-2 pb-2">
-            <button v-for="(avatar, index) in appAvatars" :key="index" @click="selectAppAvatar(avatar)" class="group relative rounded-2xl overflow-hidden aspect-square border-2 border-transparent hover:border-indigo-500 transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-1 bg-slate-100 dark:bg-slate-800 focus:outline-none">
+          <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-2 max-h-[50vh] overflow-y-auto pr-2 pb-2">
+            <button v-for="(avatar, index) in appAvatars" :key="index" @click="selectAppAvatar(avatar)" class="group relative rounded-xl sm:rounded-2xl overflow-hidden aspect-square border-2 border-transparent hover:border-indigo-500 transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-1 bg-slate-100 dark:bg-slate-800 focus:outline-none">
               <img :src="avatar" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="App Avatar" />
             </button>
           </div>
@@ -176,8 +169,8 @@
     <transition name="fade">
       <div v-if="showFullscreenImage" class="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/95 dark:bg-black/95 backdrop-blur-xl p-4">
         
-        <button @click="showFullscreenImage = false" class="absolute top-6 right-6 sm:top-10 sm:right-10 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors border border-white/20 z-10 group">
-           <svg class="w-6 h-6 transform group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <button @click="showFullscreenImage = false" class="absolute top-6 right-6 sm:top-10 sm:right-10 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors border border-white/20 z-10 group">
+           <svg class="w-5 h-5 sm:w-6 sm:h-6 transform group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
 
         <div class="relative w-full h-[85vh] flex items-center justify-center animate-fade-in-up p-4">
@@ -186,7 +179,7 @@
             :class="[
               'rounded-[2rem] shadow-[0_0_100px_rgba(0,0,0,0.5)] ring-1 ring-white/10',
               teacher?.avatarUrl?.includes('dicebear') 
-                ? 'w-full max-w-[400px] aspect-square object-cover bg-slate-100 dark:bg-slate-800' 
+                ? 'w-full max-w-[300px] sm:max-w-[400px] aspect-square object-cover bg-slate-100 dark:bg-slate-800' 
                 : 'max-w-full max-h-full object-contain'
             ]" 
             alt="Full Profile Image" 
@@ -199,21 +192,21 @@
     <transition name="fade-scale">
       <div v-if="customAlert.show" class="fixed inset-0 z-[130] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-xl transition-opacity" @click="closeAlert"></div>
-        <div class="relative w-full max-w-sm bg-white dark:bg-[#0A0A0A] rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-200 dark:border-white/10 flex flex-col z-10 p-8 text-center ring-1 ring-slate-200 dark:ring-white/5">
+        <div class="relative w-full max-w-sm bg-white dark:bg-[#0A0A0A] rounded-[2rem] sm:rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-200 dark:border-white/10 flex flex-col z-10 p-6 sm:p-8 text-center ring-1 ring-slate-200 dark:ring-white/5">
           <div :class="['absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none', customAlert.type === 'success' ? 'bg-emerald-500/20' : 'bg-rose-500/20']"></div>
-          <div :class="['w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 shadow-2xl relative transition-transform animate-bounce-short', customAlert.type === 'success' ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/40' : 'bg-gradient-to-br from-rose-400 to-red-500 shadow-rose-500/40']">
+          <div :class="['w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full flex items-center justify-center mb-5 sm:mb-6 shadow-2xl relative transition-transform animate-bounce-short', customAlert.type === 'success' ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/40' : 'bg-gradient-to-br from-rose-400 to-red-500 shadow-rose-500/40']">
             <div class="absolute inset-0 rounded-full border-2 border-white/30 mix-blend-overlay"></div>
-            <svg v-if="customAlert.type === 'success'" class="w-10 h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-            <svg v-else-if="customAlert.type === 'error'" class="w-10 h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-            <svg v-else class="w-10 h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            <svg v-if="customAlert.type === 'success'" class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            <svg v-else-if="customAlert.type === 'error'" class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <svg v-else class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
           </div>
-          <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2 font-sans tracking-tight">{{ customAlert.type === 'success' ? 'Success!' : customAlert.type === 'error' ? 'Error Occurred' : 'Sign Out?' }}</h3>
-          <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 font-khmer">{{ customAlert.message }}</p>
-          <div v-if="customAlert.type === 'confirm'" class="flex gap-3">
-            <button @click="closeAlert" class="flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300">Cancel</button>
-            <button @click="executeConfirm" class="flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-rose-600 hover:bg-rose-500 hover:shadow-rose-500/25">{{ customAlert.confirmText }}</button>
+          <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 font-sans tracking-tight">{{ customAlert.type === 'success' ? 'Success!' : customAlert.type === 'error' ? 'Error Occurred' : 'Sign Out?' }}</h3>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-6 sm:mb-8 font-khmer">{{ customAlert.message }}</p>
+          <div v-if="customAlert.type === 'confirm'" class="flex gap-2 sm:gap-3">
+            <button @click="closeAlert" class="flex-1 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300">Cancel</button>
+            <button @click="executeConfirm" class="flex-1 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-rose-600 hover:bg-rose-500 hover:shadow-rose-500/25">{{ customAlert.confirmText }}</button>
           </div>
-          <button v-else @click="closeAlert" :class="['w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-lg text-white flex items-center justify-center gap-2 hover:-translate-y-1', customAlert.type === 'success' ? 'bg-slate-900 dark:bg-white dark:text-slate-900 hover:shadow-emerald-500/25 dark:hover:bg-emerald-400' : 'bg-rose-600 hover:shadow-rose-500/25 hover:bg-rose-500']">{{ customAlert.type === 'success' ? 'Awesome' : 'Try Again' }}</button>
+          <button v-else @click="closeAlert" :class="['w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white flex items-center justify-center gap-2 hover:-translate-y-1', customAlert.type === 'success' ? 'bg-slate-900 dark:bg-white dark:text-slate-900 hover:shadow-emerald-500/25 dark:hover:bg-emerald-400' : 'bg-rose-600 hover:shadow-rose-500/25 hover:bg-rose-500']">{{ customAlert.type === 'success' ? 'Awesome' : 'Try Again' }}</button>
         </div>
       </div>
     </transition>
@@ -376,22 +369,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Siemreap&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
 
 .font-sans { font-family: 'Inter', sans-serif; }
-
-/* 2. Updated the font-khmer class to apply Siemreap */
-.font-khmer { font-family: 'Siemreap', sans-serif; }
-
+.font-khmer { font-family: 'Kantumruy Pro', sans-serif; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
+
 .animate-fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulse-slow { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.05); } }
 .animate-pulse-slow { animation: pulse-slow 6s infinite; }
-@keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
-.animate-blob { animation: blob 15s infinite alternate; }
-.animation-delay-2000 { animation-delay: 2s; }
-.animation-delay-4000 { animation-delay: 4s; }
 @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .animate-spin-slow { animation: spin-slow 12s linear infinite; }
 @keyframes hologram { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
@@ -405,3 +392,4 @@ onMounted(() => {
 @keyframes bounce-short { 0% { transform: scale(0.8); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 .animate-bounce-short { animation: bounce-short 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 </style>
+

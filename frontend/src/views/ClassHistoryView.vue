@@ -1,53 +1,47 @@
 <template>
-  <div class="min-h-screen bg-[#F1F5F9] dark:bg-[#0B1120] font-sans text-slate-900 dark:text-slate-50 selection:bg-cyan-500 selection:text-white relative overflow-x-hidden transition-colors duration-500 pb-32">
+  <div class="w-full h-full relative">
     
-    <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
-      <div class="absolute inset-0 bg-[radial-gradient(#94A3B8_1px,transparent_1.5px)] dark:bg-[radial-gradient(#ffffff_1px,transparent_1.5px)] [background-size:32px_32px] opacity-[0.12] dark:opacity-[0.05] transition-opacity"></div>
-      <div class="absolute top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-40 dark:opacity-20 animate-blob bg-cyan-300 dark:bg-cyan-700 transition-opacity"></div>
-      <div class="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[140px] opacity-40 dark:opacity-20 animate-blob animation-delay-2000 bg-indigo-200 dark:bg-indigo-800 transition-opacity"></div>
-    </div>
-
-    <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-12 animate-fade-in-up">
-      
-      <button @click="goBack" class="group flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 mb-10 transition-colors">
-        <div class="w-8 h-8 rounded-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+    <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
+        
+      <button @click="goBack" class="group flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 mb-6 sm:mb-8 transition-colors animate-fade-in-up">
+        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
+          <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
         </div>
         {{ isAdmin ? 'Back to Directory' : 'Back to Schedule' }}
       </button>
 
-      <div class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl rounded-[2.5rem] shadow-xl shadow-cyan-500/5 dark:shadow-black/50 border border-white dark:border-white/5 p-8 sm:p-12 mb-12 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+      <div class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl rounded-2xl sm:rounded-[2.5rem] shadow-xl shadow-cyan-500/5 dark:shadow-black/50 border border-white dark:border-white/5 p-5 sm:p-10 mb-8 sm:mb-12 relative overflow-hidden animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div class="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-cyan-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         
-        <div class="relative z-10 flex flex-col md:flex-row gap-8 justify-between items-start md:items-center">
+        <div class="relative z-10 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
           <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 rounded-lg text-[10px] font-black uppercase tracking-widest mb-4">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              Lesson History Archive
+              Lesson History
               <span v-if="isAdmin" class="ml-2 bg-rose-500 text-white px-2 py-0.5 rounded text-[8px] tracking-widest uppercase">Admin View</span>
             </div>
-            <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-4">{{ classData.subject }}</h1>
+            <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-3 sm:mb-4">{{ classData.subject }}</h1>
             
-            <div class="flex flex-wrap items-center gap-3 text-sm font-bold text-slate-500 dark:text-slate-400 font-mono tracking-wide">
-              <p>Cohort Tab: <span class="text-cyan-500 dark:text-cyan-400">{{ classData.group }}</span></p>
-              <span v-if="fullMajorName" class="px-3 py-1 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-lg text-[11px] font-black font-khmer uppercase tracking-widest border border-cyan-100 dark:border-cyan-500/20 shadow-sm">{{ fullMajorName }}</span>
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-mono tracking-wide">
+              <p>Cohort: <span class="text-cyan-500 dark:text-cyan-400">{{ classData.group }}</span></p>
+              <span v-if="fullMajorName" class="px-2 py-1 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-cyan-100 dark:border-cyan-500/20 shadow-sm">{{ fullMajorName }}</span>
             </div>
           </div>
 
           <div class="flex flex-col items-end gap-3 w-full md:w-auto">
-            <div class="bg-slate-900 dark:bg-black/50 rounded-2xl p-6 text-white border border-slate-700 dark:border-white/10 shadow-inner w-full text-center flex flex-col items-center transition-all duration-300">
-               <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+            <div class="bg-slate-900 dark:bg-black/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white border border-slate-700 dark:border-white/10 shadow-inner w-full text-center flex flex-col items-center transition-all duration-300">
+               <p class="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
                  {{ filterMonthYear ? 'Filtered Hours' : 'Total Hours Logged' }}
                </p>
-               <p class="text-3xl font-black font-khmer text-cyan-400">{{ displayedTotalHours }}</p>
+               <p class="text-2xl sm:text-3xl font-black font-khmer text-cyan-400">{{ displayedTotalHours }}</p>
             </div>
 
-            <div v-if="isAdmin" class="w-full flex items-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-2.5 shadow-sm transition-all focus-within:ring-2 focus-within:ring-cyan-500/50">
-               <svg class="w-4 h-4 text-cyan-500 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <div v-if="isAdmin" class="w-full flex items-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-sm transition-all focus-within:ring-2 focus-within:ring-cyan-500/50">
+               <svg class="w-4 h-4 text-cyan-500 mr-2 sm:mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                <input 
                  type="month" 
                  v-model="filterMonthYear" 
-                 class="bg-transparent border-none text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 focus:ring-0 outline-none w-full p-0" 
+                 class="bg-transparent border-none text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 focus:ring-0 outline-none w-full p-0" 
                  title="Filter by Year and Month"
                />
                <button v-if="filterMonthYear" @click="filterMonthYear = ''" class="ml-2 text-slate-400 hover:text-rose-500 transition-colors p-1" title="Clear Filter">
@@ -59,71 +53,71 @@
       </div>
 
       <div class="relative">
-        <div class="absolute left-[39px] top-0 bottom-0 w-1 bg-slate-200 dark:bg-slate-800 rounded-full z-0"></div>
+        <div class="absolute left-[23px] sm:left-[39px] top-0 bottom-0 w-[2px] sm:w-1 bg-slate-200 dark:bg-slate-800 rounded-full z-0"></div>
 
-        <div class="space-y-10">
+        <div class="space-y-6 sm:space-y-10">
           
-          <div v-if="isLoading" class="pl-20 text-slate-500 font-bold animate-pulse">Loading history...</div>
-          <div v-else-if="filteredHistoryData.length === 0" class="pl-20 text-slate-500 font-bold bg-white/40 dark:bg-slate-800/40 p-6 rounded-2xl border border-white dark:border-white/5 backdrop-blur-md">
+          <div v-if="isLoading" class="pl-14 sm:pl-20 text-slate-500 text-xs sm:text-sm font-bold animate-pulse">Loading history...</div>
+          <div v-else-if="filteredHistoryData.length === 0" class="pl-14 sm:pl-20 text-slate-500 text-xs sm:text-sm font-bold bg-white/40 dark:bg-slate-800/40 p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-white dark:border-white/5 backdrop-blur-md">
             {{ filterMonthYear ? 'No lessons were logged during this specific month.' : 'No lessons have been logged for this cohort yet.' }}
           </div>
           
-          <div v-for="(lesson, index) in paginatedHistory" :key="lesson.week + '-' + index" class="relative flex items-start gap-6 sm:gap-10 animate-fade-in-up" :style="`animation-delay: ${0.05 * index}s;`">
+          <div v-for="(lesson, index) in paginatedHistory" :key="lesson.week + '-' + index" class="relative flex items-start gap-3 sm:gap-10 animate-fade-in-up" :style="`animation-delay: ${0.1 * index}s;`">
             
-            <div class="relative z-10 shrink-0 mt-2">
-              <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-full border-4 border-[#F1F5F9] dark:border-[#0B1120] flex flex-col items-center justify-center shadow-lg shadow-cyan-500/20 ring-1 ring-slate-200 dark:ring-slate-700">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Week</span>
-                <span class="text-2xl font-black text-cyan-500 dark:text-cyan-400 leading-none">{{ lesson.week }}</span>
+            <div class="relative z-10 shrink-0 mt-2 sm:mt-0">
+              <div class="w-12 h-12 sm:w-20 sm:h-20 bg-white dark:bg-slate-900 rounded-full border-[3px] sm:border-4 border-[#F1F5F9] dark:border-[#0B1120] flex flex-col items-center justify-center shadow-lg shadow-cyan-500/20 ring-1 ring-slate-200 dark:ring-slate-700">
+                <span class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5 sm:mb-1">Week</span>
+                <span class="text-lg sm:text-2xl font-black text-cyan-500 dark:text-cyan-400 leading-none">{{ lesson.week }}</span>
               </div>
             </div>
 
-            <div class="flex-grow bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl rounded-[2rem] border border-white dark:border-white/5 p-6 sm:p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div class="flex-grow bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl rounded-2xl sm:rounded-[2rem] border border-white dark:border-white/5 p-4 sm:p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               
-              <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100 dark:border-slate-700/50">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-slate-100 dark:border-slate-700/50">
                 <div>
-                  <h3 class="text-lg font-black text-slate-900 dark:text-white mb-1">Lesson {{ lesson.lessonNo }}</h3>
-                  <p class="text-xs font-bold text-slate-500 flex items-center gap-2 font-mono">
-                    <svg class="w-3.5 h-3.5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                  <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white mb-1">Lesson {{ lesson.lessonNo }}</h3>
+                  <p class="text-[10px] sm:text-xs font-bold text-slate-500 flex items-center gap-1.5 sm:gap-2 font-mono">
+                    <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     {{ lesson.date }}
                   </p>
                 </div>
                 
-                <div class="flex items-center gap-5">
-                  <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-5">
-                    <button @click="goToEditPage(lesson)" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 transition-all" title="Edit">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                <div class="flex flex-row-reverse sm:flex-row items-center justify-between sm:justify-end gap-4 sm:gap-5 w-full sm:w-auto mt-2 sm:mt-0">
+                  <div class="flex items-center gap-2 border-l sm:border-l-0 sm:border-r border-slate-200 dark:border-slate-700 pl-4 sm:pl-0 sm:pr-5">
+                    <button @click="goToEditPage(lesson)" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 transition-all" title="Edit">
+                      <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                     </button>
-                    <button @click="promptDelete(lesson)" :disabled="isDeleting === lesson.week" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 transition-all disabled:opacity-50" title="Delete">
+                    <button @click="promptDelete(lesson)" :disabled="isDeleting === lesson.week" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 transition-all disabled:opacity-50" title="Delete">
                       <span v-if="isDeleting === lesson.week" class="w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></span>
-                      <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      <svg v-else class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                   </div>
-                  <div class="text-right">
-                    <p class="text-sm font-black text-cyan-600 dark:text-cyan-400 font-khmer bg-cyan-50 dark:bg-cyan-500/10 px-3 py-1.5 rounded-lg">{{ lesson.hours }}</p>
-                    <p class="text-[10px] font-bold text-slate-400 mt-1.5 font-mono">{{ lesson.time }}</p>
+                  <div class="text-left sm:text-right">
+                    <p class="text-xs sm:text-sm font-black text-cyan-600 dark:text-cyan-400 font-khmer bg-cyan-50 dark:bg-cyan-500/10 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg">{{ lesson.hours }}</p>
+                    <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 mt-1 sm:mt-1.5 font-mono">{{ lesson.time }}</p>
                   </div>
                 </div>
               </div>
 
               <div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Covered Topics (ខ្លឹមសារមេរៀន)</p>
-                <p class="text-sm text-slate-700 dark:text-slate-300 font-khmer leading-relaxed">{{ lesson.content }}</p>
+                <p class="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">Covered Topics (ខ្លឹមសារមេរៀន)</p>
+                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-khmer leading-relaxed">{{ lesson.content }}</p>
               </div>
 
-              <div v-if="lesson.notes" class="mt-6 pt-4 border-t border-dashed border-slate-200 dark:border-slate-700">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Notes</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 italic font-khmer">{{ lesson.notes }}</p>
+              <div v-if="lesson.notes" class="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-dashed border-slate-200 dark:border-slate-700">
+                <p class="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 sm:mb-2">Notes</p>
+                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 italic font-khmer">{{ lesson.notes }}</p>
               </div>
 
             </div>
           </div>
 
-          <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 sm:gap-3 mt-12 mb-8 relative z-10 pl-6 sm:pl-10">
+          <div v-if="totalPages > 1" class="flex justify-center items-center gap-1.5 sm:gap-3 mt-8 sm:mt-12 mb-4 relative z-10 pl-4 sm:pl-10">
             <button @click="prevPage" :disabled="currentPage === 1" class="w-8 h-8 sm:w-10 sm:h-10 shrink-0 flex items-center justify-center rounded-xl bg-white/60 dark:bg-slate-800/60 shadow-sm border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
               <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
             </button>
 
-            <div class="flex items-center gap-1.5 sm:gap-2">
+            <div class="flex items-center gap-1 sm:gap-2">
               <template v-for="(item, idx) in visiblePages" :key="idx">
                 <span v-if="item === '...'" class="text-slate-400 dark:text-slate-500 font-black px-1 sm:px-2">...</span>
                 <button v-else @click="goToPage(item)" :class="['w-8 h-8 sm:w-10 sm:h-10 shrink-0 flex items-center justify-center rounded-xl text-xs sm:text-sm font-black transition-all', currentPage === item ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30' : 'bg-white/60 dark:bg-slate-800/60 shadow-sm border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800']">
@@ -145,7 +139,7 @@
       <div v-if="customAlert.show" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-xl transition-opacity" @click="closeAlert"></div>
 
-        <div class="relative w-full max-w-sm bg-white dark:bg-[#0A0A0A] rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-200 dark:border-white/10 flex flex-col z-10 p-8 text-center ring-1 ring-slate-200 dark:ring-white/5">
+        <div class="relative w-full max-w-sm bg-white dark:bg-[#0A0A0A] rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-200 dark:border-white/10 flex flex-col z-10 p-6 sm:p-8 text-center ring-1 ring-slate-200 dark:ring-white/5">
           
           <div :class="['absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none', 
             customAlert.type === 'success' ? 'bg-emerald-500/20' : 
@@ -153,42 +147,41 @@
             'bg-amber-500/20']">
           </div>
 
-          <div :class="['w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 shadow-2xl relative transition-transform animate-bounce-short', 
+          <div :class="['w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full flex items-center justify-center mb-5 sm:mb-6 shadow-2xl relative transition-transform animate-bounce-short', 
             customAlert.type === 'success' ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/40' : 
             customAlert.type === 'error' ? 'bg-gradient-to-br from-rose-400 to-red-500 shadow-rose-500/40' : 
             'bg-gradient-to-br from-amber-400 to-orange-500 shadow-amber-500/40']">
             
             <div class="absolute inset-0 rounded-full border-2 border-white/30 mix-blend-overlay"></div>
             
-            <svg v-if="customAlert.type === 'success'" class="w-10 h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-            <svg v-else-if="customAlert.type === 'error'" class="w-10 h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-            <svg v-else class="w-10 h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            <svg v-if="customAlert.type === 'success'" class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            <svg v-else-if="customAlert.type === 'error'" class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <svg v-else class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
           </div>
 
-          <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2 font-sans tracking-tight">
+          <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 font-sans tracking-tight">
             {{ customAlert.type === 'success' ? 'Success!' : customAlert.type === 'error' ? 'Error Occurred' : 'Are you sure?' }}
           </h3>
-          <p class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-8 font-khmer">
+          <p class="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 mb-6 sm:mb-8 font-khmer">
             {{ customAlert.message }}
           </p>
 
-          <div v-if="customAlert.type === 'confirm'" class="flex gap-3">
-            <button @click="closeAlert" class="flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300">
+          <div v-if="customAlert.type === 'confirm'" class="flex gap-2 sm:gap-3">
+            <button @click="closeAlert" class="flex-1 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300">
               Cancel
             </button>
-            <button @click="executeConfirm" class="flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-rose-600 hover:bg-rose-500 hover:shadow-rose-500/25">
+            <button @click="executeConfirm" class="flex-1 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-rose-600 hover:bg-rose-500 hover:shadow-rose-500/25">
               Delete It
             </button>
           </div>
           
-          <button v-else @click="closeAlert" :class="['w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-lg text-white flex items-center justify-center gap-2 hover:-translate-y-1', 
+          <button v-else @click="closeAlert" :class="['w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all shadow-lg text-white flex items-center justify-center gap-2 hover:-translate-y-1', 
             customAlert.type === 'success' ? 'bg-slate-900 dark:bg-white dark:text-slate-900 hover:shadow-emerald-500/25 dark:hover:bg-emerald-400' : 'bg-rose-600 hover:shadow-rose-500/25 hover:bg-rose-500']">
             {{ customAlert.type === 'success' ? 'Awesome' : 'Try Again' }}
           </button>
         </div>
       </div>
     </transition>
-
   </div>
 </template>
 

@@ -1,90 +1,93 @@
 <template>
-  <div class="min-h-screen bg-[#F1F5F9] dark:bg-[#0B1120] font-sans text-slate-900 dark:text-slate-50 selection:bg-indigo-500 selection:text-white relative overflow-x-hidden transition-colors duration-500">
+  <div class="w-full h-full relative">
     
-    <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
-      <div class="absolute inset-0 bg-[radial-gradient(#94A3B8_1px,transparent_1.5px)] dark:bg-[radial-gradient(#ffffff_1px,transparent_1.5px)] [background-size:32px_32px] opacity-[0.12] dark:opacity-[0.05] transition-opacity"></div>
-      <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-50 dark:opacity-20 animate-blob bg-indigo-300 dark:bg-indigo-600 transition-opacity"></div>
-      <div class="absolute top-[20%] right-[-10%] w-[45vw] h-[45vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-40 dark:opacity-20 animate-blob animation-delay-2000 bg-fuchsia-200 dark:bg-purple-700 transition-opacity"></div>
-      <div class="absolute bottom-[-20%] left-[10%] w-[60vw] h-[60vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[140px] opacity-50 dark:opacity-20 animate-blob animation-delay-4000 bg-cyan-200 dark:bg-cyan-800 transition-opacity"></div>
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(241,245,249,0.9)_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(11,17,32,0.9)_100%)] transition-colors duration-500"></div>
-    </div>
-
-    <nav class="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 animate-fade-in-down">
-      <div class="bg-white/60 dark:bg-slate-900/60 hover:bg-white/80 dark:hover:bg-slate-900/80 backdrop-blur-3xl border border-white/80 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-full p-1.5 flex items-center justify-between w-full max-w-4xl relative overflow-hidden transition-all duration-500">
-        <div class="flex items-center gap-3 pl-4 relative z-10">
-          <div class="w-9 h-9 from-slate-900 via-slate-800 to-slate-900 dark:from-indigo-600 dark:to-cyan-500 rounded-full flex items-center justify-center shadow-sm  border-slate-700 dark:border-transparent">
-            <img src="../assets/DUC.png" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></img>
-          </div>
-          <span class="font-black tracking-tight text-sm text-slate-800 dark:text-white bg-clip-text hidden sm:block">Digital Faculty Workspace</span>
-        </div>
-        <div class="flex items-center gap-2 relative z-10 pr-1.5">
-          <button @click="router.push('/settings')" class="w-9 h-9 flex items-center justify-center bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 rounded-full transition-all shadow-sm border border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-          </button>
-          
-          <button v-if="teacher" @click="goToProfile" class="group flex items-center gap-2 pr-3 pl-1.5 py-1.5 bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 rounded-full transition-all shadow-sm border border-slate-100 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500">
-            <div class="relative">
-              <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-cyan-400 p-[1.5px] relative z-10 overflow-hidden">
-                <img v-if="teacher.avatarUrl" :src="teacher.avatarUrl" class="w-full h-full object-cover rounded-full" />
-                <div v-else class="w-full h-full bg-white dark:bg-slate-900 rounded-full flex items-center justify-center text-[10px] font-black text-indigo-700 dark:text-indigo-400">
-                  {{ getInitials(teacher.nameEn, teacher.nameKh) }}
-                </div>
-              </div>
-            </div>
-            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">{{ teacher.nameKh.split(' ')[0] }}</span>
-          </button>
-        </div>
-      </div>
-    </nav>
-
-    <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-36 pb-32">
+    <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
       
-      <div v-if="teacher" class="mb-12 animate-fade-in-up" style="animation-delay: 0.1s;">
-        <p class="text-indigo-500 font-black tracking-widest uppercase text-[10px] mb-2 flex items-center gap-2">
+      <!-- Header -->
+      <div v-if="teacher" class="mb-6 sm:mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <p class="text-indigo-500 font-black tracking-widest uppercase text-[9px] sm:text-[10px] mb-1.5 sm:mb-2 flex items-center gap-2">
           <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
           Academic Timetable
         </p>
-        <h1 class="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-none">Your Schedule</h1>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-none">Your Schedule</h1>
       </div>
 
-      <div v-if="isLoading" class="relative mt-8">
-        <div class="absolute left-[27px] sm:left-[35px] top-6 bottom-10 w-[3px] bg-slate-200/50 dark:bg-slate-700/50 z-0 rounded-full overflow-hidden"></div>
+      <!-- 🔥 FIX: Added 'relative z-50' right here to break out of the Stacking Context Trap! -->
+      <div v-if="teacher && !isLoading && !hasError" class="relative z-50 mb-6 sm:mb-10 animate-fade-in-up" style="animation-delay: 0.2s;">
+        <div class="flex items-center gap-1 sm:gap-2 bg-white/40 dark:bg-slate-800/40 p-1.5 rounded-[1.25rem] w-max backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+          
+          <!-- Tab 1: Today -->
+          <button 
+            @click="activeTab = 'today'; isDropdownOpen = false" 
+            :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'today' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50']"
+          >
+            Today's Classes
+          </button>
 
-        <div class="space-y-16">
-          <div v-for="i in 2" :key="`skeleton-day-${i}`" class="relative">
-            <div class="sticky top-[96px] z-30 py-4 flex items-center gap-6 mb-6">
-              <div class="relative flex items-center justify-center w-10 h-10 shrink-0">
-                <div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse border-[5px] border-white dark:border-[#0B1120] shadow-sm z-10"></div>
+          <!-- Tab 2: Full Week -->
+          <button 
+            @click="activeTab = 'week'; selectedDayFilter = 'All'; isDropdownOpen = false" 
+            :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'week' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50']"
+          >
+            Full Week
+          </button>
+
+          <!-- Filter Button (Only shows when Full Week is active) -->
+          <div v-if="activeTab === 'week'" class="relative flex items-center border-l border-slate-300/50 dark:border-slate-600/50 pl-1 sm:pl-2 ml-1 sm:ml-0 animate-fade-in">
+            <button 
+              @click="isDropdownOpen = !isDropdownOpen" 
+              :class="['flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', selectedDayFilter !== 'All' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50']"
+            >
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+              <span class="hidden sm:inline">{{ selectedDayFilter === 'All' ? 'Filter Days' : selectedDayFilter }}</span>
+              <span class="sm:hidden">{{ selectedDayFilter === 'All' ? 'All' : selectedDayFilter.substring(0,3) }}</span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <transition name="fade-scale">
+              <div v-if="isDropdownOpen" class="absolute top-full right-0 mt-2 w-40 sm:w-48 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-2 z-[60]">
+                <button @click="selectDay('All')" :class="['w-full text-left px-4 sm:px-5 py-2.5 sm:py-3 text-xs font-black uppercase tracking-widest transition-colors', selectedDayFilter === 'All' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50']">
+                  All Days
+                </button>
+                <button v-for="day in availableDays" :key="day" @click="selectDay(day)" :class="['w-full text-left px-4 sm:px-5 py-2.5 sm:py-3 text-xs font-black uppercase tracking-widest transition-colors border-t border-slate-100 dark:border-slate-700/50', selectedDayFilter === day ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50']">
+                  {{ day }}
+                </button>
               </div>
-              <div class="h-7 w-32 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
+            </transition>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Invisible overlay to close dropdown if user clicks outside -->
+      <div v-if="isDropdownOpen" @click="isDropdownOpen = false" class="fixed inset-0 z-40"></div>
+
+      <!-- Loading Skeletons -->
+      <div v-if="isLoading" class="relative mt-6 sm:mt-8">
+        <div class="absolute left-[27px] sm:left-[35px] top-6 bottom-10 w-[3px] bg-slate-200/50 dark:bg-slate-700/50 z-0 rounded-full overflow-hidden"></div>
+        <div class="space-y-8 sm:space-y-12">
+          <div v-for="i in 2" :key="`skeleton-day-${i}`" class="relative">
+            <div class="sticky top-[70px] sm:top-[96px] z-30 py-2 sm:py-3 flex items-center gap-4 mb-4 sm:mb-6">
+              <div class="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 shrink-0">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse border-[3px] sm:border-[4px] border-[#F1F5F9] dark:border-[#0B1120] shadow-sm z-10"></div>
+              </div>
+              <div class="h-6 sm:h-8 w-24 sm:w-32 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
             </div>
-
-            <div class="flex flex-col gap-6 pl-12 sm:pl-16 relative z-10">
-              <div v-for="j in 2" :key="`skeleton-card-${j}`" class="relative rounded-3xl bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200/40 dark:border-slate-700/40 overflow-hidden flex flex-col sm:flex-row shadow-sm">
-                
+            <div class="flex flex-col gap-4 sm:gap-6 pl-10 sm:pl-16 relative z-10">
+              <div v-for="j in 2" :key="`skeleton-card-${j}`" class="relative rounded-2xl sm:rounded-[2rem] bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200/40 dark:border-slate-700/40 overflow-hidden flex flex-col sm:flex-row shadow-sm">
                 <div class="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 dark:via-white/5 to-transparent z-20 pointer-events-none"></div>
-
-                <div class="sm:w-48 shrink-0 bg-slate-50/50 dark:bg-slate-800/50 p-6 flex flex-row sm:flex-col items-center sm:items-start sm:justify-center border-b sm:border-b-0 sm:border-r border-slate-100/50 dark:border-slate-700/50 gap-4 sm:gap-3">
-                  <div class="hidden sm:block h-3 w-16 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
-                  <div class="h-8 w-24 bg-slate-300 dark:bg-slate-600 rounded-lg animate-pulse"></div>
-                  <div class="hidden sm:block h-5 w-5 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse my-1"></div>
-                  <div class="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
+                <div class="sm:w-40 shrink-0 bg-slate-50/50 dark:bg-slate-800/50 p-4 sm:p-5 flex flex-row sm:flex-col items-center sm:items-start sm:justify-center border-b sm:border-b-0 sm:border-r border-slate-100/50 dark:border-slate-700/50 gap-3 sm:gap-2">
+                  <div class="h-6 sm:h-8 w-16 sm:w-20 bg-slate-300 dark:bg-slate-600 rounded-lg animate-pulse"></div>
+                  <div class="hidden sm:block h-4 w-4 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse my-1"></div>
+                  <div class="h-5 sm:h-6 w-12 sm:w-16 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
                 </div>
-
-                <div class="flex-grow p-6 sm:p-8 flex flex-col relative z-10 justify-between">
+                <div class="flex-grow p-4 sm:p-6 flex flex-col relative z-10 justify-between">
                   <div>
-                    <div class="flex flex-wrap items-center gap-2 mb-6">
-                      <div class="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
-                      <div class="h-6 w-24 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
-                      <div class="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
+                    <div class="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
+                      <div class="h-5 sm:h-6 w-14 sm:w-16 bg-slate-200 dark:bg-slate-700 rounded-md animate-pulse"></div>
+                      <div class="h-5 sm:h-6 w-20 sm:w-24 bg-slate-200 dark:bg-slate-700 rounded-md animate-pulse"></div>
                     </div>
-                    <div class="h-8 w-3/4 bg-slate-300 dark:bg-slate-600 rounded-lg animate-pulse mb-3"></div>
-                    <div class="h-8 w-1/2 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse mb-8"></div>
-                  </div>
-                  
-                  <div class="flex flex-wrap items-center gap-3 pt-5 border-t border-slate-100 dark:border-slate-700/50">
-                    <div class="h-10 w-28 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
-                    <div class="h-10 w-32 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
+                    <div class="h-6 sm:h-8 w-3/4 bg-slate-300 dark:bg-slate-600 rounded-lg animate-pulse mb-4 sm:mb-6"></div>
                   </div>
                 </div>
               </div>
@@ -93,116 +96,131 @@
         </div>
       </div>
 
+      <!-- Error State -->
       <div v-else-if="hasError" class="relative mt-8 animate-fade-in-up">
-        <div class="flex flex-col items-center justify-center py-20 px-6 text-center rounded-3xl bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl border border-red-200/60 dark:border-red-900/30 shadow-sm relative overflow-hidden">
-          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-          
-          <div class="w-24 h-24 mb-6 rounded-2xl bg-gradient-to-br from-red-50 to-white dark:from-red-900/40 dark:to-slate-900 flex items-center justify-center border border-red-100 dark:border-red-800/50 shadow-sm -rotate-3 relative z-10">
-            <svg class="w-10 h-10 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"></path></svg>
+        <div class="flex flex-col items-center justify-center py-12 sm:py-16 px-6 text-center rounded-[2rem] bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl border border-red-200/60 dark:border-red-900/30 shadow-sm relative overflow-hidden">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-5 rounded-2xl bg-gradient-to-br from-red-50 to-white dark:from-red-900/40 dark:to-slate-900 flex items-center justify-center border border-red-100 dark:border-red-800/50 shadow-sm -rotate-3">
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"></path></svg>
           </div>
-          <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-3 relative z-10">Connection Lost</h3>
-          <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-8 relative z-10">We couldn't reach the server. Please check your internet connection and try again.</p>
-          
-          <button @click="refreshTeacherData" class="px-6 py-3 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl font-bold transition-all border border-red-200 dark:border-red-500/30 shadow-sm flex items-center gap-2 relative z-10 group">
+          <h3 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Connection Lost</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-sm mb-6">We couldn't reach the server. Please check your internet connection.</p>
+          <button @click="refreshTeacherData" class="px-5 sm:px-6 py-2 sm:py-2.5 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 text-red-600 dark:text-red-400 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 group">
             <svg class="w-4 h-4 group-hover:-rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             Try Again
           </button>
         </div>
       </div>
 
-      <div v-else-if="Object.keys(groupedSchedule).length === 0" class="relative mt-8 animate-fade-in-up">
-        <div class="flex flex-col items-center justify-center py-20 px-6 text-center rounded-3xl bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/50 shadow-sm relative overflow-hidden">
-          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-          
-          <div class="w-24 h-24 mb-6 rounded-2xl bg-gradient-to-br from-slate-100 to-white dark:from-slate-800 dark:to-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm rotate-3 relative z-10">
-            <svg class="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+      <!-- Empty State / No Classes -->
+      <div v-else-if="Object.keys(displayedSchedule).length === 0" class="relative mt-8 animate-fade-in-up">
+        <div class="flex flex-col items-center justify-center py-12 sm:py-16 px-6 text-center rounded-[2rem] bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/50 shadow-sm relative overflow-hidden">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-5 rounded-2xl bg-gradient-to-br from-slate-100 to-white dark:from-slate-800 dark:to-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm rotate-3 relative z-10">
+            <svg v-if="activeTab === 'today'" class="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <svg v-else class="w-8 h-8 sm:w-10 sm:h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
           </div>
-          <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-3 relative z-10">Clear Schedule</h3>
-          <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-8 relative z-10">You don't have any classes assigned for this semester yet. Enjoy your free time!</p>
-          <button @click="refreshTeacherData" class="px-6 py-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl font-bold transition-all border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-2 relative z-10 group">
+          <h3 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
+            {{ activeTab === 'today' ? 'Day Off!' : (selectedDayFilter !== 'All' ? 'No Classes' : 'Clear Schedule') }}
+          </h3>
+          <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-sm mb-6 relative z-10">
+            {{ activeTab === 'today' ? 'You don\'t have any classes to teach today. Enjoy your free time!' : (selectedDayFilter !== 'All' ? `You have no classes scheduled for ${selectedDayFilter}.` : 'You don\'t have any classes assigned for this semester yet.') }}
+          </p>
+          <button v-if="activeTab === 'week' && selectedDayFilter === 'All'" @click="refreshTeacherData" class="px-6 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-900 dark:text-white rounded-xl font-bold transition-all border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-2 group">
             <svg class="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             Reload Data
           </button>
         </div>
       </div>
 
-      <div v-else class="relative mt-8">
-        <div class="absolute left-[27px] sm:left-[35px] top-6 bottom-10 w-[3px] bg-slate-200/50 dark:bg-slate-700/50 z-0 rounded-full overflow-hidden">
+      <!-- Active Schedule -->
+      <div v-else class="relative mt-6 sm:mt-8">
+        <!-- Timeline line -->
+        <div class="absolute left-[23px] sm:left-[35px] top-6 bottom-10 w-[2px] sm:w-[3px] bg-slate-200/50 dark:bg-slate-700/50 z-0 rounded-full overflow-hidden">
           <div class="w-full h-1/3 bg-gradient-to-b from-transparent via-indigo-500 to-transparent animate-data-flow"></div>
         </div>
 
-        <div class="space-y-16">
-          <div v-for="(classes, day, index) in groupedSchedule" :key="day" class="relative animate-fade-in-up" :style="`animation-delay: ${0.15 * index}s;`">
+        <div class="space-y-8 sm:space-y-12">
+          <div v-for="(classes, day, index) in displayedSchedule" :key="day" class="relative animate-fade-in-up" :style="`animation-delay: ${0.1 * index}s;`">
             
-            <div class="sticky top-[96px] z-30 py-4 flex items-center gap-6 mb-6 backdrop-blur-2xl bg-[#F1F5F9]/80 dark:bg-[#0B1120]/80 -ml-4 pl-4 rounded-r-3xl">
-              <div class="relative flex items-center justify-center w-10 h-10 shrink-0">
+            <!-- Day Header -->
+            <div class="sticky top-[60px] sm:top-[96px] z-30 py-2 sm:py-3 px-3 sm:px-4 flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 shadow-sm border border-white/50 dark:border-slate-700/50 rounded-xl sm:rounded-2xl w-max ml-0 sm:ml-2">
+              <div class="relative flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 shrink-0">
                 <div class="absolute inset-0 bg-indigo-400 rounded-full animate-ping opacity-30"></div>
-                <div class="w-6 h-6 rounded-full bg-white dark:bg-slate-900 border-[5px] border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.6)] z-10"></div>
+                <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white dark:bg-slate-900 border-[3px] sm:border-[4px] border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] z-10"></div>
               </div>
-              <h3 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">{{ day }}</h3>
+              <h3 class="text-base sm:text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase pr-2">{{ day }}</h3>
             </div>
 
-            <div class="flex flex-col gap-6 pl-12 sm:pl-16 relative z-10">
-              
-              <div v-for="cls in classes" :key="cls.time + cls.room" class="group relative rounded-3xl bg-white/80 dark:bg-slate-800/60 backdrop-blur-xl shadow-sm border border-slate-200/60 dark:border-slate-700/50 hover:shadow-xl hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all duration-300 overflow-hidden flex flex-col sm:flex-row">
+            <div class="flex flex-col gap-4 sm:gap-5 pl-10 sm:pl-16 relative z-10">
+              <div v-for="cls in classes" :key="cls.time + cls.room" class="group relative rounded-2xl sm:rounded-[2rem] bg-white/80 dark:bg-slate-800/60 backdrop-blur-xl shadow-sm border border-slate-200/60 dark:border-slate-700/50 hover:shadow-lg sm:hover:shadow-xl hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all duration-300 overflow-hidden flex flex-col sm:flex-row">
                 
-                <div class="sm:w-48 shrink-0 bg-slate-50 dark:bg-slate-800/80 p-6 flex flex-row sm:flex-col items-center sm:items-start sm:justify-center border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-slate-700/50 relative overflow-hidden gap-4 sm:gap-1">
+                <!-- Timeblock -->
+                <div class="sm:w-40 shrink-0 bg-slate-50/80 dark:bg-slate-800/80 p-3.5 sm:p-5 flex flex-row sm:flex-col items-center justify-between sm:items-start sm:justify-center border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-slate-700/50 relative overflow-hidden gap-2 sm:gap-1">
                   <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
                   
                   <div class="hidden sm:block">
-                    <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Timeblock</p>
+                    <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Timeblock</p>
                   </div>
                   
-                  <template v-if="cls.time && cls.time.includes('-')">
-                    <p class="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900 dark:text-white font-mono leading-none">{{ cls.time.split('-')[0].trim() }}</p>
-                    <div class="text-slate-300 dark:text-slate-600 sm:my-1 opacity-70">
-                      <svg class="w-5 h-5 -rotate-90 sm:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-                    </div>
-                    <p class="text-xl sm:text-2xl font-black tracking-tighter text-slate-500 dark:text-slate-400 font-mono leading-none">{{ cls.time.split('-')[1].trim() }}</p>
-                  </template>
-                  <template v-else>
-                    <p class="text-3xl font-black tracking-tighter text-slate-900 dark:text-white font-mono">{{ cls.time }}</p>
-                  </template>
+                  <div class="flex flex-row sm:flex-col items-center sm:items-start gap-1 sm:gap-0">
+                    <template v-if="cls.time && cls.time.includes('-')">
+                      <p class="text-lg sm:text-3xl font-black tracking-tighter text-slate-900 dark:text-white font-mono leading-none">{{ cls.time.split('-')[0].trim() }}</p>
+                      <div class="text-slate-300 dark:text-slate-600 sm:my-1 mx-1 sm:mx-0 opacity-70">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 rotate-0 sm:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" class="sm:hidden"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 14l-7 7m0 0l-7-7m7-7V3" class="hidden sm:block"></path></svg>
+                      </div>
+                      <p class="text-base sm:text-2xl font-black tracking-tighter text-slate-500 dark:text-slate-400 font-mono leading-none">{{ cls.time.split('-')[1].trim() }}</p>
+                    </template>
+                    <template v-else>
+                      <p class="text-lg sm:text-3xl font-black tracking-tighter text-slate-900 dark:text-white font-mono">{{ cls.time }}</p>
+                    </template>
+                  </div>
+
+                  <div class="sm:hidden flex items-center gap-1 px-2 py-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-md text-[9px] font-black font-mono uppercase tracking-wider shadow-sm">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    {{ cls.room }}
+                  </div>
                 </div>
 
-                <div class="flex-grow p-6 sm:p-8 flex flex-col relative z-10 justify-between">
-                  
+                <!-- Main Content -->
+                <div class="flex-grow p-4 sm:p-6 flex flex-col relative z-10 justify-between">
                   <div>
-                    <div class="flex flex-wrap items-center gap-2 mb-5">
-                      <div class="flex items-center gap-1.5 px-3 py-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-[11px] font-black font-mono uppercase tracking-wider shadow-sm">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+                      <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-md text-[10px] font-black font-mono uppercase tracking-wider shadow-sm">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         {{ cls.room }}
                       </div>
 
-                      <div v-if="cls.department && cls.department !== '?'" class="flex items-center px-2.5 py-1 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-fuchsia-100 dark:border-fuchsia-500/20 truncate max-w-[200px]" :title="cls.department">
+                      <div v-if="cls.department && cls.department !== '?'" class="flex items-center px-2 py-0.5 sm:py-1 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 rounded-md text-[9px] font-black font-khmer uppercase tracking-widest border border-fuchsia-100 dark:border-fuchsia-500/20 truncate max-w-[120px] sm:max-w-[150px]" :title="cls.department">
                         {{ cls.department }}
                       </div>
 
-                      <div v-if="extractGen(cls.group)" class="flex items-center px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20">
+                      <div v-if="extractGen(cls.group)" class="flex items-center px-2 py-0.5 sm:py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md text-[9px] font-black font-khmer uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20">
                         ជំនាន់ទី {{ extractGen(cls.group) }}
                       </div>
                       
-                      <div v-if="cls.year && cls.year !== '?'" class="flex items-center px-2.5 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-blue-100 dark:border-blue-500/20">
+                      <div v-if="cls.year && cls.year !== '?'" class="flex items-center px-2 py-0.5 sm:py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md text-[9px] font-black font-khmer uppercase tracking-widest border border-blue-100 dark:border-blue-500/20">
                         ឆ្នាំទី {{ cls.year }}
                       </div>
 
-                      <div v-if="cls.semester && cls.semester !== '?'" class="flex items-center px-2.5 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-amber-100 dark:border-amber-500/20">
+                      <div v-if="cls.semester && cls.semester !== '?'" class="flex items-center px-2 py-0.5 sm:py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md text-[9px] font-black font-khmer uppercase tracking-widest border border-amber-100 dark:border-amber-500/20">
                         ឆមាសទី {{ cls.semester }}
                       </div>
                     </div>
 
-                    <h4 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-8">{{ cls.subject }}</h4>
+                    <h4 class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-khmer leading-snug sm:leading-tight mb-4 sm:mb-6">
+                      {{ cleanSubjectName(cls.subject) }}
+                    </h4>
                   </div>
                   
-                  <div class="flex flex-wrap items-center gap-3 pt-5 border-t border-slate-100 dark:border-slate-700/50">
-                    <button @click="openTrackingForm(cls)" class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 px-4 py-2.5 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all duration-300 cursor-pointer w-max hover:-translate-y-0.5 group/btn">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                  <!-- Action Buttons -->
+                  <div class="flex flex-row items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-100 dark:border-slate-700/50">
+                    <button @click="openTrackingForm(cls)" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-indigo-50 dark:bg-indigo-500/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all duration-300">
+                      <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                       Track: {{ cls.group }}
                     </button>
 
-                    <button @click="openHistoryView(cls)" class="flex items-center gap-2 bg-white dark:bg-slate-800 shadow-sm px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-cyan-400 dark:hover:border-cyan-500 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all duration-300 cursor-pointer w-max hover:-translate-y-0.5 group/btn2">
-                      <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      View History
+                    <button @click="openHistoryView(cls)" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-white dark:bg-slate-800 shadow-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-cyan-400 hover:text-cyan-600 dark:hover:border-cyan-500 dark:hover:text-cyan-400 transition-all duration-300">
+                      <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      History
                     </button>
                   </div>
 
@@ -226,8 +244,47 @@ const mySchedule = ref([]);
 const isLoading = ref(true);
 const hasError = ref(false);
 
-const goToProfile = () => {
-  router.push('/profile');
+// 🔥 Dropdown State
+const activeTab = ref('today'); // 'today' or 'week'
+const selectedDayFilter = ref('All');
+const isDropdownOpen = ref(false);
+
+const englishDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const todayName = computed(() => {
+  const dayIndex = new Date().getDay();
+  return englishDays[dayIndex];
+});
+
+// 🔥 Auto-extract unique days that actually have classes (WITH TRIM FIX)
+const availableDays = computed(() => {
+  const days = new Set();
+  mySchedule.value.forEach(cls => {
+    if (cls.day && cls.day.trim() !== '') {
+      const cleanDay = cls.day.trim();
+      const dayName = cleanDay.charAt(0).toUpperCase() + cleanDay.slice(1).toLowerCase();
+      days.add(dayName);
+    }
+  });
+  
+  // Sort naturally by days of the week
+  const order = { 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7 };
+  return Array.from(days).sort((a, b) => (order[a] || 99) - (order[b] || 99));
+});
+
+// Handle Day Selection
+const selectDay = (day) => {
+  selectedDayFilter.value = day;
+  activeTab.value = 'week';
+  isDropdownOpen.value = false;
+};
+
+const cleanSubjectName = (subject) => {
+  if (!subject) return '';
+  return subject
+    .replace(/\s+/g, ' ')           
+    .replace(/\s*\(\s*/g, ' (')     
+    .replace(/\s*\)\s*/g, ')')      
+    .trim();                        
 };
 
 const openTrackingForm = (cls) => {
@@ -266,23 +323,16 @@ const openHistoryView = (cls) => {
   });
 };
 
-const getInitials = (nameEn, nameKh) => {
-  if (nameEn && nameEn !== 'N/A') return nameEn.charAt(0).toUpperCase();
-  if (nameKh) return nameKh.charAt(0);
-  return '?';
-};
-
-const refreshTeacherData = async () => {
+const refreshTeacherData = async (showLoader = true) => {
   const token = localStorage.getItem('duc_teacher_token');
   if (token) teacher.value = JSON.parse(token);
   
   if (teacher.value) {
-    isLoading.value = true;
+    if (showLoader) isLoading.value = true;
     hasError.value = false;
     
     try {
       const res = await fetch(`https://duc-teacher-tracking.onrender.com/api/my-schedule?name=${encodeURIComponent(teacher.value.nameKh)}`);
-      
       if (!res.ok) throw new Error('Network response was not ok');
       
       const data = await res.json();
@@ -292,46 +342,60 @@ const refreshTeacherData = async () => {
         throw new Error('API returned unsuccessful response');
       }
     } catch (err) {
-      console.error("Fetch Error:", err);
-      hasError.value = true;
+      if (showLoader) hasError.value = true;
     } finally {
-      isLoading.value = false;
+      if (showLoader) isLoading.value = false;
     }
   }
 };
 
-onActivated(() => {
-  refreshTeacherData();
+onActivated(() => { 
+  refreshTeacherData(false); 
 });
 
 onMounted(() => {
-  const theme = localStorage.getItem('theme') || 'system';
-  if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
-
   const token = localStorage.getItem('duc_teacher_token');
   if (!token) {
     router.push('/login');
     return;
   }
-  
-  refreshTeacherData();
+  refreshTeacherData(true);
 });
 
-const groupedSchedule = computed(() => {
+// 🔥 SMART DISPLAY LOGIC (WITH TRIM FIX)
+const displayedSchedule = computed(() => {
   const groups = {};
   const validClasses = mySchedule.value.filter(cls => {
     return (cls.subject && cls.subject.trim() !== '') || (cls.time && cls.time.trim() !== '');
   });
 
-  validClasses.forEach(cls => {
-    if (!groups[cls.day]) groups[cls.day] = [];
-    groups[cls.day].push(cls);
+  let classesToShow = validClasses;
+
+  // If "Today's Classes" is selected
+  if (activeTab.value === 'today') {
+    classesToShow = validClasses.filter(cls => 
+      cls.day && cls.day.trim().toLowerCase() === todayName.value.toLowerCase()
+    );
+    if (classesToShow.length === 0) return {}; 
+  } 
+  // If specific day is selected from Dropdown
+  else if (activeTab.value === 'week' && selectedDayFilter.value !== 'All') {
+    classesToShow = validClasses.filter(cls => 
+      cls.day && cls.day.trim().toLowerCase() === selectedDayFilter.value.toLowerCase()
+    );
+    if (classesToShow.length === 0) return {};
+  }
+
+  // Grouping by Day
+  classesToShow.forEach(cls => {
+    // Normalize day name capitalization
+    const cleanDay = cls.day.trim();
+    const dayKey = cleanDay.charAt(0).toUpperCase() + cleanDay.slice(1).toLowerCase();
+    if (!groups[dayKey]) groups[dayKey] = [];
+    groups[dayKey].push(cls);
   });
 
+  // Sorting by Time
   Object.keys(groups).forEach(day => {
     groups[day].sort((a, b) => {
       const getHour = (t) => t ? parseInt(t.match(/(\d+):/)?.[1] || 99) : 99;
@@ -345,20 +409,9 @@ const groupedSchedule = computed(() => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Siemreap&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
-
 .font-sans { font-family: 'Inter', sans-serif; }
 .font-khmer { font-family: 'Siemreap', sans-serif; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
-
-@keyframes blob {
-  0% { transform: translate(0px, 0px) scale(1); }
-  33% { transform: translate(30px, -50px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
-  100% { transform: translate(0px, 0px) scale(1); }
-}
-.animate-blob { animation: blob 15s infinite alternate; }
-.animation-delay-2000 { animation-delay: 2s; }
-.animation-delay-4000 { animation-delay: 4s; }
 
 @keyframes dataFlow {
   0% { transform: translateY(-100%); opacity: 0; }
@@ -366,20 +419,23 @@ const groupedSchedule = computed(() => {
   100% { transform: translateY(300%); opacity: 0; }
 }
 .animate-data-flow { animation: dataFlow 3s ease-in-out infinite; }
+.animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
-.animate-fade-in-down { animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.animate-fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
-
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(40px); }
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
 
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
+
+.fade-scale-enter-active, .fade-scale-leave-active { transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-scale-enter-from, .fade-scale-leave-to { opacity: 0; transform: scale(0.9) translateY(-10px); }
 </style>
