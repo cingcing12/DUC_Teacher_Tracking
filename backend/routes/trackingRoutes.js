@@ -14,7 +14,6 @@ let masterSheetCache = {
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 const getMasterRows = async (sheets, forceFresh = false) => {
-    // If frontend sends ?fresh=true, we SKIP the RAM cache completely!
     if (!forceFresh && masterSheetCache.rows && (Date.now() - masterSheetCache.lastFetch < CACHE_TTL)) {
         console.log("⚡ Serving from Fast RAM Cache!");
         return masterSheetCache.rows;
@@ -49,14 +48,183 @@ const calculateHours = (start, end) => {
     return `${hrs} ម៉ោង ${formattedMins} នាទី`;
 };
 
-// ==========================================
-// ANTI-BROWSER CACHE MIDDLEWARE
-// ==========================================
 const noCache = (req, res, next) => {
     res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate, max-age=0');
     res.header('Expires', '-1');
     res.header('Pragma', 'no-cache');
     next();
+};
+
+// ==========================================
+// 🔥 HELPER: OBLITERATE SPACES FOR FUZZY MATCHING
+// ==========================================
+const normalizeText = (str) => {
+    return String(str || "")
+        .replace(/[\s\u200B-\u200D\uFEFF]/g, '') 
+        .toLowerCase();
+};
+
+// ==========================================
+// 🔥 HELPER: STRICT VISUAL ATTENDANCE VALIDATOR + PAINTER
+// ==========================================
+const getColumnLetter = (colIndex) => {
+    let letter = '';
+    let temp = colIndex;
+    while (temp >= 0) {
+        letter = String.fromCharCode((temp % 26) + 65) + letter;
+        temp = Math.floor(temp / 26) - 1;
+    }
+    return letter;
+};
+
+const markVisualAttendance = async (sheets, cohort, subject, teacher, date, status) => {
+    try {
+        const dateObj = new Date(date);
+        const monthNum = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const targetDay = parseInt(dateObj.getDate());
+        
+        const KHMER_MONTHS = {
+            "01": "មករា", "02": "កុម្ភៈ", "03": "មីនា", "04": "មេសា", "05": "ឧសភា", "06": "មិថុនា",
+            "07": "កក្កដា", "08": "សីហា", "09": "កញ្ញា", "10": "តុលា", "11": "វិច្ឆិកា", "12": "ធ្នូ"
+        };
+        const khmerMonth = normalizeText(KHMER_MONTHS[monthNum]);
+
+        const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
+        const tabs = sheetMeta.data.sheets; 
+
+        let targetSheetId = null;
+        let targetTabTitle = null;
+        let targetRowIndex = -1;
+        let targetColIndex = -1;
+
+        const cleanTeacher = normalizeText(String(teacher).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
+        const cleanSubject = normalizeText(subject);
+        const cleanCohort = normalizeText(String(cohort).replace(/^g\d+-/i, ''));
+
+        for (const tab of tabs) {
+            const tabTitle = tab.properties.title;
+            const response = await sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEETS.ATTENDANCE,
+                range: `'${tabTitle}'!A1:AZ200`
+            });
+            const rows = response.data.values || [];
+            if (rows.length < 7) continue;
+
+            const monthRow = rows[5] || [];
+            const monthMap = {};
+            let currentMonth = "";
+            for (let c = 6; c < 100; c++) { 
+                if (monthRow[c] && String(monthRow[c]).trim() !== "") {
+                    currentMonth = normalizeText(monthRow[c]);
+                }
+                monthMap[c] = currentMonth;
+            }
+
+            let bestRowMatch = -1;
+            let fallbackRowMatch = -1;
+
+            for (let r = 7; r < rows.length; r++) { 
+                if (!rows[r]) continue;
+                const rowSubject = normalizeText(rows[r][2]); 
+                const rowTeacher = normalizeText(rows[r][3]); 
+                const rowCohortClean = normalizeText(rows[r][6]).replace(/^g\d+-/i, '');
+
+                if (rowSubject === cleanSubject && rowTeacher.includes(cleanTeacher)) {
+                    if (fallbackRowMatch === -1) fallbackRowMatch = r;
+                    if (rowCohortClean.includes(cleanCohort) || cleanCohort.includes(rowCohortClean)) {
+                        bestRowMatch = r;
+                        break;
+                    }
+                }
+            }
+
+            targetRowIndex = bestRowMatch !== -1 ? bestRowMatch : fallbackRowMatch;
+
+            if (targetRowIndex !== -1) {
+                targetSheetId = tab.properties.sheetId;
+                targetTabTitle = tabTitle;
+                let blockHeaderRowIdx = -1;
+                
+                for (let i = targetRowIndex; i >= 6; i--) {
+                    if (!rows[i]) continue;
+                    const checkStr = normalizeText(rows[i][0]) + normalizeText(rows[i][1]) + normalizeText(rows[i][2]);
+                    if (checkStr.includes("ថ្ងៃ") || /monday|tuesday|wednesday|thursday|friday|saturday|sunday/i.test(checkStr)) {
+                        blockHeaderRowIdx = i;
+                        break;
+                    }
+                }
+
+                if (blockHeaderRowIdx !== -1) {
+                    const dayRow = rows[blockHeaderRowIdx];
+
+                    // 🔥 STRICT VALIDATION: It MUST find the exact date match! No more auto-correct.
+                    for (let c = 7; c < Math.max(dayRow.length, 100); c++) {
+                        const dayCell = String(dayRow[c] || "").trim();
+                        if (dayCell !== "" && !isNaN(dayCell) && monthMap[c] === khmerMonth) {
+                            if (parseInt(dayCell) === targetDay) {
+                                targetColIndex = c;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (targetColIndex !== -1) break; 
+            }
+        }
+
+        // 🔥 REJECT IF NOT FOUND
+        if (targetRowIndex === -1 || targetColIndex === -1) {
+            return { success: false, message: `The date ${date} does not match the scheduled days for this class!` };
+        }
+
+        let bgRed = 1, bgGreen = 1, bgBlue = 1; 
+        let txtRed = 0, txtGreen = 0, txtBlue = 0; 
+
+        if (status === "✓") {
+            bgRed = 0.2; bgGreen = 0.66; bgBlue = 0.33; 
+            txtRed = 1; txtGreen = 1; txtBlue = 1; 
+        } else if (status === "A") {
+            bgRed = 0.8; bgGreen = 0.0; bgBlue = 0.0; 
+            txtRed = 1; txtGreen = 1; txtBlue = 1; 
+        } else if (status === "") {
+            bgRed = 1; bgGreen = 1; bgBlue = 1; 
+        }
+
+        const requests = [{
+            updateCells: {
+                range: {
+                    sheetId: targetSheetId,
+                    startRowIndex: targetRowIndex,
+                    endRowIndex: targetRowIndex + 1,
+                    startColumnIndex: targetColIndex,
+                    endColumnIndex: targetColIndex + 1
+                },
+                rows: [{
+                    values: [{
+                        userEnteredValue: { stringValue: status },
+                        userEnteredFormat: {
+                            backgroundColor: { red: bgRed, green: bgGreen, blue: bgBlue },
+                            textFormat: { foregroundColor: { red: txtRed, green: txtGreen, blue: txtBlue }, bold: true },
+                            horizontalAlignment: "CENTER",
+                            verticalAlignment: "MIDDLE"
+                        }
+                    }]
+                }],
+                fields: "userEnteredValue,userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
+            }
+        }];
+
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId: SPREADSHEETS.ATTENDANCE,
+            requestBody: { requests }
+        });
+
+        return { success: true };
+
+    } catch (error) {
+        console.error("Error marking visual attendance:", error);
+        return { success: false, message: "System error while verifying the class date." };
+    }
 };
 
 // ==========================================
@@ -67,6 +235,12 @@ router.post("/track-lesson", async (req, res) => {
     const { teacherNameKh, department, subject, cohort, room, week, date, startTime, endTime, lessonNo, hours, content, notes, year, semester } = req.body;
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
+
+    // 🔥 STRICT VALIDATION: Ensure the date exists in the schedule BEFORE saving!
+    const visualRes = await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, "✓");
+    if (!visualRes.success) {
+        return res.status(400).json({ success: false, message: visualRes.message });
+    }
 
     const pureCohort = extractPureCohort(cohort);
     let fullMajorName = pureCohort; 
@@ -103,7 +277,6 @@ router.post("/track-lesson", async (req, res) => {
       requestBody: { values: rowData },
     });
 
-    // 🔥 OBLITERATE THE CACHE: Forces the NEXT request to fetch live data
     masterSheetCache.rows = null;
     masterSheetCache.lastFetch = 0;
 
@@ -134,7 +307,6 @@ router.get("/class-history", noCache, async (req, res) => {
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
-    // 🔥 CHECK FOR FRESH OVERRIDE
     const forceFresh = req.query.fresh === 'true';
     const rows = await getMasterRows(sheets, forceFresh); 
     
@@ -214,9 +386,23 @@ router.put("/class-history", noCache, async (req, res) => {
     if (rowIndex === -1) return res.status(404).json({ success: false, message: "Record not found" });
 
     const newHours = calculateHours(startTime, endTime);
+    const oldDate = String(existingData[9] || "").replace(/'/g, "").trim();
     const safeDate = date ? `'${date}` : existingData[9] || "";
     const safeStartTime = startTime ? `'${startTime}` : existingData[10] || "";
     const safeEndTime = endTime ? `'${endTime}` : existingData[11] || "";
+
+    const newDate = date ? String(date).trim() : oldDate;
+    
+    // 🔥 STRICT VALIDATION DURING EDIT: Validate new date BEFORE allowing the edit
+    if (oldDate && newDate && oldDate !== newDate) {
+        const visualRes = await markVisualAttendance(sheets, cohort, subject, teacher, newDate, "✓");
+        if (!visualRes.success) {
+            return res.status(400).json({ success: false, message: visualRes.message });
+        }
+        await markVisualAttendance(sheets, cohort, subject, teacher, oldDate, ""); // Erase old date
+    } else {
+        await markVisualAttendance(sheets, cohort, subject, teacher, newDate, "✓");
+    }
 
     const updatedRow = [
       existingData[0] || "", existingData[1] || "", existingData[2] || "", existingData[3] || "", existingData[4] || "", 
@@ -246,7 +432,6 @@ router.put("/class-history", noCache, async (req, res) => {
 // ==========================================
 router.delete("/class-history", noCache, async (req, res) => {
   try {
-    // 🔥 ADDED 'date' TO THE QUERY SO WE KNOW EXACTLY WHICH ONE TO KILL
     const { cohort, week, subject, teacher, date } = req.query;
     
     const pureCohort = extractPureCohort(cohort).trim().toLowerCase();
@@ -258,21 +443,22 @@ router.delete("/class-history", noCache, async (req, res) => {
 
     const rows = await getMasterRows(sheets);
     let rowIndex = -1;
+    let deletedDate = "";
 
     for (let i = 0; i < rows.length; i++) {
       const dbCohort = String(rows[i][6] || "").trim().toLowerCase();
       const dbSubject = String(rows[i][5] || "").trim().toLowerCase();
       const dbTeacher = String(rows[i][7] || "");
-      const dbDate = String(rows[i][9] || "").replace(/'/g, "").trim(); // Removes the ' from the sheet date
+      const dbDate = String(rows[i][9] || "").replace(/'/g, "").trim(); 
 
-      // 🔥 IT NOW CHECKS THE EXACT WEEK *AND* EXACT DATE!
       if (dbCohort === pureCohort && dbSubject === querySubject && String(rows[i][8]) == String(week)) {
           let isMatch = true;
           if (targetTeacher && !dbTeacher.includes(targetTeacher)) isMatch = false;
-          if (date && dbDate !== String(date).trim()) isMatch = false; // Ensures it's the exact same day
+          if (date && dbDate !== String(date).trim()) isMatch = false; 
 
           if (isMatch) {
               rowIndex = i + 2; 
+              deletedDate = dbDate;
               break;
           }
       }
@@ -299,6 +485,10 @@ router.delete("/class-history", noCache, async (req, res) => {
     masterSheetCache.rows = null;
     masterSheetCache.lastFetch = 0;
 
+    if (deletedDate) {
+        await markVisualAttendance(sheets, cohort, subject, teacher, deletedDate, ""); 
+    }
+    
     res.json({ success: true, message: "Deleted successfully" });
   } catch (error) { 
     console.error(error);
@@ -306,7 +496,9 @@ router.delete("/class-history", noCache, async (req, res) => {
   }
 });
 
+// ==========================================
 // GET: ADMIN TRACKING DIRECTORY
+// ==========================================
 router.get('/tracking-directory', noCache, async (req, res) => {
   try {
     const authClient = await auth.getClient();
@@ -368,5 +560,4 @@ router.get('/tracking-directory', noCache, async (req, res) => {
   }
 });
 
-// MAJORS AND FACULTY ROUTES OMITTED FOR BREVITY (Keep them exactly the same as before!)
 module.exports = router;

@@ -144,7 +144,7 @@ const handleTeacherLogin = async () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: teacherForm.value.name.trim(), // Strip accidental spaces from name
+        name: teacherForm.value.name.trim(),
         phone: formattedPhone
       })
     });

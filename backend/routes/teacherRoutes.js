@@ -281,7 +281,6 @@ router.post("/update-teacher", async (req, res) => {
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
-    // 1. Fetch the exact Sheet ID needed for merging cells later
     const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TEACHER });
     const targetSheet = sheetInfo.data.sheets.find(s => s.properties.title === tab);
     if (!targetSheet) return res.status(404).json({ success: false, message: "Sheet tab not found" });
@@ -294,7 +293,6 @@ router.post("/update-teacher", async (req, res) => {
     const rows = response.data.values;
     if (!rows) return res.status(404).json({ success: false, message: "Sheet not found" });
 
-    // 2. Find the starting row
     let targetRowIdx = -1;
     for (let i = 4; i < rows.length; i++) {
       const rowNameKh = rows[i][1] ? String(rows[i][1]).trim() : "";
@@ -305,7 +303,6 @@ router.post("/update-teacher", async (req, res) => {
     }
     if (targetRowIdx === -1) return res.status(404).json({ success: false, message: "Teacher not found in spreadsheet" });
 
-    // 3. Identify current block size
     let teacherBlockIndices = [targetRowIdx];
     for (let i = targetRowIdx + 1; i < rows.length; i++) {
       const colA = rows[i][0] ? String(rows[i][0]).trim() : "";
@@ -352,7 +349,6 @@ router.post("/update-teacher", async (req, res) => {
       }
     }
 
-    // 4. Calculate if we need MORE rows than the teacher currently has
     let maxRowsNeeded = teacherBlockIndices.length;
     const slotCounts = {};
     if (teacher.subjects && Array.isArray(teacher.subjects)) {
@@ -375,7 +371,6 @@ router.post("/update-teacher", async (req, res) => {
       return r;
     });
 
-    // 🔥 5. Dynamically insert missing rows into Google Sheets to push other teachers down
     const rowsToAdd = maxRowsNeeded - blockData.length;
     if (rowsToAdd > 0) {
       await sheets.spreadsheets.batchUpdate({
@@ -394,11 +389,9 @@ router.post("/update-teacher", async (req, res) => {
           }]
         }
       });
-      // Expand our local block memory to match
       for (let i = 0; i < rowsToAdd; i++) blockData.push(new Array(65).fill(""));
     }
 
-    // 6. Wipe only the curriculum columns within this block
     for (let r = 0; r < blockData.length; r++) {
       for (const y in slots) {
         for (const s in slots[y]) {
@@ -412,7 +405,6 @@ router.post("/update-teacher", async (req, res) => {
       }
     }
 
-    // 7. Update basic info on the TOP row only
     blockData[0][0] = teacher.id || blockData[0][0] || "";
     blockData[0][1] = teacher.nameKh || blockData[0][1] || "";
     blockData[0][2] = teacher.nameEn || blockData[0][2] || "";
@@ -421,7 +413,6 @@ router.post("/update-teacher", async (req, res) => {
     blockData[0][5] = teacher.major || blockData[0][5] || "";
     blockData[0][6] = teacher.phone || blockData[0][6] || "";
 
-    // 8. Safely loop and stack subjects dynamically
     const usedSlots = {};
     if (teacher.subjects && Array.isArray(teacher.subjects)) {
       for (const sub of teacher.subjects) {
@@ -449,7 +440,6 @@ router.post("/update-teacher", async (req, res) => {
       }
     }
 
-    // 9. Blast the Data Updates
     const startRow = targetRowIdx + 1; 
     const endRow = targetRowIdx + blockData.length; 
     await sheets.spreadsheets.values.update({
@@ -459,7 +449,6 @@ router.post("/update-teacher", async (req, res) => {
       requestBody: { values: blockData }
     });
 
-    // 🔥 10. Automatically MERGE Columns A through G vertically for the teacher
     if (blockData.length > 1) {
       await sheets.spreadsheets.batchUpdate({
         spreadsheetId: SPREADSHEETS.TEACHER,
@@ -501,14 +490,13 @@ router.post("/update-teacher", async (req, res) => {
 });
 
 // ==========================================
-// SECURE LOGIN
+// SECURE LOGIN (WITH MULTI-DEPARTMENT FINDER)
 // ==========================================
-// 🔥 NEW HELPER: Strips out the prefixes and invisible spaces for a perfect match!
 const cleanTeacherName = (str) => {
   if (!str) return "";
   return String(str)
-    .replace(/លោកគ្រូ|អ្នកគ្រូ/g, "") // Removes Mr/Ms Teacher
-    .replace(/\u200B/g, "")          // Removes sneaky invisible Khmer zero-width spaces
+    .replace(/លោកគ្រូ|អ្នកគ្រូ/g, "")
+    .replace(/\u200B/g, "")
     .trim();
 };
 
@@ -517,7 +505,6 @@ router.post("/login", async (req, res) => {
     const { name, phone } = req.body;
     if (!name || !phone) return res.status(400).json({ success: false, message: "Name and Phone required" });
 
-    // 🔥 1. Clean the user's input before checking!
     const cleanInputName = cleanTeacherName(name).toLowerCase();
     const cleanInputPhone = normalizePhone(phone);
 
@@ -530,6 +517,7 @@ router.post("/login", async (req, res) => {
     const sheetNames = response.data.sheets.map((sheet) => sheet.properties.title);
 
     let loggedInTeacher = null;
+    let foundDepartments = []; // 🔥 We create an array to collect ALL departments!
 
     for (const tab of sheetNames) {
       if (tab.toLowerCase().includes("schedule") || tab.toLowerCase().includes("year")) continue;
@@ -542,33 +530,55 @@ router.post("/login", async (req, res) => {
       if (!rows) continue;
 
       for (const row of rows) {
-        // Keep the original names safe so we can send them to the Vue frontend later
+        const teacherId = row[0] ? String(row[0]).trim() : "";
         const originalNameKh = row[1] ? row[1].trim() : "";
         const originalNameEn = row[2] ? row[2].trim() : "";
+        const teacherDegree = row[4] ? String(row[4]).trim() : "";
+        const teacherMajor = row[5] ? String(row[5]).trim() : "";
         
-        // 🔥 2. Clean the database names so they match the input!
         const dbNameKh = cleanTeacherName(originalNameKh).toLowerCase();
         const dbNameEn = cleanTeacherName(originalNameEn).toLowerCase();
         
         const rawRowPhone = row[6] ? String(row[6]).trim() : "";
         const sheetPhones = getNormalizedPhoneArray(rawRowPhone);
 
-        // 🔥 3. Compare the completely cleaned names!
+        // If we find a match in THIS tab...
         if ((dbNameKh === cleanInputName || dbNameEn === cleanInputName) && sheetPhones.includes(cleanInputPhone)) {
           
-          const avatarUrl = await getAvatarUrl(sheets, originalNameKh, rawRowPhone);
+          // Add this tab (department) to our collection!
+          if (!foundDepartments.includes(tab)) {
+              foundDepartments.push(tab);
+          }
 
-          // We send back 'originalNameKh' so the UI still displays "លោកគ្រូ..." nicely!
-          loggedInTeacher = { nameKh: originalNameKh, nameEn: originalNameEn, department: tab, phone: rawRowPhone, avatarUrl };
-          break;
+          // We only need to grab the avatar and base details once
+          if (!loggedInTeacher) {
+              const avatarUrl = await getAvatarUrl(sheets, originalNameKh, rawRowPhone);
+              loggedInTeacher = { 
+                  id: teacherId,
+                  nameKh: originalNameKh, 
+                  nameEn: originalNameEn, 
+                  degree: teacherDegree,
+                  major: teacherMajor,
+                  phone: rawRowPhone, 
+                  avatarUrl 
+              };
+          }
+          
+          break; // Break the inner row loop, but CONTINUE checking the next tab!
         }
       }
-      if (loggedInTeacher) break;
     }
 
-    if (loggedInTeacher) res.json({ success: true, teacher: loggedInTeacher });
-    else res.status(401).json({ success: false, message: "Invalid credentials" });
+    if (loggedInTeacher) {
+      // 🔥 Combine all found departments with a comma, e.g., "Dept1, Dept2, Dept3"
+      loggedInTeacher.department = foundDepartments.join(", ");
+      res.json({ success: true, teacher: loggedInTeacher });
+    } else {
+      res.status(401).json({ success: false, message: "Invalid credentials" });
+    }
+    
   } catch (error) {
+    console.error("Login Error:", error);
     res.status(500).json({ success: false, message: "Server error during login" });
   }
 });
