@@ -29,208 +29,151 @@ app.get("/", (req, res) => {
 });
 
 // ==========================================
-// 🔥 THE NIGHTLY ATTENDANCE AUDITOR
+// 🔥 THE PRODUCTION ATTENDANCE AUDITOR
 // ==========================================
 const normalizeText = (str) => String(str || "").replace(/[\s\u200B-\u200D\uFEFF]/g, '').toLowerCase();
 
-const getColumnLetter = (colIndex) => {
-    let letter = '';
-    let temp = colIndex;
-    while (temp >= 0) {
-        letter = String.fromCharCode((temp % 26) + 65) + letter;
-        temp = Math.floor(temp / 26) - 1;
-    }
-    return letter;
-};
-
-// Internal function for the Cron Job to mark "A"
-const markAbsence = async (sheets, cohort, subject, teacher, dateStr) => {
-    try {
-        const dateObj = new Date(dateStr);
-        const monthNum = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const targetDay = parseInt(dateObj.getDate());
-        
-        const KHMER_MONTHS = {
-            "01": "មករា", "02": "កុម្ភៈ", "03": "មីនា", "04": "មេសា", "05": "ឧសភា", "06": "មិថុនា",
-            "07": "កក្កដា", "08": "សីហា", "09": "កញ្ញា", "10": "តុលា", "11": "វិច្ឆិកា", "12": "ធ្នូ"
-        };
-        const khmerMonth = normalizeText(KHMER_MONTHS[monthNum]);
-
-        const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
-        const tabs = sheetMeta.data.sheets; 
-
-        let targetSheetId = null;
-        let targetRowIndex = -1;
-        let targetColIndex = -1;
-
-        const cleanTeacher = normalizeText(String(teacher).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
-        const cleanSubject = normalizeText(subject);
-        const cleanCohort = normalizeText(String(cohort).replace(/^g\d+-/i, ''));
-
-        for (const tab of tabs) {
-            const tabTitle = tab.properties.title;
-            const response = await sheets.spreadsheets.values.get({
-                spreadsheetId: SPREADSHEETS.ATTENDANCE,
-                range: `'${tabTitle}'!A1:AZ200`
-            });
-            const rows = response.data.values || [];
-            if (rows.length < 7) continue;
-
-            const monthRow = rows[5] || [];
-            const monthMap = {};
-            for (let c = 6; c < 100; c++) { 
-                if (monthRow[c] && String(monthRow[c]).trim() !== "") monthMap[c] = normalizeText(monthRow[c]);
-            }
-
-            let bestRowMatch = -1, fallbackRowMatch = -1;
-            for (let r = 7; r < rows.length; r++) { 
-                if (!rows[r]) continue;
-                const rowSubject = normalizeText(rows[r][2]); 
-                const rowTeacher = normalizeText(rows[r][3]); 
-                const rowCohortClean = normalizeText(rows[r][6]).replace(/^g\d+-/i, '');
-
-                if (rowSubject === cleanSubject && rowTeacher.includes(cleanTeacher)) {
-                    if (fallbackRowMatch === -1) fallbackRowMatch = r;
-                    if (rowCohortClean.includes(cleanCohort) || cleanCohort.includes(rowCohortClean)) {
-                        bestRowMatch = r; break;
-                    }
-                }
-            }
-
-            targetRowIndex = bestRowMatch !== -1 ? bestRowMatch : fallbackRowMatch;
-
-            if (targetRowIndex !== -1) {
-                targetSheetId = tab.properties.sheetId;
-                let blockHeaderRowIdx = -1;
-                
-                for (let i = targetRowIndex; i >= 6; i--) {
-                    if (!rows[i]) continue;
-                    const checkStr = normalizeText(rows[i][0]) + normalizeText(rows[i][1]) + normalizeText(rows[i][2]);
-                    if (checkStr.includes("ថ្ងៃ") || /monday|tuesday|wednesday|thursday|friday|saturday|sunday/i.test(checkStr)) {
-                        blockHeaderRowIdx = i; break;
-                    }
-                }
-
-                if (blockHeaderRowIdx !== -1) {
-                    const dayRow = rows[blockHeaderRowIdx];
-                    let closestDiff = 999;
-                    let bestCol = -1;
-
-                    for (let c = 7; c < Math.max(dayRow.length, 100); c++) {
-                        const dayCell = String(dayRow[c] || "").trim();
-                        if (dayCell !== "" && !isNaN(dayCell) && monthMap[c] === khmerMonth) {
-                            const diff = Math.abs(parseInt(dayCell) - targetDay);
-                            if (diff < closestDiff) {
-                                closestDiff = diff; bestCol = c;
-                            }
-                        }
-                    }
-                    if (bestCol !== -1 && closestDiff <= 6) targetColIndex = bestCol;
-                }
-                if (targetColIndex !== -1) break; 
-            }
-        }
-
-        if (targetRowIndex === -1 || targetColIndex === -1) return false;
-
-        // Dark Red Background, White Text for "A"
-        const requests = [{
-            updateCells: {
-                range: { sheetId: targetSheetId, startRowIndex: targetRowIndex, endRowIndex: targetRowIndex + 1, startColumnIndex: targetColIndex, endColumnIndex: targetColIndex + 1 },
-                rows: [{
-                    values: [{
-                        userEnteredValue: { stringValue: "A" },
-                        userEnteredFormat: {
-                            backgroundColor: { red: 0.8, green: 0.0, blue: 0.0 },
-                            textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true },
-                            horizontalAlignment: "CENTER", verticalAlignment: "MIDDLE"
-                        }
-                    }]
-                }],
-                fields: "userEnteredValue,userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
-            }
-        }];
-
-        await sheets.spreadsheets.batchUpdate({ spreadsheetId: SPREADSHEETS.ATTENDANCE, requestBody: { requests } });
-        console.log(`🚨 Auto-Marked ABSENT ('A') for ${teacher} - ${subject}`);
-        return true;
-    } catch (error) {
-        console.error("Cron Job Visual Paint Error:", error);
-        return false;
-    }
-};
-
-// ⏰ Runs every single night at 11:59 PM (Phnom Penh Time)
+// ⏰ RUNS EVERY NIGHT AT 11:59 PM (CAMBODIA TIME)
 cron.schedule('59 23 * * *', async () => {
   console.log("🌙 WAKING UP: Running Nightly Attendance Auditor...");
+  
   try {
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
-    // Get today's date in Cambodia time
+    // 🔥 REAL-TIME CLOCK (Cambodia Time)
     const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Phnom_Penh"}));
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const todayName = dayNames[now.getDay()];
-    const todayDateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-
-    console.log(`📅 Auditing for: ${todayName}, ${todayDateStr}`);
-
-    // 1. Get everyone who ACTUALLY taught today
-    const trackRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'MasterTracking'!A2:Q" });
-    const trackedRows = trackRes.data.values || [];
-    const taughtToday = new Set();
-
-    trackedRows.forEach(row => {
-        const dbDate = String(row[9] || "").replace(/'/g, "").trim(); 
-        if (dbDate === todayDateStr) {
-            const subj = normalizeText(row[5]);
-            const teacher = normalizeText(String(row[7]).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
-            taughtToday.add(`${subj}_${teacher}`);
-        }
-    });
-
-    // 2. Cross-reference with the SCHEDULE to see who was SUPPOSED to teach today
-    const schedRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.SCHEDULE, range: "'Current Schedule'!A7:Q200" });
-    const schedRows = schedRes.data.values || [];
+    const todayName = dayNames[now.getDay()]; 
     
-    let currentDayBlock = "";
+    // Formatting YYYY-MM-DD for logs
+    const todayDateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`; 
 
-    for (let r = 0; r < schedRows.length; r++) {
-        const row = schedRows[r];
-        if (!row || row.length === 0) continue;
+    console.log(`📅 [REAL-TIME CLOCK] Auditing ONLY for: ${todayName}, ${todayDateStr}`);
 
-        const dayCell = String(row[1] || "").trim();
-        if (dayCell.includes("-")) {
-            currentDayBlock = dayCell.split("-")[1].trim(); // Gets "Monday"
+    const monthNum = String(now.getMonth() + 1).padStart(2, '0');
+    const targetDay = parseInt(now.getDate());
+    
+    const KHMER_MONTHS = {
+        "01": "មករា", "02": "កុម្ភៈ", "03": "មីនា", "04": "មេសា", "05": "ឧសភា", "06": "មិថុនា",
+        "07": "កក្កដា", "08": "សីហា", "09": "កញ្ញា", "10": "តុលា", "11": "វិច្ឆិកា", "12": "ធ្នូ"
+    };
+    const targetKhmerMonth = normalizeText(KHMER_MONTHS[monthNum]);
+
+    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
+    const tabs = sheetMeta.data.sheets; 
+    const paintRequests = [];
+
+    for (const tab of tabs) {
+        const tabTitle = tab.properties.title;
+        const sheetId = tab.properties.sheetId;
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEETS.ATTENDANCE,
+            range: `'${tabTitle}'!A1:AZ200`
+        });
+        const rows = response.data.values || [];
+        if (rows.length < 7) continue;
+
+        // 🔥 BULLETPROOF MONTH FINDER
+        let monthRowIndex = -1;
+        for (let r = 0; r < 8; r++) {
+            if (rows[r] && rows[r].some(cell => /មករា|កុម្ភៈ|មីនា|មេសា|ឧសភា|មិថុនា|កក្កដា|សីហា|កញ្ញា|តុលា|វិច្ឆិកា|ធ្នូ/.test(normalizeText(cell)))) {
+                monthRowIndex = r;
+                break;
+            }
         }
 
-        // Only scan rows belonging to TODAY
-        if (currentDayBlock === todayName) {
-            const teacherNameRaw = String(row[2] || "").trim(); // Col C is Teacher Name
-            if (!teacherNameRaw) continue;
+        const monthMap = {};
+        if (monthRowIndex !== -1) {
+            let currentMonth = "";
+            for (let c = 6; c < 100; c++) { 
+                if (rows[monthRowIndex][c] && String(rows[monthRowIndex][c]).trim() !== "") {
+                    currentMonth = normalizeText(rows[monthRowIndex][c]);
+                }
+                monthMap[c] = currentMonth;
+            }
+        }
 
-            for (let c = 3; c <= 16; c++) { // Scan all class blocks in the row
-                const cellValue = String(row[c] || "").trim();
-                if (cellValue !== "") {
-                    const lines = cellValue.split("\n").map(l => l.trim()).filter(l => l);
-                    if (lines.length >= 2) {
-                        const cohort = lines[0];
-                        const subject = lines[1];
+        let targetColIndex = -1;
+        let isActiveBlock = false;
 
-                        const cleanSubj = normalizeText(subject);
-                        const cleanTeacher = normalizeText(teacherNameRaw.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
+        for (let r = 6; r < rows.length; r++) {
+            if (!rows[r]) continue;
 
-                        // If they are scheduled, but missing from the tracking sheet...
-                        if (!taughtToday.has(`${cleanSubj}_${cleanTeacher}`)) {
-                            console.log(`⚠️ MISSED CLASS DETECTED: ${teacherNameRaw} did not track ${subject}.`);
-                            await markAbsence(sheets, cohort, subject, teacherNameRaw, todayDateStr);
+            const checkStr = normalizeText(rows[r][0]) + normalizeText(rows[r][1]) + normalizeText(rows[r][2]);
+            const isDayHeader = checkStr.includes("ថ្ងៃ") || /monday|tuesday|wednesday|thursday|friday|saturday|sunday/i.test(checkStr);
+
+            if (isDayHeader) {
+                targetColIndex = -1; 
+                isActiveBlock = false;
+
+                // Check if this block matches today's exact name
+                if (checkStr.includes(todayName.toLowerCase())) {
+                    isActiveBlock = true;
+                    
+                    for (let c = 7; c < Math.max(rows[r].length, 100); c++) {
+                        const dayCell = String(rows[r][c] || "").trim();
+                        
+                        // Look for today's number
+                        if (dayCell !== "" && !isNaN(dayCell) && parseInt(dayCell) === targetDay) {
+                            if (monthRowIndex !== -1) {
+                                if (monthMap[c] === targetKhmerMonth) {
+                                    targetColIndex = c;
+                                    break;
+                                }
+                            } else {
+                                targetColIndex = c;
+                            }
                         }
+                    }
+                    if (targetColIndex !== -1) {
+                        console.log(`🎯 Locked onto Column Index [${targetColIndex}] for ${todayDateStr} in tab ${tabTitle}`);
+                    }
+                }
+                continue; 
+            }
+
+            if (isActiveBlock && targetColIndex !== -1) {
+                const subject = String(rows[r][2] || "").trim(); // Col C
+                const teacher = String(rows[r][3] || "").trim(); // Col D
+
+                if (subject !== "" && teacher !== "") {
+                    const currentStatus = String(rows[r][targetColIndex] || "").trim();
+                    
+                    // If the exact cell is empty, mark "A"
+                    if (currentStatus === "") {
+                        console.log(`🚨 Auto-Marked ABSENT ('A') for ${teacher} - ${subject}`);
+                        
+                        paintRequests.push({
+                            updateCells: {
+                                range: { sheetId: sheetId, startRowIndex: r, endRowIndex: r + 1, startColumnIndex: targetColIndex, endColumnIndex: targetColIndex + 1 },
+                                rows: [{
+                                    values: [{
+                                        userEnteredValue: { stringValue: "A" },
+                                        userEnteredFormat: {
+                                            backgroundColor: { red: 0.8, green: 0.0, blue: 0.0 }, // Dark Red
+                                            textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true }, // White Text
+                                            horizontalAlignment: "CENTER", verticalAlignment: "MIDDLE"
+                                        }
+                                    }]
+                                }],
+                                fields: "userEnteredValue,userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
+                            }
+                        });
                     }
                 }
             }
         }
     }
-    console.log("✅ Nightly Audit Complete.");
+
+    if (paintRequests.length > 0) {
+        await sheets.spreadsheets.batchUpdate({ spreadsheetId: SPREADSHEETS.ATTENDANCE, requestBody: { requests: paintRequests } });
+        console.log(`✅ Painted ${paintRequests.length} absent records for ${todayDateStr} successfully!`);
+    } else {
+        console.log(`✅ No absences found for ${todayDateStr}. Everyone submitted (or no classes scheduled)!`);
+    }
+
   } catch (error) {
       console.error("Nightly auditor failed:", error);
   }
