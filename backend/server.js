@@ -21,16 +21,34 @@ app.use("/api", trackingRoutes);
 app.use("/api", adminRoutes);
 
 app.get("/", (req, res) => {
-  res.status(200).json({ 
-    success: true, 
-    message: "DUC Tracking API is awake and running perfectly!" 
-  });
+    res.status(200).json({ 
+        success: true, 
+        message: "DUC Tracking API is awake and running perfectly!" 
+    });
 });
 
 // ==========================================
 // 🔥 THE API AUDITOR (TRIGGERED EXTERNALLY)
 // ==========================================
 const normalizeText = (str) => String(str || "").replace(/[\s\u200B-\u200D\uFEFF]/g, '').toLowerCase();
+
+// 🔥 UPGRADED: Smart Section Preserver (Synced with Tracking Routes)
+const extractPureCohort = (str) => {
+    if (!str) return '';
+    let s = String(str).trim();
+    if (/^G\d+-/i.test(s)) {
+        const parts = s.split('-');
+        if (parts.length >= 3) {
+            let pure = `${parts[0]}-${parts[1]}`;
+            if (/^[a-zA-Z0-9]{1,3}$/.test(parts[2])) {
+                pure += `-${parts[2]}`;
+            }
+            return pure.toUpperCase();
+        }
+        return s.toUpperCase(); 
+    }
+    return s; 
+};
 
 // 🛑 YOUR SECRET KEY: Make sure this matches the URL in cron-job.org!
 const CRON_SECRET = "DUC_AUDIT_2026_SECRET_KEY_12345"; 
@@ -142,13 +160,17 @@ app.get("/api/admin/run-nightly-audit", async (req, res) => {
                 if (isActiveBlock && targetColIndex !== -1) {
                     const subject = String(rows[r][2] || "").trim(); 
                     const teacher = String(rows[r][3] || "").trim(); 
+                    
+                    // Extract pure cohort for cleaner console logging
+                    const rawCohort = String(rows[r][6] || "").trim();
+                    const pureCohort = extractPureCohort(rawCohort);
 
                     if (subject !== "" && teacher !== "") {
                         const currentStatus = String(rows[r][targetColIndex] || "").trim();
                         
                         // If the exact cell is empty, mark "A"
                         if (currentStatus === "") {
-                            console.log(`🚨 API Auto-Marked ABSENT ('A') for ${teacher} - ${subject}`);
+                            console.log(`🚨 API Auto-Marked ABSENT ('A') for [${pureCohort || 'UNKNOWN'}] ${teacher} - ${subject}`);
                             
                             paintRequests.push({
                                 updateCells: {
@@ -193,5 +215,5 @@ app.get("/api/admin/run-nightly-audit", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Secure Server running on port ${PORT}`);
+    console.log(`Secure Server running on port ${PORT}`);
 });
