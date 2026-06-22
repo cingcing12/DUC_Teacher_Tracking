@@ -96,7 +96,17 @@
              </div>
            </div>
 
-           <div class="w-full bg-white/70 dark:bg-slate-800/60 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-4 group/panel hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: 0.45s;">
+           <div class="sm:col-span-2 w-full bg-white/70 dark:bg-slate-800/60 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-4 group/panel hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: 0.45s;">
+             <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/30 flex items-center justify-center text-white shrink-0 group-hover/panel:scale-110 transition-transform duration-300 ring-2 ring-white/50 dark:ring-white/10">
+               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+             </div>
+             <div class="text-left flex-grow overflow-hidden">
+               <p class="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">Registered Email</p>
+               <p class="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">{{ teacher?.email || 'Not Provided' }}</p>
+             </div>
+           </div>
+
+           <div class="w-full bg-white/70 dark:bg-slate-800/60 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-4 group/panel hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: 0.5s;">
              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 flex items-center justify-center text-white shrink-0 group-hover/panel:scale-110 transition-transform duration-300 ring-2 ring-white/50 dark:ring-white/10">
                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"></path></svg>
              </div>
@@ -106,7 +116,7 @@
              </div>
            </div>
 
-           <div class="w-full bg-white/70 dark:bg-slate-800/60 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-4 group/panel hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: 0.5s;">
+           <div class="w-full bg-white/70 dark:bg-slate-800/60 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-4 group/panel hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: 0.55s;">
              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-600 shadow-lg shadow-fuchsia-500/30 flex items-center justify-center text-white shrink-0 group-hover/panel:scale-110 transition-transform duration-300 ring-2 ring-white/50 dark:ring-white/10">
                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
              </div>
@@ -116,21 +126,31 @@
              </div>
            </div>
 
-           <div class="sm:col-span-2 w-full bg-white/70 dark:bg-slate-800/60 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-4 group/panel hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: 0.55s;">
-             <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-emerald-500 shadow-lg shadow-cyan-500/30 flex items-center justify-center text-white shrink-0 group-hover/panel:scale-110 transition-transform duration-300 ring-2 ring-white/50 dark:ring-white/10">
-               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+           <div class="w-full bg-white/70 dark:bg-slate-800/60 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-4 group/panel hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: 0.6s;">
+             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/30 flex items-center justify-center text-white shrink-0 group-hover/panel:scale-110 transition-transform duration-300 ring-2 ring-white/50 dark:ring-white/10">
+               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
              </div>
              <div class="text-left flex-grow overflow-hidden">
-               <p class="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                 Secure Comms PIN <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+               <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Gender</p>
+               <p class="text-sm font-bold text-slate-900 dark:text-white truncate font-khmer">{{ teacher?.gender || 'Not Provided' }}</p>
+             </div>
+           </div>
+
+           <div class="w-full bg-white/70 dark:bg-slate-800/60 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-4 group/panel hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: 0.65s;">
+             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-emerald-500 shadow-lg shadow-cyan-500/30 flex items-center justify-center text-white shrink-0 group-hover/panel:scale-110 transition-transform duration-300 ring-2 ring-white/50 dark:ring-white/10">
+               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+             </div>
+             <div class="text-left flex-grow overflow-hidden">
+               <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                 Secure PIN <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
                </p>
-               <p class="text-base sm:text-xl font-black text-slate-900 dark:text-white font-mono tracking-widest">{{ formatPhone(teacher?.phone) }}</p>
+               <p class="text-sm font-black text-slate-900 dark:text-white font-mono tracking-widest">{{ formatPhone(teacher?.phone) }}</p>
              </div>
            </div>
 
         </div>
 
-        <button @click="promptLogout" class="relative z-20 w-full py-4 sm:py-5 bg-white/90 dark:bg-slate-800/90 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-2xl sm:rounded-[2rem] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-500/50 shadow-md hover:shadow-lg hover:shadow-rose-500/20 flex justify-center items-center gap-2.5 group/logout animate-fade-in-up" style="animation-delay: 0.6s;">
+        <button @click="promptLogout" class="relative z-20 w-full py-4 sm:py-5 bg-white/90 dark:bg-slate-800/90 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-2xl sm:rounded-[2rem] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-500/50 shadow-md hover:shadow-lg hover:shadow-rose-500/20 flex justify-center items-center gap-2.5 group/logout animate-fade-in-up" style="animation-delay: 0.7s;">
           <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-100 dark:bg-rose-500/20 group-hover/logout:bg-rose-500 group-hover/logout:text-white text-rose-500 dark:text-rose-400 flex items-center justify-center transition-colors duration-300">
             <svg class="w-3.5 h-3.5 transform group-hover/logout:translate-x-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
           </div>

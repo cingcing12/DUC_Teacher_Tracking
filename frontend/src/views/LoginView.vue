@@ -24,23 +24,23 @@
         
         <form v-if="isTeacherMode" @submit.prevent="handleTeacherLogin" class="space-y-5 relative z-10">
           <div>
-            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">Full Name (Khmer or English)</label>
+            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">Email Address</label>
             <div class="relative group">
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
               </div>
-              <input v-model="teacherForm.name" type="text" required class="w-full pl-11 pr-4 py-3.5 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm font-bold text-slate-800 placeholder-slate-300" placeholder="e.g. សុខភ័ក្ត">
+              <input v-model="teacherForm.email" type="email" required class="w-full pl-11 pr-4 py-3.5 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm font-bold text-slate-800 placeholder-slate-300" placeholder="teacher@duc.edu.kh">
             </div>
           </div>
 
           <div>
-            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">PIN / Phone Number</label>
+            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">Password</label>
             <div class="relative group">
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
               </div>
               
-              <input v-model="teacherForm.phone" :type="showTeacherPassword ? 'text' : 'password'" required class="w-full pl-11 pr-12 py-3.5 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm font-bold text-slate-800 placeholder-slate-300" placeholder="••••••••">
+              <input v-model="teacherForm.password" :type="showTeacherPassword ? 'text' : 'password'" required class="w-full pl-11 pr-12 py-3.5 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm font-bold text-slate-800 placeholder-slate-300" placeholder="••••••••">
               
               <button type="button" @click="showTeacherPassword = !showTeacherPassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-indigo-500 transition-colors focus:outline-none">
                 <svg v-if="!showTeacherPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
@@ -117,7 +117,8 @@ const errorMsg = ref('');
 const showTeacherPassword = ref(false);
 const showAdminPassword = ref(false);
 
-const teacherForm = ref({ name: '', phone: '' });
+// 🔥 UPDATED STATE TO EMAIL & PASSWORD
+const teacherForm = ref({ email: '', password: '' });
 const adminPassword = ref('');
 
 // Clear errors and reset eye icons when URL changes
@@ -128,7 +129,7 @@ watch(isTeacherMode, () => {
 });
 
 const handleTeacherLogin = async () => {
-  if (!teacherForm.value.name || !teacherForm.value.phone) {
+  if (!teacherForm.value.email || !teacherForm.value.password) {
     errorMsg.value = "Please fill in all fields.";
     return;
   }
@@ -136,16 +137,13 @@ const handleTeacherLogin = async () => {
   isLoading.value = true;
   errorMsg.value = '';
 
-  // 🔥 Format phone: Automatically strips out any spaces the user typed
-  const formattedPhone = teacherForm.value.phone.replace(/\s+/g, '');
-
   try {
     const response = await fetch('https://duc-teacher-tracking.onrender.com/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: teacherForm.value.name.trim(),
-        phone: formattedPhone
+        email: teacherForm.value.email.trim(),
+        password: teacherForm.value.password
       })
     });
 
@@ -155,7 +153,8 @@ const handleTeacherLogin = async () => {
       localStorage.setItem('duc_teacher_token', JSON.stringify(result.teacher));
       router.push('/schedule'); 
     } else {
-      errorMsg.value = "Invalid Name or Phone Number. Please check your details.";
+      // 🔥 Grabs exact error message from backend (e.g. "Your account is currently blocked...")
+      errorMsg.value = result.message || "Invalid Email or Password. Please try again.";
     }
   } catch (error) {
     errorMsg.value = "Unable to connect to the server.";
