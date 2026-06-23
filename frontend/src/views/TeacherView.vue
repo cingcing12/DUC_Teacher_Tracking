@@ -3,7 +3,6 @@
     
     <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
       
-      <!-- Header -->
       <div v-if="teacher" class="mb-6 sm:mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
         <p class="text-indigo-500 font-black tracking-widest uppercase text-[9px] sm:text-[10px] mb-1.5 sm:mb-2 flex items-center gap-2">
           <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
@@ -12,11 +11,9 @@
         <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-none">Your Schedule</h1>
       </div>
 
-      <!-- 🔥 FIX: Added 'relative z-50' right here to break out of the Stacking Context Trap! -->
       <div v-if="teacher && !isLoading && !hasError" class="relative z-50 mb-6 sm:mb-10 animate-fade-in-up" style="animation-delay: 0.2s;">
         <div class="flex items-center gap-1 sm:gap-2 bg-white/40 dark:bg-slate-800/40 p-1.5 rounded-[1.25rem] w-max backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
           
-          <!-- Tab 1: Today -->
           <button 
             @click="activeTab = 'today'; isDropdownOpen = false" 
             :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'today' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50']"
@@ -24,7 +21,6 @@
             Today's Classes
           </button>
 
-          <!-- Tab 2: Full Week -->
           <button 
             @click="activeTab = 'week'; selectedDayFilter = 'All'; isDropdownOpen = false" 
             :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'week' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50']"
@@ -32,7 +28,6 @@
             Full Week
           </button>
 
-          <!-- Filter Button (Only shows when Full Week is active) -->
           <div v-if="activeTab === 'week'" class="relative flex items-center border-l border-slate-300/50 dark:border-slate-600/50 pl-1 sm:pl-2 ml-1 sm:ml-0 animate-fade-in">
             <button 
               @click="isDropdownOpen = !isDropdownOpen" 
@@ -43,7 +38,6 @@
               <span class="sm:hidden">{{ selectedDayFilter === 'All' ? 'All' : selectedDayFilter.substring(0,3) }}</span>
             </button>
 
-            <!-- Dropdown Menu -->
             <transition name="fade-scale">
               <div v-if="isDropdownOpen" class="absolute top-full right-0 mt-2 w-40 sm:w-48 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-2 z-[60]">
                 <button @click="selectDay('All')" :class="['w-full text-left px-4 sm:px-5 py-2.5 sm:py-3 text-xs font-black uppercase tracking-widest transition-colors', selectedDayFilter === 'All' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50']">
@@ -59,10 +53,8 @@
         </div>
       </div>
 
-      <!-- Invisible overlay to close dropdown if user clicks outside -->
       <div v-if="isDropdownOpen" @click="isDropdownOpen = false" class="fixed inset-0 z-40"></div>
 
-      <!-- Loading Skeletons -->
       <div v-if="isLoading" class="relative mt-6 sm:mt-8">
         <div class="absolute left-[27px] sm:left-[35px] top-6 bottom-10 w-[3px] bg-slate-200/50 dark:bg-slate-700/50 z-0 rounded-full overflow-hidden"></div>
         <div class="space-y-8 sm:space-y-12">
@@ -96,7 +88,6 @@
         </div>
       </div>
 
-      <!-- Error State -->
       <div v-else-if="hasError" class="relative mt-8 animate-fade-in-up">
         <div class="flex flex-col items-center justify-center py-12 sm:py-16 px-6 text-center rounded-[2rem] bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl border border-red-200/60 dark:border-red-900/30 shadow-sm relative overflow-hidden">
           <div class="w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-5 rounded-2xl bg-gradient-to-br from-red-50 to-white dark:from-red-900/40 dark:to-slate-900 flex items-center justify-center border border-red-100 dark:border-red-800/50 shadow-sm -rotate-3">
@@ -111,7 +102,6 @@
         </div>
       </div>
 
-      <!-- Empty State / No Classes -->
       <div v-else-if="Object.keys(displayedSchedule).length === 0" class="relative mt-8 animate-fade-in-up">
         <div class="flex flex-col items-center justify-center py-12 sm:py-16 px-6 text-center rounded-[2rem] bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/50 shadow-sm relative overflow-hidden">
           <div class="w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-5 rounded-2xl bg-gradient-to-br from-slate-100 to-white dark:from-slate-800 dark:to-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm rotate-3 relative z-10">
@@ -131,9 +121,7 @@
         </div>
       </div>
 
-      <!-- Active Schedule -->
       <div v-else class="relative mt-6 sm:mt-8">
-        <!-- Timeline line -->
         <div class="absolute left-[23px] sm:left-[35px] top-6 bottom-10 w-[2px] sm:w-[3px] bg-slate-200/50 dark:bg-slate-700/50 z-0 rounded-full overflow-hidden">
           <div class="w-full h-1/3 bg-gradient-to-b from-transparent via-indigo-500 to-transparent animate-data-flow"></div>
         </div>
@@ -141,7 +129,6 @@
         <div class="space-y-8 sm:space-y-12">
           <div v-for="(classes, day, index) in displayedSchedule" :key="day" class="relative animate-fade-in-up" :style="`animation-delay: ${0.1 * index}s;`">
             
-            <!-- Day Header -->
             <div class="sticky top-[60px] sm:top-[96px] z-30 py-2 sm:py-3 px-3 sm:px-4 flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 shadow-sm border border-white/50 dark:border-slate-700/50 rounded-xl sm:rounded-2xl w-max ml-0 sm:ml-2">
               <div class="relative flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 shrink-0">
                 <div class="absolute inset-0 bg-indigo-400 rounded-full animate-ping opacity-30"></div>
@@ -153,7 +140,6 @@
             <div class="flex flex-col gap-4 sm:gap-5 pl-10 sm:pl-16 relative z-10">
               <div v-for="cls in classes" :key="cls.time + cls.room" class="group relative rounded-2xl sm:rounded-[2rem] bg-white/80 dark:bg-slate-800/60 backdrop-blur-xl shadow-sm border border-slate-200/60 dark:border-slate-700/50 hover:shadow-lg sm:hover:shadow-xl hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all duration-300 overflow-hidden flex flex-col sm:flex-row">
                 
-                <!-- Timeblock -->
                 <div class="sm:w-40 shrink-0 bg-slate-50/80 dark:bg-slate-800/80 p-3.5 sm:p-5 flex flex-row sm:flex-col items-center justify-between sm:items-start sm:justify-center border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-slate-700/50 relative overflow-hidden gap-2 sm:gap-1">
                   <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
                   
@@ -165,7 +151,7 @@
                     <template v-if="cls.time && cls.time.includes('-')">
                       <p class="text-lg sm:text-3xl font-black tracking-tighter text-slate-900 dark:text-white font-mono leading-none">{{ cls.time.split('-')[0].trim() }}</p>
                       <div class="text-slate-300 dark:text-slate-600 sm:my-1 mx-1 sm:mx-0 opacity-70">
-                        <svg class="w-3 h-3 sm:w-4 sm:h-4 rotate-0 sm:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" class="sm:hidden"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 14l-7 7m0 0l-7-7m7-7V3" class="hidden sm:block"></path></svg>
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 rotate-0 sm:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7-7m7-7H3" class="sm:hidden"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 14l-7 7m0 0l-7-7m7-7V3" class="hidden sm:block"></path></svg>
                       </div>
                       <p class="text-base sm:text-2xl font-black tracking-tighter text-slate-500 dark:text-slate-400 font-mono leading-none">{{ cls.time.split('-')[1].trim() }}</p>
                     </template>
@@ -180,7 +166,6 @@
                   </div>
                 </div>
 
-                <!-- Main Content -->
                 <div class="flex-grow p-4 sm:p-6 flex flex-col relative z-10 justify-between">
                   <div>
                     <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
@@ -204,6 +189,11 @@
                       <div v-if="cls.semester && cls.semester !== '?'" class="flex items-center px-2 py-0.5 sm:py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md text-[9px] font-black font-khmer uppercase tracking-widest border border-amber-100 dark:border-amber-500/20">
                         ឆមាសទី {{ cls.semester }}
                       </div>
+
+                      <div v-if="cls.department === '?' || cls.year === '?' || cls.semester === '?'" class="flex items-center gap-1 px-2 py-0.5 sm:py-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-md text-[9px] font-black uppercase tracking-widest border border-red-200 dark:border-red-500/30 shadow-sm animate-pulse">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        Incomplete Data
+                      </div>
                     </div>
 
                     <h4 class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-khmer leading-snug sm:leading-tight mb-4 sm:mb-6">
@@ -211,11 +201,24 @@
                     </h4>
                   </div>
                   
-                  <!-- Action Buttons -->
                   <div class="flex flex-row items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-100 dark:border-slate-700/50">
-                    <button @click="openTrackingForm(cls)" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-indigo-50 dark:bg-indigo-500/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all duration-300">
+                    
+                    <button 
+                      v-if="cls.department !== '?' && cls.year !== '?' && cls.semester !== '?'"
+                      @click="openTrackingForm(cls)" 
+                      class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-indigo-50 dark:bg-indigo-500/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all duration-300"
+                    >
                       <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                       Track: {{ cls.group }}
+                    </button>
+                    
+                    <button 
+                      v-else
+                      @click="showDataError(cls)" 
+                      class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-red-50 dark:bg-red-500/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 dark:hover:text-white transition-all duration-300"
+                    >
+                      <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                      Contact Admin
                     </button>
 
                     <button @click="openHistoryView(cls)" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-white dark:bg-slate-800 shadow-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-cyan-400 hover:text-cyan-600 dark:hover:border-cyan-500 dark:hover:text-cyan-400 transition-all duration-300">
@@ -231,6 +234,30 @@
         </div>
       </div>
     </main>
+
+    <transition name="fade-scale">
+      <div v-if="customAlert.show" class="fixed inset-0 z-[130] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-xl transition-opacity" @click="closeAlert"></div>
+        <div class="relative w-full max-w-sm bg-white dark:bg-[#0A0A0A] rounded-[2rem] shadow-[0_0_100px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-200 dark:border-white/10 flex flex-col z-10 p-6 sm:p-8 text-center ring-1 ring-slate-200 dark:ring-white/5">
+          <div class="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none bg-red-500/20"></div>
+          
+          <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-5 shadow-2xl relative bg-gradient-to-br from-red-400 to-rose-600 shadow-red-500/40 animate-bounce-short">
+            <div class="absolute inset-0 rounded-full border-2 border-white/30 mix-blend-overlay"></div>
+            <svg class="w-8 h-8 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          </div>
+          
+          <h3 class="text-xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Database Error</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+            This class cannot be tracked because its <strong class="text-slate-800 dark:text-slate-200">Department, Year, or Semester</strong> is missing from the Master Database. Please contact the administrator to fix the database alignment.
+          </p>
+          
+          <button @click="closeAlert" class="w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:scale-[1.02]">
+            Understood
+          </button>
+        </div>
+      </div>
+    </transition>
+
   </div>
 </template>
 
@@ -254,6 +281,17 @@ const todayName = computed(() => {
   const dayIndex = new Date().getDay();
   return englishDays[dayIndex];
 });
+
+// 🔥 NEW: MODAL STATE
+const customAlert = ref({ show: false });
+
+const showDataError = (cls) => {
+  customAlert.value.show = true;
+};
+
+const closeAlert = () => {
+  customAlert.value.show = false;
+};
 
 // 🔥 Auto-extract unique days that actually have classes (WITH TRIM FIX)
 const availableDays = computed(() => {
@@ -281,8 +319,8 @@ const selectDay = (day) => {
 const cleanSubjectName = (subject) => {
   if (!subject) return '';
   return subject
-    .replace(/\s+/g, ' ')           
-    .replace(/\s*\(\s*/g, ' (')     
+    .replace(/\s+/g, ' ')          
+    .replace(/\s*\(\s*/g, ' (')    
     .replace(/\s*\)\s*/g, ')')      
     .trim();                        
 };
@@ -435,6 +473,13 @@ const displayedSchedule = computed(() => {
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
+
+@keyframes bounce-short { 
+  0% { transform: scale(0.8); opacity: 0; } 
+  60% { transform: scale(1.1); opacity: 1; } 
+  100% { transform: scale(1); opacity: 1; } 
+}
+.animate-bounce-short { animation: bounce-short 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
 .fade-scale-enter-active, .fade-scale-leave-active { transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
 .fade-scale-enter-from, .fade-scale-leave-to { opacity: 0; transform: scale(0.9) translateY(-10px); }
