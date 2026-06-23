@@ -491,7 +491,7 @@ router.post("/update-teacher", async (req, res) => {
 
 
 // ==========================================
-// 🔥 SECURE LOGIN: EMAIL & PASSWORD + DEPARTMENT SCANNER
+// 🔥 SECURE LOGIN: EMAIL & PASSWORD
 // ==========================================
 const cleanTeacherName = (str) => {
   if (!str) return "";
@@ -501,7 +501,7 @@ const cleanTeacherName = (str) => {
     .trim();
 };
 
-const TEACHER_DATA_SHEET_ID = "1wCRweEDDuNIZtXYq-qiOSIE-zYgvMQ2zA8m594DtevQ";
+const TEACHER_DATA_SHEET_ID = "1wCRweEDDuNIZtXYq-qiOSIE-zYgvMQ2zA8m594DtevQ"; 
 const TEACHER_DATA_TAB = "ទិន្នន័យលោកគ្រូអ្នកគ្រូ";
 
 router.post("/login", async (req, res) => {
@@ -512,10 +512,12 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ success: false, message: "Email and Password required" });
     }
 
+    const cleanInputEmail = email.trim().toLowerCase();
+    const cleanInputPassword = password.trim(); 
+
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
-    // 1. VERIFY EMAIL AND PASSWORD IN THE NEW DATABASE
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: TEACHER_DATA_SHEET_ID, 
       range: `'${TEACHER_DATA_TAB}'!A2:Q`
@@ -527,34 +529,31 @@ router.post("/login", async (req, res) => {
     for (const row of rows) {
       const dbPhone = String(row[9] || "").trim();               // Column J (Index 9)
       const dbEmail = String(row[10] || "").trim().toLowerCase(); // Column K (Index 10)
-      const dbPassword = String(row[15] || "").trim();           // Column P (Index 15)
-      const isBlocked = String(row[16] || "").trim().toUpperCase() === "TRUE"; // Column Q (Index 16)
+      
+      // 🔥 THE FIX IS RIGHT HERE:
+      const dbPassword = String(row[14] || "").trim();           // Column O (Index 14)
+      const isBlocked = String(row[15] || "").trim().toUpperCase() === "TRUE"; // Column P (Index 15)
 
-      if (dbEmail === email.trim().toLowerCase() && dbPassword === password) {
+      if (dbEmail === cleanInputEmail && dbPassword === cleanInputPassword) {
         
         if (isBlocked) {
           return res.status(403).json({ success: false, message: "Your account is currently blocked. Please contact Admin." });
         }
 
-        const originalNameKh = String(row[1] || "").trim(); // Column B
-        const originalNameEn = String(row[2] || "").trim(); // Column C
-
         loggedInTeacher = { 
-          id: String(row[0] || ""), // Column A
-          nameKh: originalNameKh, 
-          nameEn: originalNameEn, 
-          gender: String(row[4] || "").trim(), // 🔥 FIX: Column E (Index 4)
-          degree: String(row[7] || "").trim(), // 🔥 NEW: កម្រិតសិក្សា Column H (Index 7)
-          major: String(row[8] || "").trim(),  // 🔥 NEW: ជំនាញ Column I (Index 8)
+          id: String(row[0] || ""), 
+          nameKh: String(row[1] || "").trim(), 
+          nameEn: String(row[2] || "").trim(), 
+          gender: String(row[4] || "").trim(), 
+          degree: String(row[7] || "").trim(), 
+          major: String(row[8] || "").trim(),  
           phone: dbPhone, 
           email: dbEmail
-          // Removed cerNumber entirely!
         };
         break;
       }
     }
 
-    // Reject if no exact match found
     if (!loggedInTeacher) {
       return res.status(401).json({ success: false, message: "Incorrect Email or Password!" });
     }
@@ -562,9 +561,9 @@ router.post("/login", async (req, res) => {
     // 2. FETCH THE AVATAR 
     loggedInTeacher.avatarUrl = await getAvatarUrl(sheets, loggedInTeacher.nameKh, loggedInTeacher.phone);
 
-    // 3. SCAN DEPARTMENT TABS (Only for Department routing now)
+    // 3. SCAN DEPARTMENT TABS
     const allSheetsRes = await sheets.spreadsheets.get({
-      spreadsheetId: SPREADSHEETS.TEACHER, // Uses OLD sheet ID from config
+      spreadsheetId: SPREADSHEETS.TEACHER,
     });
     const sheetNames = allSheetsRes.data.sheets.map((sheet) => sheet.properties.title);
     
@@ -573,12 +572,11 @@ router.post("/login", async (req, res) => {
     const cleanInputNameEn = cleanTeacherName(loggedInTeacher.nameEn).toLowerCase();
 
     for (const tab of sheetNames) {
-      // Skip the configuration tabs
       if (tab.toLowerCase().includes("schedule") || tab.toLowerCase().includes("year")) continue;
 
       const sheetData = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEETS.TEACHER, 
-        range: `'${tab}'!A5:C500`, // Only need to scan names now
+        range: `'${tab}'!A5:C500`, 
       });
       const deptRows = sheetData.data.values;
       if (!deptRows) continue;
@@ -587,18 +585,16 @@ router.post("/login", async (req, res) => {
         const dbNameKh = cleanTeacherName(r[1] ? r[1].trim() : "").toLowerCase();
         const dbNameEn = cleanTeacherName(r[2] ? r[2].trim() : "").toLowerCase();
         
-        // If the Khmer Name OR English Name matches...
         if ((dbNameKh !== "" && dbNameKh === cleanInputNameKh) || (dbNameEn !== "" && dbNameEn === cleanInputNameEn)) {
           if (!foundDepartments.includes(tab)) {
               foundDepartments.push(tab);
           }
-          break; // Found in this tab, move on to check the next tab
+          break; 
         }
       }
     }
 
     loggedInTeacher.department = foundDepartments.join(", ");
-    
     res.json({ success: true, message: "Login successful!", teacher: loggedInTeacher });
     
   } catch (error) {
