@@ -56,9 +56,55 @@ router.get("/my-schedule", async (req, res) => {
             const roomName = rooms[c] || `DUC${c - 2}`;
             const group = lines[0] || "";
             const subject = lines[1] || "";
+            
+            // 🔥 THE FIX: SMART TIME LOOKAHEAD V3 (Ignores Empty Merged Cells)
+            let fallbackTime = row[2] || "";
+            
+            if (fallbackTime && !lines[lines.length - 1].includes(":")) {
+              let startTimeStr = fallbackTime.split("-")[0]?.trim() || "";
+              let endTimeStr = fallbackTime.split("-")[1]?.trim() || "";
+              let currentEndTimeCompare = endTimeStr.replace(/\s+/g, '');
+
+              // Look down the column to see how far this merged cell stretches
+              for (let nextR = i + 1; nextR < rows.length; nextR++) {
+                const nextRow = rows[nextR] || [];
+                
+                // Stop if a new Day starts or it's Lunch time
+                if (nextRow[1] && nextRow[1].trim() !== "" && nextRow[1].trim() !== "DAY") break;
+                if (nextRow[2] && String(nextRow[2]).toUpperCase().includes("LUNCH")) break;
+                
+                // Stop if we hit a cell with text (meaning our merged class ended)
+                if (nextRow[c] && nextRow[c].trim() !== "") break;
+
+                const nextTimeCell = nextRow[2] ? String(nextRow[2]).trim() : "";
+
+                // If we find a new time block, check if the times connect!
+                if (nextTimeCell !== "" && nextTimeCell.includes("-")) {
+                  let nextStartTimeStr = nextTimeCell.split("-")[0]?.trim() || "";
+                  let nextEndTimeStr = nextTimeCell.split("-")[1]?.trim() || "";
+                  let nextStartTimeCompare = nextStartTimeStr.replace(/\s+/g, '');
+
+                  // Only stretch the time if the blocks connect perfectly (e.g., 16:00 matches 16:00)
+                  if (currentEndTimeCompare === nextStartTimeCompare) {
+                    endTimeStr = nextEndTimeStr;
+                    currentEndTimeCompare = nextEndTimeStr.replace(/\s+/g, '');
+                  } else {
+                    // GAP FOUND (e.g., 16:00 ended, but 17:00 started). Stop stretching!
+                    break;
+                  }
+                }
+                // Notice we removed the 'else { break }' here! 
+                // Now it just safely ignores empty time cells and keeps looking down.
+              }
+              
+              if (startTimeStr && endTimeStr) {
+                fallbackTime = `${startTimeStr}-${endTimeStr}`;
+              }
+            }
+
             const exactTime = lines[lines.length - 1].includes(":")
               ? lines[lines.length - 1].replace(/[()]/g, "").trim()
-              : row[2] || "";
+              : fallbackTime;
 
             myClasses.push({
               scheduleType: tab, 
@@ -81,7 +127,6 @@ router.get("/my-schedule", async (req, res) => {
       const teacherMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TEACHER });
       const teacherTabs = teacherMeta.data.sheets.map(s => s.properties.title);
       
-      // INCREASED RANGE: We must read all the way down to get the subjects inside the teacher rows!
       const ranges = teacherTabs.map(t => `'${t}'!A1:BM200`); 
       const teacherDataRes = await sheets.spreadsheets.values.batchGet({
         spreadsheetId: SPREADSHEETS.TEACHER,
@@ -96,7 +141,6 @@ router.get("/my-schedule", async (req, res) => {
         const tRows = rangeData.values || [];
         if (tRows.length < 4) return;
 
-        // DYNAMICALLY find which row holds Year, Semester, and Subject Headers
         let yearRowIdx = -1;
         let semRowIdx = -1;
         let headerRowIdx = -1;
@@ -108,7 +152,6 @@ router.get("/my-schedule", async (req, res) => {
           if (headerRowIdx === -1 && (rowStr.includes("មុខវិជ្ជា") || rowStr.includes("english") || rowStr.includes("khmer"))) headerRowIdx = r;
         }
 
-        // Fallbacks
         if (yearRowIdx === -1) yearRowIdx = 1;
         if (semRowIdx === -1) semRowIdx = 2;
         if (headerRowIdx === -1) headerRowIdx = 3;
@@ -123,7 +166,6 @@ router.get("/my-schedule", async (req, res) => {
 
         const maxCols = Math.max(yearRow.length, semRow.length, headerRow.length);
 
-        // Step A: Map out what each column represents (Year, Semester, and is it a Subject column?)
         for (let c = 0; c < maxCols; c++) {
           if (yearRow[c] && yearRow[c].includes("ឆ្នាំ")) {
             const ym = yearRow[c].match(/([១-៩1-9])/);
@@ -145,7 +187,6 @@ router.get("/my-schedule", async (req, res) => {
           };
         }
 
-        // Step B: Loop through ALL teacher rows to grab the actual subject names!
         for (let r = headerRowIdx + 1; r < tRows.length; r++) {
           const row = tRows[r];
           if (!row) continue;
