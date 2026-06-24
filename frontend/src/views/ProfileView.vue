@@ -4,9 +4,9 @@
     <main class="relative z-10 w-full max-w-[28rem] sm:max-w-xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col items-center">
         
       <div class="w-full flex justify-start mb-6 sm:mb-8 animate-fade-in-up">
-        <button @click="goBack" class="group flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 sm:py-2.5 bg-white/60 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 backdrop-blur-xl rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300 shadow-sm border border-white/80 dark:border-slate-700/50 hover:scale-105">
+        <button @click="goBack" :class="['group flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 sm:py-2.5 bg-white/60 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 backdrop-blur-xl rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300 shadow-sm border border-white/80 dark:border-slate-700/50 hover:scale-105', language === 'kh' ? 'font-khmer' : '']">
           <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-          Return to Workspace
+          {{ t.backToWorkspace }}
         </button>
       </div>
 
@@ -25,7 +25,7 @@
         <div class="w-full flex items-center justify-between z-10 mb-6">
           <div class="flex items-center gap-2 sm:gap-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-3 py-1.5 sm:py-2 rounded-xl border border-white/50 dark:border-slate-700/50 shadow-sm">
              <img src="../assets/DUC.png" class="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-sm" alt="DUC Logo" />
-             <span class="text-[9px] sm:text-[10px] font-black tracking-widest text-slate-800 dark:text-white uppercase letter-spacing-2">Faculty Profile</span>
+             <span :class="['text-[9px] sm:text-[10px] font-black tracking-widest text-slate-800 dark:text-white uppercase letter-spacing-2', language === 'kh' ? 'font-khmer' : '']">{{ t.facultyProfile }}</span>
           </div>
           
           <div class="w-10 h-7 sm:w-12 sm:h-8 rounded-lg border border-emerald-300/50 dark:border-emerald-500/30 bg-gradient-to-br from-emerald-100 to-teal-200 dark:from-emerald-500/20 dark:to-teal-600/10 flex items-center justify-center overflow-hidden relative shadow-[0_0_15px_rgba(16,185,129,0.3)] backdrop-blur-md">
@@ -52,7 +52,7 @@
                   <div class="flex gap-2 mb-1">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                   </div>
-                  <span class="text-[10px] font-black uppercase tracking-widest text-white mt-1 shadow-sm">Manage</span>
+                  <span :class="['text-[10px] font-black uppercase tracking-widest text-white mt-1 shadow-sm', language === 'kh' ? 'font-khmer' : '']">{{ t.manage }}</span>
                 </div>
 
                 <div v-if="isUploadingAvatar" class="absolute inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50">
@@ -68,8 +68,8 @@
           </h2>
           <div class="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50/80 dark:bg-indigo-500/20 border border-indigo-100 dark:border-indigo-500/30 backdrop-blur-md shadow-sm">
             <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
-            <p class="text-[10px] sm:text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">
-              {{ teacher?.nameEn || 'Verified Instructor' }}
+            <p :class="['text-[10px] sm:text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest', language === 'kh' && !teacher?.nameEn ? 'font-khmer' : '']">
+              {{ teacher?.nameEn || t.verifiedInstructor }}
             </p>
           </div>
         </div>
@@ -81,7 +81,7 @@
                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
              </div>
              <div class="text-left flex-grow overflow-hidden">
-               <p class="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Faculty Departments</p>
+               <p :class="['text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.facultyDepartments }}</p>
                
                <div class="flex flex-wrap gap-2">
                  <span 
@@ -91,7 +91,7 @@
                  >
                    {{ dept }}
                  </span>
-                 <span v-if="!formattedDepartments.length" class="text-sm font-bold text-slate-900 dark:text-white">Not Provided</span>
+                 <span v-if="!formattedDepartments.length" :class="['text-sm font-bold text-slate-900 dark:text-white', language === 'kh' ? 'font-khmer' : '']">{{ t.notProvided }}</span>
                </div>
              </div>
            </div>
@@ -101,8 +101,8 @@
                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
              </div>
              <div class="text-left flex-grow overflow-hidden">
-               <p class="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">Registered Email</p>
-               <p class="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">{{ teacher?.email || 'Not Provided' }}</p>
+               <p :class="['text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5', language === 'kh' ? 'font-khmer' : '']">{{ t.registeredEmail }}</p>
+               <p class="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">{{ teacher?.email || t.notProvided }}</p>
              </div>
            </div>
 
@@ -111,8 +111,8 @@
                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"></path></svg>
              </div>
              <div class="text-left flex-grow overflow-hidden">
-               <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Academic Degree</p>
-               <p class="text-sm font-bold text-slate-900 dark:text-white truncate font-khmer">{{ teacher?.degree || 'Not Provided' }}</p>
+               <p :class="['text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1', language === 'kh' ? 'font-khmer' : '']">{{ t.academicDegree }}</p>
+               <p :class="['text-sm font-bold text-slate-900 dark:text-white truncate font-khmer', !teacher?.degree ? 'font-sans' : '']">{{ teacher?.degree || t.notProvided }}</p>
              </div>
            </div>
 
@@ -121,8 +121,8 @@
                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
              </div>
              <div class="text-left flex-grow overflow-hidden">
-               <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Specialization</p>
-               <p class="text-sm font-bold text-slate-900 dark:text-white truncate font-khmer">{{ teacher?.major || 'Not Provided' }}</p>
+               <p :class="['text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1', language === 'kh' ? 'font-khmer' : '']">{{ t.specialization }}</p>
+               <p :class="['text-sm font-bold text-slate-900 dark:text-white truncate font-khmer', !teacher?.major ? 'font-sans' : '']">{{ teacher?.major || t.notProvided }}</p>
              </div>
            </div>
 
@@ -131,8 +131,8 @@
                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
              </div>
              <div class="text-left flex-grow overflow-hidden">
-               <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Gender</p>
-               <p class="text-sm font-bold text-slate-900 dark:text-white truncate font-khmer">{{ teacher?.gender || 'Not Provided' }}</p>
+               <p :class="['text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1', language === 'kh' ? 'font-khmer' : '']">{{ t.gender }}</p>
+               <p :class="['text-sm font-bold text-slate-900 dark:text-white truncate font-khmer', !teacher?.gender ? 'font-sans' : '']">{{ teacher?.gender || t.notProvided }}</p>
              </div>
            </div>
 
@@ -141,20 +141,20 @@
                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
              </div>
              <div class="text-left flex-grow overflow-hidden">
-               <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                 Secure PIN <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+               <p :class="['text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5', language === 'kh' ? 'font-khmer' : '']">
+                 {{ t.securePin }} <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
                </p>
-               <p class="text-sm font-black text-slate-900 dark:text-white font-mono tracking-widest">{{ formatPhone(teacher?.phone) }}</p>
+               <p :class="['text-sm font-black text-slate-900 dark:text-white font-mono tracking-widest', formatPhone(teacher?.phone) === t.noPinSet ? 'font-sans' : '']">{{ formatPhone(teacher?.phone) }}</p>
              </div>
            </div>
 
         </div>
 
-        <button @click="promptLogout" class="relative z-20 w-full py-4 sm:py-5 bg-white/90 dark:bg-slate-800/90 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-2xl sm:rounded-[2rem] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-500/50 shadow-md hover:shadow-lg hover:shadow-rose-500/20 flex justify-center items-center gap-2.5 group/logout animate-fade-in-up" style="animation-delay: 0.7s;">
+        <button @click="promptLogout" :class="['relative z-20 w-full py-4 sm:py-5 bg-white/90 dark:bg-slate-800/90 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-2xl sm:rounded-[2rem] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-500/50 shadow-md hover:shadow-lg hover:shadow-rose-500/20 flex justify-center items-center gap-2.5 group/logout animate-fade-in-up', language === 'kh' ? 'font-khmer' : '']" style="animation-delay: 0.7s;">
           <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-100 dark:bg-rose-500/20 group-hover/logout:bg-rose-500 group-hover/logout:text-white text-rose-500 dark:text-rose-400 flex items-center justify-center transition-colors duration-300">
             <svg class="w-3.5 h-3.5 transform group-hover/logout:translate-x-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
           </div>
-          Terminate Session
+          {{ t.terminateSession }}
         </button>
 
       </div>
@@ -165,31 +165,31 @@
         <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md transition-opacity" @click="showAvatarMenu = false"></div>
         
         <div class="relative w-full max-w-xs bg-white dark:bg-[#0A0F1A] rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 p-5 sm:p-6 flex flex-col gap-2 sm:gap-3 ring-1 ring-black/5 dark:ring-white/5">
-          <h3 class="text-center text-[10px] sm:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Profile Photo</h3>
+          <h3 :class="['text-center text-[10px] sm:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.profilePhoto }}</h3>
 
           <button v-if="teacher?.avatarUrl" @click="viewFullscreenImage" class="group/btn flex items-center gap-3 sm:gap-4 w-full p-3 sm:p-4 rounded-xl sm:rounded-[1.5rem] bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300">
             <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover/btn:scale-110 transition-transform">
               <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
             </div>
-            <span class="text-xs sm:text-sm font-bold">View Picture</span>
+            <span :class="['text-xs sm:text-sm font-bold', language === 'kh' ? 'font-khmer' : '']">{{ t.viewPicture }}</span>
           </button>
 
           <button @click="openAppAvatarsModal" class="group/btn flex items-center gap-3 sm:gap-4 w-full p-3 sm:p-4 rounded-xl sm:rounded-[1.5rem] bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300">
             <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-cyan-100 dark:bg-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover/btn:scale-110 transition-transform">
               <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <span class="text-xs sm:text-sm font-bold">Choose App Avatar</span>
+            <span :class="['text-xs sm:text-sm font-bold', language === 'kh' ? 'font-khmer' : '']">{{ t.chooseAppAvatar }}</span>
           </button>
 
           <button @click="triggerFileInputFromMenu" class="group/btn flex items-center gap-3 sm:gap-4 w-full p-3 sm:p-4 rounded-xl sm:rounded-[1.5rem] bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300">
             <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover/btn:scale-110 transition-transform">
               <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
             </div>
-            <span class="text-xs sm:text-sm font-bold">Upload Custom</span>
+            <span :class="['text-xs sm:text-sm font-bold', language === 'kh' ? 'font-khmer' : '']">{{ t.uploadCustom }}</span>
           </button>
 
-          <button @click="showAvatarMenu = false" class="mt-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 py-2 sm:py-3 transition-colors">
-            Cancel
+          <button @click="showAvatarMenu = false" :class="['mt-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 py-2 sm:py-3 transition-colors', language === 'kh' ? 'font-khmer' : '']">
+            {{ t.cancel }}
           </button>
         </div>
       </div>
@@ -201,7 +201,7 @@
         
         <div class="relative w-full max-w-sm bg-white dark:bg-[#0A0F1A] rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 p-5 sm:p-6 flex flex-col ring-1 ring-black/5 dark:ring-white/5">
           <div class="flex justify-between items-center mb-5 sm:mb-6">
-            <h3 class="text-xs sm:text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Select Avatar</h3>
+            <h3 :class="['text-xs sm:text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest', language === 'kh' ? 'font-khmer' : '']">{{ t.selectAvatar }}</h3>
             <button @click="showAppAvatarsModal = false" class="text-slate-400 hover:text-rose-500 transition-colors">
               <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -250,13 +250,23 @@
             <svg v-else-if="customAlert.type === 'error'" class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
             <svg v-else class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
           </div>
-          <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 font-sans tracking-tight">{{ customAlert.type === 'success' ? 'Success!' : customAlert.type === 'error' ? 'Error Occurred' : 'Sign Out?' }}</h3>
-          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-6 sm:mb-8 font-khmer">{{ customAlert.message }}</p>
+          
+          <h3 :class="['text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 tracking-tight', language === 'kh' ? 'font-khmer' : 'font-sans']">
+            {{ customAlert.type === 'success' ? t.success : customAlert.type === 'error' ? t.errorOccurred : t.signOut }}
+          </h3>
+          <p :class="['text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-6 sm:mb-8 font-khmer']">{{ customAlert.message }}</p>
+          
           <div v-if="customAlert.type === 'confirm'" class="flex gap-2 sm:gap-3">
-            <button @click="closeAlert" class="flex-1 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300">Cancel</button>
-            <button @click="executeConfirm" class="flex-1 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-rose-600 hover:bg-rose-50 hover:shadow-rose-500/25">{{ customAlert.confirmText }}</button>
+            <button @click="closeAlert" :class="['flex-1 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300', language === 'kh' ? 'font-khmer' : '']">
+              {{ t.cancel }}
+            </button>
+            <button @click="executeConfirm" :class="['flex-1 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-rose-600 hover:bg-rose-50 hover:shadow-rose-500/25', language === 'kh' ? 'font-khmer' : '']">
+              {{ customAlert.confirmText }}
+            </button>
           </div>
-          <button v-else @click="closeAlert" :class="['w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white flex items-center justify-center gap-2 hover:-translate-y-1', customAlert.type === 'success' ? 'bg-slate-900 dark:bg-white dark:text-slate-900 hover:shadow-emerald-500/25 dark:hover:bg-emerald-400' : 'bg-rose-600 hover:shadow-rose-500/25 hover:bg-rose-500']">{{ customAlert.type === 'success' ? 'Awesome' : 'Try Again' }}</button>
+          <button v-else @click="closeAlert" :class="['w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white flex items-center justify-center gap-2 hover:-translate-y-1', customAlert.type === 'success' ? 'bg-slate-900 dark:bg-white dark:text-slate-900 hover:shadow-emerald-500/25 dark:hover:bg-emerald-400' : 'bg-rose-600 hover:shadow-rose-500/25 hover:bg-rose-500', language === 'kh' ? 'font-khmer' : '']">
+            {{ customAlert.type === 'success' ? t.awesome : t.tryAgain }}
+          </button>
         </div>
       </div>
     </transition>
@@ -292,22 +302,99 @@ const appAvatars = [
 const customAlert = ref({ show: false, type: 'success', message: '', confirmText: 'Confirm', confirmAction: null });
 let alertTimeout = null;
 
-// 🔥 COMPUTES MULTIPLE DEPARTMENTS IF SEPARATED BY COMMA
+// --- LANGUAGE STATE & DICTIONARY ---
+const language = ref(localStorage.getItem('app_lang') || 'en');
+
+window.addEventListener('storage', (e) => {
+  if (e.key === 'app_lang') {
+    language.value = e.newValue || 'en';
+  }
+});
+
+const t = computed(() => {
+  if (language.value === 'kh') {
+    return {
+      backToWorkspace: 'ត្រឡប់ទៅកន្លែងធ្វើការ',
+      facultyProfile: 'ប្រវត្តិរូបសាស្ត្រាចារ្យ',
+      manage: 'គ្រប់គ្រង',
+      verifiedInstructor: 'គ្រូបង្រៀនដែលបានផ្ទៀងផ្ទាត់',
+      facultyDepartments: 'ដេប៉ាតឺម៉ង់',
+      notProvided: 'មិនមានព័ត៌មាន',
+      registeredEmail: 'អ៊ីមែល',
+      academicDegree: 'កម្រិតវប្បធម៌',
+      specialization: 'ជំនាញ',
+      gender: 'ភេទ',
+      securePin: 'លេខសម្ងាត់ PIN',
+      noPinSet: 'មិនមានលេខ PIN',
+      terminateSession: 'ចាកចេញពីគណនី',
+      profilePhoto: 'រូបថតប្រវត្តិរូប',
+      viewPicture: 'មើលរូបថត',
+      chooseAppAvatar: 'ជ្រើសរើសរូបតំណាង',
+      uploadCustom: 'បង្ហោះរូបថតថ្មី',
+      cancel: 'បោះបង់',
+      selectAvatar: 'ជ្រើសរើសរូបតំណាង',
+      success: 'ជោគជ័យ!',
+      errorOccurred: 'មានកំហុសកើតឡើង',
+      signOut: 'ចាកចេញ?',
+      awesome: 'អស្ចារ្យ',
+      tryAgain: 'ព្យាយាមម្តងទៀត',
+      alertAvatarSuccess: 'រូបតំណាងត្រូវបានផ្លាស់ប្តូរដោយជោគជ័យ!',
+      alertAvatarFail: 'បរាជ័យក្នុងការផ្លាស់ប្តូររូបតំណាង។',
+      alertServerError: 'ការតភ្ជាប់ម៉ាស៊ីនមេបរាជ័យ។',
+      alertImgLarge: 'រូបភាពធំពេក។ សូមជ្រើសរើសរូបភាពក្រោម 5MB។',
+      alertUploadSuccess: 'រូបថតប្រវត្តិរូបត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ!',
+      alertUploadFail: 'ការបង្ហោះបរាជ័យ។',
+      alertUploadServerError: 'ការតភ្ជាប់ម៉ាស៊ីនមេបរាជ័យ។ មិនអាចបង្ហោះរូបភាពបានទេ។',
+      alertLogoutMsg: 'តើអ្នកពិតជាចង់ចាកចេញពីគណនីនេះមែនទេ?',
+      logOutBtn: 'ចាកចេញ'
+    };
+  }
+  return {
+    backToWorkspace: 'Return to Workspace',
+    facultyProfile: 'Faculty Profile',
+    manage: 'Manage',
+    verifiedInstructor: 'Verified Instructor',
+    facultyDepartments: 'Faculty Departments',
+    notProvided: 'Not Provided',
+    registeredEmail: 'Registered Email',
+    academicDegree: 'Academic Degree',
+    specialization: 'Specialization',
+    gender: 'Gender',
+    securePin: 'Secure PIN',
+    noPinSet: 'NO PIN SET',
+    terminateSession: 'Terminate Session',
+    profilePhoto: 'Profile Photo',
+    viewPicture: 'View Picture',
+    chooseAppAvatar: 'Choose App Avatar',
+    uploadCustom: 'Upload Custom',
+    cancel: 'Cancel',
+    selectAvatar: 'Select Avatar',
+    success: 'Success!',
+    errorOccurred: 'Error Occurred',
+    signOut: 'Sign Out?',
+    awesome: 'Awesome',
+    tryAgain: 'Try Again',
+    alertAvatarSuccess: 'App avatar selected successfully!',
+    alertAvatarFail: 'Failed to update avatar.',
+    alertServerError: 'Server connection failed.',
+    alertImgLarge: 'Image is too large. Please select an image under 5MB.',
+    alertUploadSuccess: 'Profile avatar updated successfully!',
+    alertUploadFail: 'Upload failed.',
+    alertUploadServerError: 'Server connection failed. Could not upload image.',
+    alertLogoutMsg: 'Are you sure you want to securely terminate this session?',
+    logOutBtn: 'Log Out'
+  };
+});
+
+// MULTIPLE DEPARTMENTS IF SEPARATED BY COMMA
 const formattedDepartments = computed(() => {
   if (!teacher.value?.department) return [];
   if (Array.isArray(teacher.value.department)) return teacher.value.department;
-  // Splits by comma, removes whitespace, filters out empty strings
   return teacher.value.department.split(',').map(d => d.trim()).filter(d => d);
 });
 
-const getInitials = (nameEn, nameKh) => {
-  if (nameEn && nameEn !== 'N/A') return nameEn.charAt(0).toUpperCase();
-  if (nameKh) return nameKh.charAt(0);
-  return '?';
-};
-
 const formatPhone = (phone) => {
-  if (!phone || phone === 'N/A') return 'NO PIN SET';
+  if (!phone || phone === 'N/A') return t.value.noPinSet;
   const cleaned = ('' + phone).replace(/\D/g, '');
   const match = cleaned.match(/^(\d{3})(\d{3})(\d{3,4})$/);
   if (match) return `${match[1]} ${match[2]} ${match[3]}`;
@@ -351,12 +438,12 @@ const selectAppAvatar = async (url) => {
     if (data.success) {
       teacher.value.avatarUrl = url;
       localStorage.setItem('duc_teacher_token', JSON.stringify(teacher.value));
-      triggerAlert('success', 'App avatar selected successfully!');
+      triggerAlert('success', t.value.alertAvatarSuccess);
     } else {
-      triggerAlert('error', data.message || 'Failed to update avatar.');
+      triggerAlert('error', data.message || t.value.alertAvatarFail);
     }
   } catch (error) {
-    triggerAlert('error', 'Server connection failed.');
+    triggerAlert('error', t.value.alertServerError);
   } finally {
     isUploadingAvatar.value = false;
   }
@@ -367,7 +454,7 @@ const handleImageUpload = async (event) => {
   if (!file) return;
 
   if (file.size > 5 * 1024 * 1024) {
-    triggerAlert('error', 'Image is too large. Please select an image under 5MB.');
+    triggerAlert('error', t.value.alertImgLarge);
     return;
   }
 
@@ -383,19 +470,19 @@ const handleImageUpload = async (event) => {
     if (data.success) {
       teacher.value.avatarUrl = data.imageUrl;
       localStorage.setItem('duc_teacher_token', JSON.stringify(teacher.value));
-      triggerAlert('success', 'Profile avatar updated successfully!');
+      triggerAlert('success', t.value.alertUploadSuccess);
     } else {
-      triggerAlert('error', data.message || 'Upload failed.');
+      triggerAlert('error', data.message || t.value.alertUploadFail);
     }
   } catch (error) {
-    triggerAlert('error', 'Server connection failed. Could not upload image.');
+    triggerAlert('error', t.value.alertUploadServerError);
   } finally {
     isUploadingAvatar.value = false;
     event.target.value = ''; 
   }
 };
 
-const triggerAlert = (type, message, confirmText = 'Confirm', onConfirm = null) => {
+const triggerAlert = (type, message, confirmText = t.value.confirm, onConfirm = null) => {
   customAlert.value = { show: true, type, message, confirmText, confirmAction: onConfirm };
   if (type === 'success') { alertTimeout = setTimeout(() => { if (customAlert.value.show) closeAlert(); }, 2500); }
 };
@@ -410,7 +497,7 @@ const executeConfirm = () => {
   closeAlert();
 };
 
-const promptLogout = () => triggerAlert('confirm', 'Are you sure you want to securely terminate this session?', 'Log Out', logout);
+const promptLogout = () => triggerAlert('confirm', t.value.alertLogoutMsg, t.value.logOutBtn, logout);
 const logout = () => { localStorage.removeItem('duc_teacher_token'); router.push('/login'); };
 
 onMounted(() => {

@@ -4,11 +4,13 @@
     <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
       
       <div v-if="teacher" class="mb-6 sm:mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
-        <p class="text-indigo-500 font-black tracking-widest uppercase text-[9px] sm:text-[10px] mb-1.5 sm:mb-2 flex items-center gap-2">
+        <p :class="['text-indigo-500 font-black tracking-widest uppercase text-[9px] sm:text-[10px] mb-1.5 sm:mb-2 flex items-center gap-2', language === 'kh' ? 'font-khmer text-xs' : '']">
           <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
-          Academic Timetable
+          {{ t.academicTimetable }}
         </p>
-        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-none">Your Schedule</h1>
+        <h1 :class="['text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-none', language === 'kh' ? 'font-khmer leading-snug tracking-normal' : '']">
+          {{ t.yourSchedule }}
+        </h1>
       </div>
 
       <div v-if="teacher && !isLoading && !hasError" class="relative z-50 mb-6 sm:mb-10 animate-fade-in-up" style="animation-delay: 0.2s;">
@@ -16,40 +18,39 @@
           
           <button 
             @click="activeTab = 'today'; isDropdownOpen = false" 
-            :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'today' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50']"
+            :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'today' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer' : '']"
           >
-            Today's Classes
+            {{ t.todayClasses }}
           </button>
 
           <button 
             @click="activeTab = 'week'; selectedDayFilter = 'All'; isDropdownOpen = false" 
-            :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'week' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50']"
+            :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'week' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer' : '']"
           >
-            Full Week
+            {{ t.fullWeek }}
           </button>
 
           <div v-if="activeTab === 'week'" class="relative flex items-center border-l border-slate-300/50 dark:border-slate-600/50 pl-1 sm:pl-2 ml-1 sm:ml-0 animate-fade-in">
             <button 
               @click="isDropdownOpen = !isDropdownOpen" 
-              :class="['flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', selectedDayFilter !== 'All' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50']"
+              :class="['flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', selectedDayFilter !== 'All' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer' : '']"
             >
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-              <span class="hidden sm:inline">{{ selectedDayFilter === 'All' ? 'Filter Days' : selectedDayFilter }}</span>
-              <span class="sm:hidden">{{ selectedDayFilter === 'All' ? 'All' : selectedDayFilter.substring(0,3) }}</span>
+              <span class="hidden sm:inline">{{ selectedDayFilter === 'All' ? t.filterDays : displayDay(selectedDayFilter) }}</span>
+              <span class="sm:hidden">{{ selectedDayFilter === 'All' ? t.all : displayDay(selectedDayFilter).substring(0,3) }}</span>
             </button>
 
             <transition name="fade-scale">
               <div v-if="isDropdownOpen" class="absolute top-full right-0 mt-2 w-40 sm:w-48 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-2 z-[60]">
-                <button @click="selectDay('All')" :class="['w-full text-left px-4 sm:px-5 py-2.5 sm:py-3 text-xs font-black uppercase tracking-widest transition-colors', selectedDayFilter === 'All' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50']">
-                  All Days
+                <button @click="selectDay('All')" :class="['w-full text-left px-4 sm:px-5 py-2.5 sm:py-3 text-xs font-black uppercase tracking-widest transition-colors', selectedDayFilter === 'All' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer text-sm' : '']">
+                  {{ t.allDays }}
                 </button>
-                <button v-for="day in availableDays" :key="day" @click="selectDay(day)" :class="['w-full text-left px-4 sm:px-5 py-2.5 sm:py-3 text-xs font-black uppercase tracking-widest transition-colors border-t border-slate-100 dark:border-slate-700/50', selectedDayFilter === day ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50']">
-                  {{ day }}
+                <button v-for="day in availableDays" :key="day" @click="selectDay(day)" :class="['w-full text-left px-4 sm:px-5 py-2.5 sm:py-3 text-xs font-black uppercase tracking-widest transition-colors border-t border-slate-100 dark:border-slate-700/50', selectedDayFilter === day ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer text-sm' : '']">
+                  {{ displayDay(day) }}
                 </button>
               </div>
             </transition>
           </div>
-
         </div>
       </div>
 
@@ -93,11 +94,11 @@
           <div class="w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-5 rounded-2xl bg-gradient-to-br from-red-50 to-white dark:from-red-900/40 dark:to-slate-900 flex items-center justify-center border border-red-100 dark:border-red-800/50 shadow-sm -rotate-3">
             <svg class="w-8 h-8 sm:w-10 sm:h-10 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"></path></svg>
           </div>
-          <h3 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Connection Lost</h3>
-          <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-sm mb-6">We couldn't reach the server. Please check your internet connection.</p>
-          <button @click="refreshTeacherData" class="px-5 sm:px-6 py-2 sm:py-2.5 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 text-red-600 dark:text-red-400 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 group">
+          <h3 :class="['text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.connectionLost }}</h3>
+          <p :class="['text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-sm mb-6', language === 'kh' ? 'font-khmer' : '']">{{ t.connectionError }}</p>
+          <button @click="refreshTeacherData" :class="['px-5 sm:px-6 py-2 sm:py-2.5 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 text-red-600 dark:text-red-400 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 group', language === 'kh' ? 'font-khmer' : '']">
             <svg class="w-4 h-4 group-hover:-rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-            Try Again
+            {{ t.tryAgain }}
           </button>
         </div>
       </div>
@@ -108,15 +109,15 @@
             <svg v-if="activeTab === 'today'" class="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             <svg v-else class="w-8 h-8 sm:w-10 sm:h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
           </div>
-          <h3 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
-            {{ activeTab === 'today' ? 'Day Off!' : (selectedDayFilter !== 'All' ? 'No Classes' : 'Clear Schedule') }}
+          <h3 :class="['text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2', language === 'kh' ? 'font-khmer' : '']">
+            {{ activeTab === 'today' ? t.dayOff : (selectedDayFilter !== 'All' ? t.noClasses : t.clearSchedule) }}
           </h3>
-          <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-sm mb-6 relative z-10">
-            {{ activeTab === 'today' ? 'You don\'t have any classes to teach today. Enjoy your free time!' : (selectedDayFilter !== 'All' ? `You have no classes scheduled for ${selectedDayFilter}.` : 'You don\'t have any classes assigned for this semester yet.') }}
+          <p :class="['text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-sm mb-6 relative z-10', language === 'kh' ? 'font-khmer' : '']">
+            {{ activeTab === 'today' ? t.msgDayOff : (selectedDayFilter !== 'All' ? t.msgNoClasses(displayDay(selectedDayFilter)) : t.msgClear) }}
           </p>
-          <button v-if="activeTab === 'week' && selectedDayFilter === 'All'" @click="refreshTeacherData" class="px-6 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-900 dark:text-white rounded-xl font-bold transition-all border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-2 group">
+          <button v-if="activeTab === 'week' && selectedDayFilter === 'All'" @click="refreshTeacherData" :class="['px-6 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-900 dark:text-white rounded-xl font-bold transition-all border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-2 group', language === 'kh' ? 'font-khmer' : '']">
             <svg class="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-            Reload Data
+            {{ t.reloadData }}
           </button>
         </div>
       </div>
@@ -134,7 +135,9 @@
                 <div class="absolute inset-0 bg-indigo-400 rounded-full animate-ping opacity-30"></div>
                 <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white dark:bg-slate-900 border-[3px] sm:border-[4px] border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] z-10"></div>
               </div>
-              <h3 class="text-base sm:text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase pr-2">{{ day }}</h3>
+              <h3 :class="['text-base sm:text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase pr-2', language === 'kh' ? 'font-khmer' : '']">
+                {{ displayDay(day) }}
+              </h3>
             </div>
 
             <div class="flex flex-col gap-4 sm:gap-5 pl-10 sm:pl-16 relative z-10">
@@ -144,7 +147,7 @@
                   <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
                   
                   <div class="hidden sm:block">
-                    <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Timeblock</p>
+                    <p :class="['text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2', language === 'kh' ? 'font-khmer text-[10px]' : '']">{{ t.timeblock }}</p>
                   </div>
                   
                   <div class="flex flex-row sm:flex-col items-center sm:items-start gap-1 sm:gap-0">
@@ -190,9 +193,9 @@
                         ឆមាសទី {{ cls.semester }}
                       </div>
 
-                      <div v-if="cls.department === '?' || cls.year === '?' || cls.semester === '?'" class="flex items-center gap-1 px-2 py-0.5 sm:py-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-md text-[9px] font-black uppercase tracking-widest border border-red-200 dark:border-red-500/30 shadow-sm animate-pulse">
+                      <div v-if="cls.department === '?' || cls.year === '?' || cls.semester === '?'" :class="['flex items-center gap-1 px-2 py-0.5 sm:py-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-md text-[9px] font-black uppercase tracking-widest border border-red-200 dark:border-red-500/30 shadow-sm animate-pulse', language === 'kh' ? 'font-khmer' : '']">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Incomplete Data
+                        {{ t.incompleteData }}
                       </div>
                     </div>
 
@@ -206,24 +209,24 @@
                     <button 
                       v-if="cls.department !== '?' && cls.year !== '?' && cls.semester !== '?'"
                       @click="openTrackingForm(cls)" 
-                      class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-indigo-50 dark:bg-indigo-500/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all duration-300"
+                      :class="['flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-indigo-50 dark:bg-indigo-500/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all duration-300', language === 'kh' ? 'font-khmer' : '']"
                     >
                       <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                      Track: {{ cls.group }}
+                      {{ t.track }}: {{ cls.group }}
                     </button>
                     
                     <button 
                       v-else
                       @click="showDataError(cls)" 
-                      class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-red-50 dark:bg-red-500/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 dark:hover:text-white transition-all duration-300"
+                      :class="['flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-red-50 dark:bg-red-500/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 dark:hover:text-white transition-all duration-300', language === 'kh' ? 'font-khmer' : '']"
                     >
                       <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                      Contact Admin
+                      {{ t.contactAdmin }}
                     </button>
 
-                    <button @click="openHistoryView(cls)" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-white dark:bg-slate-800 shadow-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-cyan-400 hover:text-cyan-600 dark:hover:border-cyan-500 dark:hover:text-cyan-400 transition-all duration-300">
+                    <button @click="openHistoryView(cls)" :class="['flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-white dark:bg-slate-800 shadow-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-cyan-400 hover:text-cyan-600 dark:hover:border-cyan-500 dark:hover:text-cyan-400 transition-all duration-300', language === 'kh' ? 'font-khmer' : '']">
                       <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      History
+                      {{ t.history }}
                     </button>
                   </div>
 
@@ -246,13 +249,13 @@
             <svg class="w-8 h-8 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
           </div>
           
-          <h3 class="text-xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Database Error</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-            This class cannot be tracked because its <strong class="text-slate-800 dark:text-slate-200">Department, Year, or Semester</strong> is missing from the Master Database. Please contact the administrator to fix the database alignment.
+          <h3 :class="['text-xl font-black text-slate-900 dark:text-white mb-2 tracking-tight', language === 'kh' ? 'font-khmer' : '']">{{ t.dbError }}</h3>
+          <p :class="['text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed', language === 'kh' ? 'font-khmer' : '']">
+            {{ t.dbErrorMsg }}
           </p>
           
-          <button @click="closeAlert" class="w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:scale-[1.02]">
-            Understood
+          <button @click="closeAlert" :class="['w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:scale-[1.02]', language === 'kh' ? 'font-khmer' : '']">
+            {{ t.understood }}
           </button>
         </div>
       </div>
@@ -276,13 +279,7 @@ const activeTab = ref('today'); // 'today' or 'week'
 const selectedDayFilter = ref('All');
 const isDropdownOpen = ref(false);
 
-const englishDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const todayName = computed(() => {
-  const dayIndex = new Date().getDay();
-  return englishDays[dayIndex];
-});
-
-// 🔥 NEW: MODAL STATE
+// 🔥 MODAL STATE
 const customAlert = ref({ show: false });
 
 const showDataError = (cls) => {
@@ -293,7 +290,95 @@ const closeAlert = () => {
   customAlert.value.show = false;
 };
 
-// 🔥 Auto-extract unique days that actually have classes (WITH TRIM FIX)
+// --- LANGUAGE STATE & DICTIONARY ---
+const language = ref(localStorage.getItem('app_lang') || 'en');
+
+// Auto-sync if changed in another tab (like Settings)
+window.addEventListener('storage', (e) => {
+  if (e.key === 'app_lang') {
+    language.value = e.newValue || 'en';
+  }
+});
+
+const khmerDays = {
+  'Monday': 'ច័ន្ទ',
+  'Tuesday': 'អង្គារ',
+  'Wednesday': 'ពុធ',
+  'Thursday': 'ព្រហស្បតិ៍',
+  'Friday': 'សុក្រ',
+  'Saturday': 'សៅរ៍',
+  'Sunday': 'អាទិត្យ'
+};
+
+const displayDay = (day) => {
+  return language.value === 'kh' ? (khmerDays[day] || day) : day;
+};
+
+const t = computed(() => {
+  if (language.value === 'kh') {
+    return {
+      academicTimetable: 'កាលវិភាគសិក្សា',
+      yourSchedule: 'កាលវិភាគរបស់អ្នក',
+      todayClasses: 'ថ្នាក់រៀនថ្ងៃនេះ',
+      fullWeek: 'ពេញមួយសប្តាហ៍',
+      filterDays: 'ជ្រើសរើសថ្ងៃ',
+      all: 'ទាំងអស់',
+      allDays: 'គ្រប់ថ្ងៃ',
+      timeblock: 'ម៉ោងសិក្សា',
+      track: 'ស្រង់វត្តមាន',
+      contactAdmin: 'ទាក់ទងរដ្ឋបាល',
+      history: 'ប្រវត្តិ',
+      incompleteData: 'ទិន្នន័យមិនពេញលេញ',
+      dayOff: 'ថ្ងៃសម្រាក!',
+      noClasses: 'គ្មានថ្នាក់រៀនទេ',
+      clearSchedule: 'កាលវិភាគទទេ',
+      msgDayOff: 'អ្នកមិនមានថ្នាក់បង្រៀនទេថ្ងៃនេះ។ រីករាយថ្ងៃសម្រាក!',
+      msgNoClasses: (day) => `អ្នកមិនមានថ្នាក់បង្រៀននៅថ្ងៃ ${day} ទេ។`,
+      msgClear: 'អ្នកមិនទាន់មានថ្នាក់បង្រៀននៅក្នុងឆមាសនេះទេ។',
+      reloadData: 'ទាញយកទិន្នន័យឡើងវិញ',
+      connectionLost: 'បាត់បង់ការតភ្ជាប់',
+      connectionError: 'មិនអាចភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេបានទេ។ សូមពិនិត្យមើលការតភ្ជាប់អ៊ីនធឺណិតរបស់អ្នក។',
+      tryAgain: 'ព្យាយាមម្តងទៀត',
+      dbError: 'កំហុសទិន្នន័យ',
+      dbErrorMsg: 'ថ្នាក់នេះមិនអាចស្រង់វត្តមានបានទេ ដោយសារតែខ្វះ ជំនាញ ឆ្នាំ ឬឆមាស នៅក្នុងប្រព័ន្ធទិន្នន័យមេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង។',
+      understood: 'យល់ព្រម'
+    };
+  }
+  return {
+    academicTimetable: 'Academic Timetable',
+    yourSchedule: 'Your Schedule',
+    todayClasses: 'Today\'s Classes',
+    fullWeek: 'Full Week',
+    filterDays: 'Filter Days',
+    all: 'All',
+    allDays: 'All Days',
+    timeblock: 'Timeblock',
+    track: 'Track',
+    contactAdmin: 'Contact Admin',
+    history: 'History',
+    incompleteData: 'Incomplete Data',
+    dayOff: 'Day Off!',
+    noClasses: 'No Classes',
+    clearSchedule: 'Clear Schedule',
+    msgDayOff: 'You don\'t have any classes to teach today. Enjoy your free time!',
+    msgNoClasses: (day) => `You have no classes scheduled for ${day}.`,
+    msgClear: 'You don\'t have any classes assigned for this semester yet.',
+    reloadData: 'Reload Data',
+    connectionLost: 'Connection Lost',
+    connectionError: 'We couldn\'t reach the server. Please check your internet connection.',
+    tryAgain: 'Try Again',
+    dbError: 'Database Error',
+    dbErrorMsg: 'This class cannot be tracked because its Department, Year, or Semester is missing from the Master Database. Please contact the administrator to fix the database alignment.',
+    understood: 'Understood'
+  };
+});
+
+const englishDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const todayName = computed(() => {
+  const dayIndex = new Date().getDay();
+  return englishDays[dayIndex];
+});
+
 const availableDays = computed(() => {
   const days = new Set();
   mySchedule.value.forEach(cls => {
@@ -304,12 +389,10 @@ const availableDays = computed(() => {
     }
   });
   
-  // Sort naturally by days of the week
   const order = { 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7 };
   return Array.from(days).sort((a, b) => (order[a] || 99) - (order[b] || 99));
 });
 
-// Handle Day Selection
 const selectDay = (day) => {
   selectedDayFilter.value = day;
   activeTab.value = 'week';
@@ -400,7 +483,6 @@ onMounted(() => {
   refreshTeacherData(true);
 });
 
-// 🔥 SMART DISPLAY LOGIC (WITH TRIM FIX)
 const displayedSchedule = computed(() => {
   const groups = {};
   const validClasses = mySchedule.value.filter(cls => {
@@ -409,14 +491,12 @@ const displayedSchedule = computed(() => {
 
   let classesToShow = validClasses;
 
-  // If "Today's Classes" is selected
   if (activeTab.value === 'today') {
     classesToShow = validClasses.filter(cls => 
       cls.day && cls.day.trim().toLowerCase() === todayName.value.toLowerCase()
     );
     if (classesToShow.length === 0) return {}; 
   } 
-  // If specific day is selected from Dropdown
   else if (activeTab.value === 'week' && selectedDayFilter.value !== 'All') {
     classesToShow = validClasses.filter(cls => 
       cls.day && cls.day.trim().toLowerCase() === selectedDayFilter.value.toLowerCase()
@@ -424,16 +504,13 @@ const displayedSchedule = computed(() => {
     if (classesToShow.length === 0) return {};
   }
 
-  // Grouping by Day
   classesToShow.forEach(cls => {
-    // Normalize day name capitalization
     const cleanDay = cls.day.trim();
     const dayKey = cleanDay.charAt(0).toUpperCase() + cleanDay.slice(1).toLowerCase();
     if (!groups[dayKey]) groups[dayKey] = [];
     groups[dayKey].push(cls);
   });
 
-  // Sorting by Time
   Object.keys(groups).forEach(day => {
     groups[day].sort((a, b) => {
       const getHour = (t) => t ? parseInt(t.match(/(\d+):/)?.[1] || 99) : 99;
@@ -446,9 +523,9 @@ const displayedSchedule = computed(() => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Siemreap&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Siemreap&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&family=Kantumruy+Pro:wght@400;500;600;700&display=swap');
 .font-sans { font-family: 'Inter', sans-serif; }
-.font-khmer { font-family: 'Siemreap', sans-serif; }
+.font-khmer { font-family: 'Kantumruy Pro', 'Siemreap', sans-serif; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 
 @keyframes dataFlow {

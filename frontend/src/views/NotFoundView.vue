@@ -18,17 +18,17 @@
           </h1>
         </div>
 
-        <h2 class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white tracking-tight mb-3 relative z-10">
-          Digital Void Discovered
+        <h2 :class="['text-2xl sm:text-3xl font-black text-slate-800 dark:text-white tracking-tight mb-3 relative z-10', language === 'kh' ? 'font-khmer' : '']">
+          {{ t.title }}
         </h2>
         
-        <p class="text-slate-500 dark:text-slate-400 font-medium mb-10 relative z-10 text-sm sm:text-base leading-relaxed">
-          Oops! The page you are looking for has drifted out of bounds. It might have been moved, deleted, or never existed at all.
+        <p :class="['text-slate-500 dark:text-slate-400 font-medium mb-10 relative z-10 text-sm sm:text-base leading-relaxed', language === 'kh' ? 'font-khmer' : '']">
+          {{ t.desc }}
         </p>
 
-        <button @click="goHome" class="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-sm font-black tracking-widest uppercase transition-all flex items-center justify-center gap-3 group hover:shadow-xl hover:shadow-indigo-500/20 dark:hover:shadow-white/10 hover:-translate-y-1 relative z-10">
+        <button @click="goHome" :class="['w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-sm font-black tracking-widest uppercase transition-all flex items-center justify-center gap-3 group hover:shadow-xl hover:shadow-indigo-500/20 dark:hover:shadow-white/10 hover:-translate-y-1 relative z-10', language === 'kh' ? 'font-khmer' : '']">
           <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-          Return to Safety
+          {{ t.button }}
         </button>
 
       </div>
@@ -38,12 +38,36 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-// Keep theme logic consistent
+// --- LANGUAGE STATE & DICTIONARY ---
+const language = ref(localStorage.getItem('app_lang') || 'en');
+
+window.addEventListener('storage', (e) => {
+  if (e.key === 'app_lang') {
+    language.value = e.newValue || 'en';
+  }
+});
+
+const t = computed(() => {
+  if (language.value === 'kh') {
+    return {
+      title: 'មិនរកឃើញទំព័រ',
+      desc: 'អូ! ទំព័រដែលអ្នកកំពុងស្វែងរកមិនមានទេ។ វាអាចត្រូវបានផ្លាស់ទី លុបចេញ ឬមិនដែលមាននៅឡើយ។',
+      button: 'ត្រឡប់ទៅសុវត្ថិភាពវិញ'
+    };
+  }
+  return {
+    title: 'Digital Void Discovered',
+    desc: 'Oops! The page you are looking for has drifted out of bounds. It might have been moved, deleted, or never existed at all.',
+    button: 'Return to Safety'
+  };
+});
+
+// Theme setup remains consistent
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme') || 'system';
   if (savedTheme === 'dark' || (savedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -54,7 +78,6 @@ onMounted(() => {
 });
 
 const goHome = () => {
-  // Check if they have an admin token or teacher token to route them correctly
   if (localStorage.getItem('duc_admin_token')) {
     router.push('/admin');
   } else if (localStorage.getItem('duc_teacher_token')) {
@@ -66,9 +89,10 @@ const goHome = () => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 
 .font-sans { font-family: 'Plus Jakarta Sans', sans-serif; }
+.font-khmer { font-family: 'Kantumruy Pro', sans-serif; }
 
 .animate-fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
 @keyframes fadeInUp {

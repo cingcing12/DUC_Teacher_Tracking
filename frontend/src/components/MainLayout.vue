@@ -24,7 +24,9 @@
               <div class="absolute inset-0 bg-indigo-500/20 rounded-full blur-md opacity-0 group-hover/logo:opacity-100 transition-opacity"></div>
               <img src="../assets/DUC.png" class="w-[22px] h-[22px] object-contain relative z-10" alt="DUC Logo" />
             </div>
-            <span class="font-black tracking-tight text-sm text-slate-800 dark:text-white hidden md:block relative z-10 drop-shadow-sm group-hover/logo:text-indigo-600 dark:group-hover/logo:text-indigo-400 transition-colors">Digital University Of Cambodia</span>
+            <span :class="['font-black tracking-tight text-sm text-slate-800 dark:text-white hidden md:block relative z-10 drop-shadow-sm group-hover/logo:text-indigo-600 dark:group-hover/logo:text-indigo-400 transition-colors', language === 'kh' ? 'font-khmer font-bold text-xs' : '']">
+              {{ t.universityName }}
+            </span>
           </div>
           
           <!-- Tabs & Actions -->
@@ -36,12 +38,12 @@
               <!-- Schedule Tab (Indigo) -->
               <button 
                 @click="router.push('/schedule')" 
-                :class="['relative flex flex-col items-center justify-center px-5 py-2 rounded-full transition-all duration-500 group outline-none', route.path === '/schedule' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white']"
+                :class="['relative flex flex-col items-center justify-center px-5 py-2 rounded-full transition-all duration-500 group outline-none', route.path === '/schedule' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white', language === 'kh' ? 'font-khmer' : '']"
               >
                 <!-- 3D Background Pill -->
                 <div :class="['absolute inset-0 rounded-full transition-all duration-500 z-0', route.path === '/schedule' ? 'bg-white dark:bg-slate-800 shadow-[0_4px_15px_rgba(99,102,241,0.2)] dark:shadow-[0_4px_15px_rgba(99,102,241,0.4)] border border-slate-200/50 dark:border-slate-700 opacity-100 scale-100' : 'opacity-0 scale-90 group-hover:scale-100 group-hover:bg-white/50 dark:group-hover:bg-white/5 border border-transparent']"></div>
                 <!-- Text -->
-                <span class="relative z-10 text-[10px] font-black uppercase tracking-widest transform transition-transform duration-300 group-active:scale-95">Schedule</span>
+                <span class="relative z-10 text-[10px] font-black uppercase tracking-widest transform transition-transform duration-300 group-active:scale-95">{{ t.schedule }}</span>
                 <!-- Neon Glowing Dot -->
                 <div :class="['absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.9)] transition-all duration-500 ease-out', route.path === '/schedule' ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 scale-0']"></div>
               </button>
@@ -49,20 +51,20 @@
               <!-- Stats Tab (Blue) -->
               <button 
                 @click="router.push('/stats')" 
-                :class="['relative flex flex-col items-center justify-center px-5 py-2 rounded-full transition-all duration-500 group outline-none', route.path === '/stats' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white']"
+                :class="['relative flex flex-col items-center justify-center px-5 py-2 rounded-full transition-all duration-500 group outline-none', route.path === '/stats' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white', language === 'kh' ? 'font-khmer' : '']"
               >
                 <div :class="['absolute inset-0 rounded-full transition-all duration-500 z-0', route.path === '/stats' ? 'bg-white dark:bg-slate-800 shadow-[0_4px_15px_rgba(59,130,246,0.2)] dark:shadow-[0_4px_15px_rgba(59,130,246,0.4)] border border-slate-200/50 dark:border-slate-700 opacity-100 scale-100' : 'opacity-0 scale-90 group-hover:scale-100 group-hover:bg-white/50 dark:group-hover:bg-white/5 border border-transparent']"></div>
-                <span class="relative z-10 text-[10px] font-black uppercase tracking-widest transform transition-transform duration-300 group-active:scale-95">Stats</span>
+                <span class="relative z-10 text-[10px] font-black uppercase tracking-widest transform transition-transform duration-300 group-active:scale-95">{{ t.stats }}</span>
                 <div :class="['absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.9)] transition-all duration-500 ease-out', route.path === '/stats' ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 scale-0']"></div>
               </button>
 
               <!-- Support Tab (Fuchsia) -->
               <button 
                 @click="router.push('/support')" 
-                :class="['relative flex flex-col items-center justify-center px-5 py-2 rounded-full transition-all duration-500 group outline-none', route.path === '/support' ? 'text-fuchsia-600 dark:text-fuchsia-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white']"
+                :class="['relative flex flex-col items-center justify-center px-5 py-2 rounded-full transition-all duration-500 group outline-none', route.path === '/support' ? 'text-fuchsia-600 dark:text-fuchsia-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white', language === 'kh' ? 'font-khmer' : '']"
               >
                 <div :class="['absolute inset-0 rounded-full transition-all duration-500 z-0', route.path === '/support' ? 'bg-white dark:bg-slate-800 shadow-[0_4px_15px_rgba(217,70,239,0.2)] dark:shadow-[0_4px_15px_rgba(217,70,239,0.4)] border border-slate-200/50 dark:border-slate-700 opacity-100 scale-100' : 'opacity-0 scale-90 group-hover:scale-100 group-hover:bg-white/50 dark:group-hover:bg-white/5 border border-transparent']"></div>
-                <span class="relative z-10 text-[10px] font-black uppercase tracking-widest transform transition-transform duration-300 group-active:scale-95">Support</span>
+                <span class="relative z-10 text-[10px] font-black uppercase tracking-widest transform transition-transform duration-300 group-active:scale-95">{{ t.support }}</span>
                 <div :class="['absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-fuchsia-500 shadow-[0_0_8px_rgba(217,70,239,0.9)] transition-all duration-500 ease-out', route.path === '/support' ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 scale-0']"></div>
               </button>
 
@@ -85,7 +87,7 @@
                   </div>
                 </div>
               </div>
-              <span :class="['text-[11px] font-black tracking-widest uppercase transition-colors duration-300', route.path === '/profile' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400']">{{ teacher.nameKh.split(' ')[0] }}</span>
+              <span :class="['text-[11px] font-black tracking-widest uppercase transition-colors duration-300', route.path === '/profile' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400', language === 'kh' ? 'font-khmer' : '']">{{ teacher.nameKh.split(' ')[0] }}</span>
             </button>
 
           </div>
@@ -108,7 +110,7 @@
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
           </div>
           <!-- Text -->
-          <span :class="['relative z-10 text-[9px] font-black uppercase tracking-wider transition-all duration-500', route.path === '/schedule' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500']">Schedule</span>
+          <span :class="['relative z-10 text-[9px] font-black uppercase tracking-wider transition-all duration-500', route.path === '/schedule' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500', language === 'kh' ? 'font-khmer text-[10px]' : '']">{{ t.schedule }}</span>
         </button>
 
         <!-- STATS TAB -->
@@ -118,7 +120,7 @@
           <div :class="['relative z-10 transition-all duration-500', route.path === '/stats' ? 'text-blue-600 dark:text-blue-400 -translate-y-1 drop-shadow-md' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-active:scale-90']">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
           </div>
-          <span :class="['relative z-10 text-[9px] font-black uppercase tracking-wider transition-all duration-500', route.path === '/stats' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500']">Stats</span>
+          <span :class="['relative z-10 text-[9px] font-black uppercase tracking-wider transition-all duration-500', route.path === '/stats' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500', language === 'kh' ? 'font-khmer text-[10px]' : '']">{{ t.stats }}</span>
         </button>
 
         <!-- SUPPORT TAB -->
@@ -128,7 +130,7 @@
           <div :class="['relative z-10 transition-all duration-500', route.path === '/support' ? 'text-fuchsia-600 dark:text-fuchsia-400 -translate-y-1 drop-shadow-md' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-active:scale-90']">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
           </div>
-          <span :class="['relative z-10 text-[9px] font-black uppercase tracking-wider transition-all duration-500', route.path === '/support' ? 'text-fuchsia-600 dark:text-fuchsia-400' : 'text-slate-400 dark:text-slate-500']">Support</span>
+          <span :class="['relative z-10 text-[9px] font-black uppercase tracking-wider transition-all duration-500', route.path === '/support' ? 'text-fuchsia-600 dark:text-fuchsia-400' : 'text-slate-400 dark:text-slate-500', language === 'kh' ? 'font-khmer text-[10px]' : '']">{{ t.support }}</span>
         </button>
 
         <!-- SETTINGS TAB -->
@@ -136,9 +138,9 @@
           <div :class="['absolute top-0 w-8 h-[3px] rounded-b-full transition-all duration-500 ease-out', route.path === '/settings' ? 'bg-amber-500 shadow-[0_2px_10px_rgba(245,158,11,0.8)] opacity-100' : 'bg-transparent opacity-0 scale-x-0']"></div>
           <div :class="['absolute top-2 w-10 h-10 rounded-full transition-all duration-500 blur-md', route.path === '/settings' ? 'bg-amber-500/20 dark:bg-amber-500/30 opacity-100' : 'opacity-0 scale-50']"></div>
           <div :class="['relative z-10 transition-all duration-500', route.path === '/settings' ? 'text-amber-500 dark:text-amber-400 -translate-y-1 drop-shadow-md' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-active:scale-90']">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
           </div>
-          <span :class="['relative z-10 text-[9px] font-black uppercase tracking-wider transition-all duration-500', route.path === '/settings' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500']">Settings</span>
+          <span :class="['relative z-10 text-[9px] font-black uppercase tracking-wider transition-all duration-500', route.path === '/settings' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500', language === 'kh' ? 'font-khmer text-[10px]' : '']">{{ t.settings }}</span>
         </button>
 
         <!-- PROFILE TAB -->
@@ -148,7 +150,7 @@
           <div :class="['relative z-10 transition-all duration-500', route.path === '/profile' ? 'text-emerald-500 dark:text-emerald-400 -translate-y-1 drop-shadow-md' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-active:scale-90']">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
           </div>
-          <span :class="['relative z-10 text-[9px] font-black uppercase tracking-wider transition-all duration-500', route.path === '/profile' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500']">Profile</span>
+          <span :class="['relative z-10 text-[9px] font-black uppercase tracking-wider transition-all duration-500', route.path === '/profile' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500', language === 'kh' ? 'font-khmer text-[10px]' : '']">{{ t.profile }}</span>
         </button>
 
       </div>
@@ -162,12 +164,57 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
 const route = useRoute();
 const teacher = ref(null);
+
+// --- LANGUAGE STATE & DICTIONARY ---
+const language = ref(localStorage.getItem('app_lang') || 'en');
+
+// 1. Cross-tab sync
+window.addEventListener('storage', (e) => {
+  if (e.key === 'app_lang') {
+    language.value = e.newValue || 'en';
+  }
+});
+
+// 2. Same-tab sync (Instant Update!)
+// We wrap localStorage.setItem so Layout instantly knows when Settings changes it.
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function(key, value) {
+  originalSetItem.apply(this, arguments);
+  if (key === 'app_lang') {
+    window.dispatchEvent(new CustomEvent('local-lang-change', { detail: value }));
+  }
+};
+
+window.addEventListener('local-lang-change', (e) => {
+  language.value = e.detail;
+});
+
+const t = computed(() => {
+  if (language.value === 'kh') {
+    return {
+      universityName: 'សាកលវិទ្យាល័យឌីជីថលកម្ពុជា',
+      schedule: 'កាលវិភាគ',
+      stats: 'ស្ថិតិ',
+      support: 'ជំនួយ',
+      settings: 'ការកំណត់',
+      profile: 'ប្រវត្តិរូប'
+    };
+  }
+  return {
+    universityName: 'Digital University Of Cambodia',
+    schedule: 'Schedule',
+    stats: 'Stats',
+    support: 'Support',
+    settings: 'Settings',
+    profile: 'Profile'
+  };
+});
 
 onMounted(() => {
   const token = localStorage.getItem('duc_teacher_token');
@@ -178,6 +225,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
+.font-khmer { font-family: 'Kantumruy Pro', sans-serif; }
+
 @keyframes blob {
   0% { transform: translate(0px, 0px) scale(1); }
   33% { transform: translate(30px, -50px) scale(1.1); }

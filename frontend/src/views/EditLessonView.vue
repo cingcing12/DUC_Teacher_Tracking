@@ -1,13 +1,13 @@
 <template>
   <div class="w-full h-full relative">
     
-    <main class="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
-      
-      <button @click="goBack" class="group flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-6 sm:mb-8 transition-colors animate-fade-in-up">
+    <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
+        
+      <button @click="goBack" :class="['group flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 mb-6 sm:mb-8 transition-colors animate-fade-in-up', language === 'kh' ? 'font-khmer' : '']">
         <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
           <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
         </div>
-        Cancel & Go Back
+        {{ t.cancelBack }}
       </button>
 
       <div class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl rounded-2xl sm:rounded-[2.5rem] shadow-xl shadow-indigo-500/5 dark:shadow-black/50 border border-white dark:border-white/5 p-5 sm:p-12 relative overflow-hidden animate-fade-in-up" style="animation-delay: 0.1s;">
@@ -15,11 +15,11 @@
         <div class="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         
         <div class="relative z-10 mb-8 sm:mb-10 border-b border-slate-200 dark:border-slate-800 pb-6 sm:pb-8">
-          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4">
+          <div :class="['inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4', language === 'kh' ? 'font-khmer' : '']">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            Edit Mode
+            {{ t.editMode }}
           </div>
-          <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-2">Update Week {{ form.week }}</h1>
+          <h1 :class="['text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.updateWeek }} {{ form.week }}</h1>
           <p class="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-mono tracking-wide">
             {{ classData.subject }} <span class="mx-2 opacity-50">•</span> {{ classData.group }}
           </p>
@@ -28,40 +28,40 @@
         <form @submit.prevent="submitEdit" class="relative z-10 space-y-5 sm:space-y-6">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2">Lesson No</label>
+              <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.lessonNo }}</label>
               <input v-model="form.lessonNo" type="text" required class="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 sm:py-4 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
             </div>
             <div>
-              <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2">Date (ថ្ងៃខែឆ្នាំ)</label>
+              <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.date }}</label>
               <input v-model="form.date" type="date" required class="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 sm:py-4 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2">Start Time</label>
+              <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.startTime }}</label>
               <input v-model="form.startTime" type="time" required class="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3 sm:px-4 py-3.5 sm:py-4 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-mono">
             </div>
             <div>
-              <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2">End Time</label>
+              <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.endTime }}</label>
               <input v-model="form.endTime" type="time" required class="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3 sm:px-4 py-3.5 sm:py-4 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-mono">
             </div>
           </div>
 
           <div>
-            <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2">Lesson Content (ខ្លឹមសារមេរៀន)</label>
-            <textarea v-model="form.content" required class="w-full min-h-[120px] sm:min-h-[160px] bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 sm:px-5 py-3 sm:py-4 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer resize-none leading-relaxed"></textarea>
+            <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.lessonContent }}</label>
+            <textarea v-model="form.content" required :class="['w-full min-h-[120px] sm:min-h-[160px] bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 sm:px-5 py-3 sm:py-4 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer resize-none leading-relaxed']"></textarea>
           </div>
 
           <div>
-            <label class="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2">Notes (ផ្សេងៗ) - Optional</label>
-            <input v-model="form.notes" type="text" class="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer">
+            <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.notes }}</label>
+            <input v-model="form.notes" type="text" :class="['w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer']">
           </div>
 
           <button type="submit" :disabled="isSaving" class="w-full mt-2 sm:mt-4 py-4 sm:py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-50 hover:-translate-y-1">
             <span v-if="isSaving" class="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             <svg v-else class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-            {{ isSaving ? 'Saving Changes...' : 'Save & Update Record' }}
+            {{ isSaving ? t.savingChanges : t.saveUpdate }}
           </button>
         </form>
 
@@ -82,31 +82,77 @@
             <svg v-else class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
           </div>
 
-          <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 font-sans tracking-tight">
-            {{ customAlert.type === 'success' ? 'Updated!' : 'Error' }}
+          <h3 :class="['text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 tracking-tight', language === 'kh' ? 'font-khmer' : '']">
+            {{ customAlert.type === 'success' ? t.updated : t.error }}
           </h3>
           <p class="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 mb-6 sm:mb-8 font-khmer">
             {{ customAlert.message }}
           </p>
 
-          <button @click="closeAlert" :class="['w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all shadow-lg text-white flex items-center justify-center gap-2 hover:-translate-y-1', customAlert.type === 'success' ? 'bg-slate-900 dark:bg-white dark:text-slate-900 hover:shadow-emerald-500/25 dark:hover:bg-emerald-400' : 'bg-rose-600 hover:shadow-rose-500/25 hover:bg-rose-500']">
-            {{ customAlert.type === 'success' ? 'Back to History' : 'Try Again' }}
+          <button @click="closeAlert" :class="['w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all shadow-lg text-white flex items-center justify-center gap-2 hover:-translate-y-1', customAlert.type === 'success' ? 'bg-slate-900 dark:bg-white dark:text-slate-900 hover:shadow-emerald-500/25 dark:hover:bg-emerald-400' : 'bg-rose-600 hover:shadow-rose-500/25 hover:bg-rose-500', language === 'kh' ? 'font-khmer' : '']">
+            {{ customAlert.type === 'success' ? t.backToHistory : t.tryAgain }}
           </button>
         </div>
       </div>
     </transition>
-
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
 const route = useRoute();
-
 const isSaving = ref(false);
+
+// --- LANGUAGE STATE & DICTIONARY ---
+const language = ref(localStorage.getItem('app_lang') || 'en');
+
+window.addEventListener('storage', (e) => {
+  if (e.key === 'app_lang') {
+    language.value = e.newValue || 'en';
+  }
+});
+
+const t = computed(() => {
+  if (language.value === 'kh') {
+    return {
+      cancelBack: 'បោះបង់ និងត្រឡប់ក្រោយ',
+      editMode: 'របៀបកែសម្រួល',
+      updateWeek: 'កែសម្រួលសប្តាហ៍ទី',
+      lessonNo: 'មេរៀនទី',
+      date: 'កាលបរិច្ឆេទ (Date)',
+      startTime: 'ម៉ោងចាប់ផ្តើម',
+      endTime: 'ម៉ោងបញ្ចប់',
+      lessonContent: 'ខ្លឹមសារមេរៀន (Lesson Content)',
+      notes: 'ចំណាំផ្សេងៗ (Notes) - ស្រេចចិត្ត',
+      saveUpdate: 'រក្សាទុក និងអាប់ដេត',
+      savingChanges: 'កំពុងរក្សាទុក...',
+      updated: 'ត្រូវបានអាប់ដេត!',
+      error: 'កំហុស',
+      backToHistory: 'ត្រឡប់ទៅប្រវត្តិ',
+      tryAgain: 'ព្យាយាមម្តងទៀត'
+    };
+  }
+  return {
+    cancelBack: 'Cancel & Go Back',
+    editMode: 'Edit Mode',
+    updateWeek: 'Update Week',
+    lessonNo: 'Lesson No',
+    date: 'Date (ថ្ងៃខែឆ្នាំ)',
+    startTime: 'Start Time',
+    endTime: 'End Time',
+    lessonContent: 'Lesson Content (ខ្លឹមសារមេរៀន)',
+    notes: 'Notes (ផ្សេងៗ) - Optional',
+    saveUpdate: 'Save & Update Record',
+    savingChanges: 'Saving Changes...',
+    updated: 'Updated!',
+    error: 'Error',
+    backToHistory: 'Back to History',
+    tryAgain: 'Try Again'
+  };
+});
 
 const classData = ref({
   subject: route.query.subject || '',
@@ -115,21 +161,18 @@ const classData = ref({
   day: route.query.day || ''
 });
 
-// 🔥 FIX 1: Strict Time Formatter
-// This ensures that "8:00" becomes "08:00", which HTML inputs REQUIRE.
 const formatTime = (t) => {
   if (!t) return '';
   let trimmed = t.trim();
   if (trimmed.length === 4 && trimmed.indexOf(':') === 1) {
     trimmed = '0' + trimmed; 
   }
-  return trimmed.substring(0, 5); // ensures we only take HH:MM
+  return trimmed.substring(0, 5);
 };
 
 let initialStartTime = '';
 let initialEndTime = '';
 
-// Check if we passed a specific time through the URL
 if (route.query.time) {
   const timeParts = route.query.time.split('-');
   if (timeParts.length === 2) {
@@ -160,9 +203,7 @@ onMounted(() => {
   }
 });
 
-const goBack = () => {
-  router.go(-1); 
-};
+const goBack = () => router.go(-1);
 
 const triggerAlert = (type, message) => {
   customAlert.value = { show: true, type, message };
@@ -176,9 +217,7 @@ const triggerAlert = (type, message) => {
 const closeAlert = () => {
   customAlert.value.show = false;
   if (alertTimeout) clearTimeout(alertTimeout);
-  if (customAlert.value.type === 'success') {
-    goBack(); 
-  }
+  if (customAlert.value.type === 'success') goBack(); 
 };
 
 const submitEdit = async () => {
