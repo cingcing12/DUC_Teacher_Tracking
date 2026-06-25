@@ -199,6 +199,7 @@
                       </div>
                     </div>
 
+                    <!-- 🔥 THE FIX IS HERE -->
                     <h4 class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-khmer leading-snug sm:leading-tight mb-4 sm:mb-6">
                       {{ cleanSubjectName(cls.subject) }}
                     </h4>
@@ -399,13 +400,10 @@ const selectDay = (day) => {
   isDropdownOpen.value = false;
 };
 
+// 🔥 THE FIX: Delete ALL text inside parentheses (G2-Y2) and clean spaces
 const cleanSubjectName = (subject) => {
   if (!subject) return '';
-  return subject
-    .replace(/\s+/g, ' ')          
-    .replace(/\s*\(\s*/g, ' (')    
-    .replace(/\s*\)\s*/g, ')')      
-    .trim();                        
+  return String(subject).replace(/\s*\(.*?\)\s*/g, '').trim();
 };
 
 const openTrackingForm = (cls) => {
