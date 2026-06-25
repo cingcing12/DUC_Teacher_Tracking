@@ -204,8 +204,49 @@ watch(language, (newLang) => {
 });
 
 // --- THEME LOGIC ---
-const applyTheme = () => {
-  if (theme.value === 'dark' || (theme.value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+
+/**
+ * Temporarily injects a global transition on all elements so that
+ * background-color / color / border-color cross-fade smoothly when
+ * the `dark` class is toggled on <html>.  The transition is removed
+ * after it completes so it never interferes with other animations.
+ * Pass instant = true on first mount to avoid an unwanted fade-in.
+ */
+const THEME_TRANSITION_DURATION = 400; // ms — keep in sync with CSS
+
+const enableThemeTransition = () => {
+  const style = document.createElement('style');
+  style.id = '__theme-transition__';
+  style.textContent = `
+    *, *::before, *::after {
+      transition:
+        background-color ${THEME_TRANSITION_DURATION}ms ease,
+        color            ${THEME_TRANSITION_DURATION}ms ease,
+        border-color     ${THEME_TRANSITION_DURATION}ms ease,
+        box-shadow       ${THEME_TRANSITION_DURATION}ms ease,
+        fill             ${THEME_TRANSITION_DURATION}ms ease,
+        stroke           ${THEME_TRANSITION_DURATION}ms ease !important;
+    }
+  `;
+  document.head.appendChild(style);
+};
+
+const disableThemeTransition = () => {
+  const style = document.getElementById('__theme-transition__');
+  if (style) style.remove();
+};
+
+const applyTheme = (instant = false) => {
+  if (!instant) {
+    enableThemeTransition();
+    // Remove the injected style after the transition finishes
+    setTimeout(disableThemeTransition, THEME_TRANSITION_DURATION + 50);
+  }
+
+  if (
+    theme.value === 'dark' ||
+    (theme.value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  ) {
     document.documentElement.classList.add('dark');
   } else {
     document.documentElement.classList.remove('dark');
@@ -239,11 +280,18 @@ watch(enableAnimations, (newValue) => {
   applyAnimations();
 });
 
+// --- SYSTEM THEME WATCHER ---
+// Re-apply when the OS switches light/dark while theme is set to "system"
+const systemThemeWatcher = window.matchMedia('(prefers-color-scheme: dark)');
+systemThemeWatcher.addEventListener('change', () => {
+  if (theme.value === 'system') applyTheme();
+});
+
 // --- LIFECYCLE ---
 onMounted(() => {
-  applyTheme();
+  applyTheme(true); // instant = true → no fade on first load
   applyAnimations();
-  
+
   if (!localStorage.getItem('duc_teacher_token')) {
     router.push('/login');
   }
@@ -255,7 +303,8 @@ const goBack = () => {
 </script>
 
 <style>
-/* Motion Disabler */
+/* ─── Motion Disabler ─────────────────────────────────────────────────────── */
+/* Must stay last so !important wins over the injected theme-transition style */
 .disable-animations *,
 .disable-animations *::before,
 .disable-animations *::after {
@@ -263,33 +312,33 @@ const goBack = () => {
   transition: none !important;
 }
 
-/* Base Animations */
+/* ─── Base Animations ─────────────────────────────────────────────────────── */
 .animate-fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-in    { animation: fadeIn   0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.8); }
-  to { opacity: 1; transform: scale(1); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50%       { transform: translateY(-8px); }
 }
 .animate-float { animation: float 6s ease-in-out infinite; }
 
 @keyframes pulse-slow {
   0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+  50%       { opacity: 0.8; transform: scale(1.05); }
 }
 .animate-pulse-slow { animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-/* Font Imports */
+/* ─── Font Imports ────────────────────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap');
 .font-khmer { font-family: 'Kantumruy Pro', sans-serif; }
 </style>

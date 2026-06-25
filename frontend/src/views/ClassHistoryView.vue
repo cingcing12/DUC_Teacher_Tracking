@@ -20,7 +20,9 @@
               {{ t.lessonHistory }}
               <span v-if="isAdmin" class="ml-2 bg-rose-500 text-white px-2 py-0.5 rounded text-[8px] tracking-widest uppercase">{{ t.adminView }}</span>
             </div>
-            <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-3 sm:mb-4">{{ classData.subject }}</h1>
+            
+            <!-- 🔥 THE FIX: Added cleanSubjectName here so it hides (G2-Y2) -->
+            <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-3 sm:mb-4">{{ cleanSubjectName(classData.subject) }}</h1>
             
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-mono tracking-wide">
               <p :class="[language === 'kh' ? 'font-khmer' : '']">{{ t.cohort }}: <span class="text-cyan-500 dark:text-cyan-400">{{ classData.group }}</span></p>
@@ -380,6 +382,11 @@ const goToPage = (page) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+// 🔥 THE FIX: Delete ALL text inside parentheses (G2-Y2) and clean spaces
+const cleanSubjectName = (subject) => {
+  if (!subject) return '';
+  return String(subject).replace(/\s*\(.*?\)\s*/g, '').trim();
+};
 
 const customAlert = ref({ show: false, type: 'success', message: '', confirmAction: null });
 let alertTimeout = null;

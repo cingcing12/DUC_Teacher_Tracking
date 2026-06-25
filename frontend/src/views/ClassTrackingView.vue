@@ -19,7 +19,9 @@
               <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-500 animate-pulse"></span>
               {{ t.activeSessionTracker }}
             </div>
-            <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-3 sm:mb-4">{{ classData.subject }}</h1>
+            
+            <!-- 🔥 THE FIX: Added cleanSubjectName here so it hides (G2-Y2) -->
+            <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-3 sm:mb-4">{{ cleanSubjectName(classData.subject) }}</h1>
             
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-mono tracking-wide">
               <p :class="[language === 'kh' ? 'font-khmer' : '']">{{ t.cohort }}: <span class="text-indigo-500 dark:text-indigo-400">{{ classData.group }}</span></p>
@@ -246,6 +248,12 @@ const classData = ref({
   department: route.query.department || 'Unknown Department'
 });
 
+// 🔥 THE FIX: Cleans out the brackets for UI display only!
+const cleanSubjectName = (name) => {
+  if (!name) return '';
+  return String(name).replace(/\s*\(.*?\)\s*/g, '').trim();
+};
+
 const getLocalDate = () => {
   const now = new Date();
   const year = now.getFullYear();
@@ -346,7 +354,7 @@ const submitTrackingData = async () => {
   const payload = {
     teacherNameKh: teacher.value.nameKh,
     department: classData.value.department,
-    subject: classData.value.subject,
+    subject: classData.value.subject, // Sends the full string with (G2-Y2) to backend safely!
     cohort: classData.value.group,
     room: classData.value.room,
     day: classData.value.day,
