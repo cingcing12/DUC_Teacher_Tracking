@@ -591,4 +591,52 @@ router.get('/tracking-directory', noCache, async (req, res) => {
   }
 });
 
+
+// GET: ALL HISTORICAL CLASSES FOR A TEACHER
+router.get("/my-full-history", noCache, async (req, res) => {
+  try {
+    const { teacher } = req.query;
+    if (!teacher) return res.status(400).json({ success: false, message: "Teacher required" });
+
+    const targetTeacher = normalizeText(teacher.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
+
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+
+    // Fetch everything from MasterTracking
+    const rows = await getMasterRows(sheets);
+    
+    const allHistory = [];
+
+    rows.forEach(row => {
+      const dbTeacher = normalizeText(row[7]);
+
+      // If the teacher's name matches, grab the data regardless of the current schedule
+      if (dbTeacher.includes(targetTeacher)) {
+        allHistory.push({
+          department: String(row[0] || ""),
+          major: String(row[1] || ""),
+          generation: String(row[2] || ""),
+          year: String(row[3] || ""),
+          semester: String(row[4] || ""),
+          subject: String(row[5] || ""),
+          cohort: String(row[6] || ""),
+          week: parseInt(row[8] || "0", 10),
+          date: String(row[9] || ""),
+          time: `${row[10] || ""} - ${row[11] || ""}`,
+          lessonNo: String(row[12] || ""),
+          content: String(row[13] || ""),
+          hours: String(row[14] || ""),
+          room: String(row[16] || "")
+        });
+      }
+    });
+
+    res.json({ success: true, data: allHistory });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Error fetching full history" });
+  }
+});
+
 module.exports = router;

@@ -18,14 +18,19 @@ import MainLayout from './components/MainLayout.vue';
 const route = useRoute();
 
 const layoutComponent = computed(() => {
-  // Hide the teacher navbar for login pages
+  // 1. Hide for login pages
   if (route.path.includes('/login') || route.name === 'login') {
     return 'div';
   }
 
-  // 🔥 FIX: Hide the navbar for the entire admin section 
-  // AND hide it if the admin is viewing a shared page (like History) using ?admin=true
+  // 2. Hide for admin section or admin-view queries
   if (route.path.includes('/admin') || route.query.admin === 'true') {
+    return 'div';
+  }
+
+  // 🔥 3. FIX: Hide for 404 pages 
+  // We check if the route name is 'NotFound' or if the path is invalid
+  if (route.name === 'NotFound' || route.matched.length === 0) {
     return 'div';
   }
 

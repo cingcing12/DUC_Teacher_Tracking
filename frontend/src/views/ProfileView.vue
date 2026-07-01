@@ -251,7 +251,7 @@
             <svg v-else class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
           </div>
           
-          <h3 :class="['text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 tracking-tight', language === 'kh' ? 'font-khmer' : 'font-sans']">
+          <h3 :class="['text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 font-sans tracking-tight', language === 'kh' ? 'font-khmer' : '']">
             {{ customAlert.type === 'success' ? t.success : customAlert.type === 'error' ? t.errorOccurred : t.signOut }}
           </h3>
           <p :class="['text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-6 sm:mb-8 font-khmer']">{{ customAlert.message }}</p>
@@ -438,6 +438,7 @@ const selectAppAvatar = async (url) => {
     if (data.success) {
       teacher.value.avatarUrl = url;
       localStorage.setItem('duc_teacher_token', JSON.stringify(teacher.value));
+      window.dispatchEvent(new CustomEvent('local-teacher-change', { detail: JSON.stringify(teacher.value) }));
       triggerAlert('success', t.value.alertAvatarSuccess);
     } else {
       triggerAlert('error', data.message || t.value.alertAvatarFail);
@@ -470,6 +471,7 @@ const handleImageUpload = async (event) => {
     if (data.success) {
       teacher.value.avatarUrl = data.imageUrl;
       localStorage.setItem('duc_teacher_token', JSON.stringify(teacher.value));
+      window.dispatchEvent(new CustomEvent('local-teacher-change', { detail: JSON.stringify(teacher.value) }));
       triggerAlert('success', t.value.alertUploadSuccess);
     } else {
       triggerAlert('error', data.message || t.value.alertUploadFail);

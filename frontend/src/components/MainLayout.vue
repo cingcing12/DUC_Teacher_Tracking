@@ -192,6 +192,13 @@ window.addEventListener('local-lang-change', (e) => {
   language.value = e.detail;
 });
 
+// --- PROFILE INSTANT SYNC ---
+window.addEventListener('local-teacher-change', (e) => {
+  if (e.detail) {
+    teacher.value = JSON.parse(e.detail);
+  }
+});
+
 const t = computed(() => {
   if (language.value === 'kh') {
     return {
