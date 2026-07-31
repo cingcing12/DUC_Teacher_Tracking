@@ -528,13 +528,23 @@ router.post("/login", async (req, res) => {
 
     for (const row of rows) {
       const dbPhone = String(row[9] || "").trim();               // Column J (Index 9)
-      const dbEmail = String(row[10] || "").trim().toLowerCase(); // Column K (Index 10)
+      const dbEmailRaw = String(row[10] || "").toLowerCase(); // Column K (Index 10)
+      
+      // Split by 'or', '/', ',', ';' to handle multiple emails
+      const emailList = dbEmailRaw
+        .replace(/\bor\b/gi, ',')
+        .replace(/[\/\|;]/g, ',')
+        .split(',')
+        .map(e => e.trim())
+        .filter(e => e.length > 0);
+        
+      const emailMatch = emailList.includes(cleanInputEmail);
       
       // 🔥 THE FIX IS RIGHT HERE:
       const dbPassword = String(row[14] || "").trim();           // Column O (Index 14)
       const isBlocked = String(row[15] || "").trim().toUpperCase() === "TRUE"; // Column P (Index 15)
 
-      if (dbEmail === cleanInputEmail && dbPassword === cleanInputPassword) {
+      if (emailMatch && dbPassword === cleanInputPassword) {
         
         if (isBlocked) {
           return res.status(403).json({ success: false, message: "Your account is currently blocked. Please contact Admin." });
