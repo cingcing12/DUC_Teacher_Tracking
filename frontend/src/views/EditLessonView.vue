@@ -3,12 +3,14 @@
     
     <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
         
-      <button @click="goBack" :class="['group flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 mb-6 sm:mb-8 transition-colors animate-fade-in-up', language === 'kh' ? 'font-khmer' : '']">
-        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
-          <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-        </div>
-        {{ t.cancelBack }}
-      </button>
+      <div class="w-full flex justify-start mb-6 sm:mb-8 animate-fade-in-up">
+        <button @click="goBack" :class="['group flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors w-max', language === 'kh' ? 'font-khmer' : '']">
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
+            <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+          </div>
+          {{ t.cancelBack }}
+        </button>
+      </div>
 
       <div class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl rounded-2xl sm:rounded-[2.5rem] shadow-xl shadow-indigo-500/5 dark:shadow-black/50 border border-white dark:border-white/5 p-5 sm:p-12 relative overflow-hidden animate-fade-in-up" style="animation-delay: 0.1s;">
         
@@ -181,10 +183,40 @@ if (route.query.time) {
   }
 }
 
+const formatDateForInput = (dateStr) => {
+  if (!dateStr) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  
+  const parts = dateStr.split(/[\/\-]/);
+  
+  if (parts.length === 3 && parts[2].length === 4) {
+    const year = parts[2];
+    let day = parts[0].padStart(2, '0');
+    let month = parts[1].padStart(2, '0');
+    
+    // Safety check: if month is > 12, it's actually MM/DD/YYYY
+    if (parseInt(month, 10) > 12) {
+      month = parts[0].padStart(2, '0');
+      day = parts[1].padStart(2, '0');
+    }
+    
+    return `${year}-${month}-${day}`;
+  }
+
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  return dateStr;
+};
+
 const form = ref({
   week: route.query.week || '',
   lessonNo: route.query.lessonNo || '',
-  date: route.query.date || '',
+  date: formatDateForInput(route.query.date),
   startTime: initialStartTime, 
   endTime: initialEndTime,    
   content: route.query.content || '',

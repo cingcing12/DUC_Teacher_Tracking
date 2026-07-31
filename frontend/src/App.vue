@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import MainLayout from './components/MainLayout.vue';
 
@@ -36,6 +36,23 @@ const layoutComponent = computed(() => {
 
   // Standard teacher pages use MainLayout
   return MainLayout;
+});
+
+onMounted(() => {
+  // Global App Theme Hydration
+  const theme = localStorage.getItem('theme');
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else if (theme === 'light') {
+    document.documentElement.classList.remove('dark');
+  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.classList.add('dark');
+  }
+  
+  // Global Animation Hydration
+  if (localStorage.getItem('animations') === 'false') {
+    document.documentElement.classList.add('disable-animations');
+  }
 });
 </script>
 <style>

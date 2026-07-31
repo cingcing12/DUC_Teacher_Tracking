@@ -1,28 +1,18 @@
 <template>
-  <div class="w-full h-full relative min-h-screen bg-[#F1F5F9] dark:bg-[#050A15] text-slate-900 dark:text-slate-50 transition-colors duration-700">
+  <div class="w-full h-full relative min-h-screen bg-transparent text-slate-900 dark:text-slate-50 transition-colors duration-700">
     
     <!-- ========================================== -->
     <!-- APP UI (HIDDEN DURING PRINT)               -->
     <!-- ========================================== -->
     <div class="print:hidden w-full h-full relative pb-32 sm:pb-0 font-sans selection:bg-indigo-500 selection:text-white">
       
-      <!-- 🌌 ULTIMATE AMBIENT PHYSICS BACKGROUND -->
-      <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
-        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQPSI4Ij4KPHJlY3Qgd2lkdGg9IjgiIGhlaWdodD0iOCIgZmlsbD0ibm9uZSIvPgo8Y2lyY2xlIGN4PSIxIiBjeT0iMSIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPgo8L3N2Zz4=')] opacity-60 mix-blend-overlay z-10"></div>
-        <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)] z-0 transition-opacity duration-700"></div>
-        
-        <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[140px] opacity-40 dark:opacity-20 animate-blob bg-indigo-400 dark:bg-indigo-600 transition-opacity"></div>
-        <div class="absolute top-[20%] right-[-10%] w-[45vw] h-[45vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[140px] opacity-30 dark:opacity-20 animate-blob animation-delay-2000 bg-fuchsia-300 dark:bg-purple-700 transition-opacity"></div>
-        <div class="absolute bottom-[-20%] left-[10%] w-[60vw] h-[60vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[160px] opacity-40 dark:opacity-10 animate-blob animation-delay-4000 bg-cyan-300 dark:bg-cyan-800 transition-opacity"></div>
-      </div>
-
       <!-- MAIN CONTENT AREA -->
-      <main class="relative z-10 w-full max-w-[28rem] sm:max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col">
+      <main class="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col">
         
         <div class="w-full flex justify-start mb-6 sm:mb-8 animate-fade-in-up">
-          <button @click="goBack" :class="['group flex items-center gap-2 sm:gap-3 px-5 py-2.5 bg-white/40 dark:bg-slate-800/40 hover:bg-white/80 dark:hover:bg-slate-800/80 backdrop-blur-2xl rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-500 shadow-[0_4px_15px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_15px_rgba(0,0,0,0.2)] border border-white/60 dark:border-white/10 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:-translate-y-0.5', language === 'kh' ? 'font-khmer' : '']">
-            <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/30 group-hover:-translate-x-1 transition-all duration-300">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+          <button @click="goBack" :class="['group flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors w-max', language === 'kh' ? 'font-khmer' : '']">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
+              <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
             </div>
             {{ t.back }}
           </button>
@@ -159,98 +149,108 @@
       </main>
     </div>
 
+    <!-- PRELOAD ASSETS FOR PRINT (Forces browser to cache them instantly) -->
+    <img src="../assets/DUC.png" alt="" class="absolute w-0 h-0 opacity-0 pointer-events-none" />
+
     <!-- ========================================== -->
     <!-- OFFICIAL PDF PRINT TEMPLATE (HIDDEN IN APP)-->
     <!-- ========================================== -->
     <div v-if="printData" id="print-area" class="hidden print:block w-full bg-white text-black font-khmer px-6">
       
-      <!-- Headers Container -->
-      <div class="w-full mb-6">
-        <!-- Kingdom Info (Top, Centered) -->
-        <div class="text-center mb-3">
-          <div class="font-moul text-lg mb-1">ព្រះរាជាណាចក្រកម្ពុជា</div>
-          <div class="font-moul text-md">ជាតិ សាសនា ព្រះមហាក្សត្រ</div>
+      <!-- Header Section -->
+      <div class="relative w-full mb-6 min-h-[120px]">
+        <!-- Left: Logo & University Name -->
+        <div class="absolute left-0 top-9 flex flex-col items-center w-64 text-center">
+          <img src="../assets/DUC.png" alt="DUC Logo" class="h-20 w-auto mb-1 object-contain" />
+          <h2 class="font-moul text-[15px] text-black leading-none mt-2 font-normal">សាកលវិទ្យាល័យឌីជីថលកម្ពុជា</h2>
+          <h3 class="text-[10px] font-black font-sans mt-1">DIGITAL UNIVERSITY OF CAMBODIA</h3>
         </div>
 
-        <!-- DUC Info (Below, Left Aligned) -->
-        <div class="text-left">
-          <div class="font-moul text-md mb-1 leading-snug">សាកលវិទ្យាល័យឌីជីថលកម្ពុជា</div>
-          <div class="font-sans font-bold text-xs">DIGITAL UNIVERSITY OF CAMBODIA</div>
+        <!-- Center: Nation Religion King -->
+        <div class="w-full flex flex-col items-center text-center pt-2">
+          <!-- 🔥 NO FONT-BOLD to match Google Sheets Moul format -->
+          <h1 class="font-moul text-[22px] text-black leading-none font-normal">ព្រះរាជាណាចក្រកម្ពុជា</h1>
+          <h2 class="font-moul text-[18px] text-black mt-3 leading-none font-normal">ជាតិ សាសនា ព្រះមហាក្សត្រ</h2>
+          
+          <!-- 🔥 CUSTOM TACTEING FONT ORNAMENT -->
+          <div class="flex items-center justify-center mt-2 mb-2 text-black">
+            <span class="font-tacteing text-3xl" style="line-height: 1;">3</span>
+          </div>
+          <!-- END DIVIDER -->
         </div>
       </div>
 
       <!-- Document Titles -->
-      <div class="text-center font-moul text-[15px] mb-8 leading-[1.8]">
-        <div>បញ្ជីតាមដានការបង្រៀនរបស់សាស្ត្រាចារ្យ និងការសិក្សារបស់និស្សិត</div>
-        <div>មហាវិទ្យាល័យ {{ printData.department ? printData.department.replace('មហាវិទ្យាល័យ', '') : '...........................................................' }}</div>
-        <div>កម្រិតបរិញ្ញាបត្រ ជំនាញ {{ printData.major || '...........................................' }}</div>
-        <div>មុខវិជ្ជា {{ cleanSubjectName(printData.subject) }}</div>
-        <div>បង្រៀនដោយ ៖ លោកគ្រូ {{ teacher?.nameKh }}</div>
+      <div class="text-center mb-4 pt-5 text-[14px] font-khmer">
+        <h3 class="force-bold mb-1">បញ្ជីតាមដានការបង្រៀនរបស់សាស្ត្រាចារ្យ</h3>
+        <h3 class="force-bold mb-1">មហាវិទ្យាល័យ {{ printData.department ? printData.department.replace('មហាវិទ្យាល័យ', '') : '...........................................................' }}</h3>
+        <h3 class="force-bold mb-1">កម្រិតបរិញ្ញាបត្រ ជំនាញ {{ printData.major || '...........................................' }}</h3>
+        <h3 class="force-bold mb-1">មុខវិជ្ជា {{ cleanSubjectName(printData.subject) }}</h3>
+        <h3 class="force-bold mb-1">បង្រៀនដោយ ៖ លោកគ្រូ {{ teacher?.nameKh }}</h3>
       </div>
 
       <!-- Meta Row -->
-      <div class="flex justify-between font-bold text-[13px] mb-2 px-1">
+      <div class="flex justify-between font-bold text-[12px] mb-1 px-1">
         <div>ថ្នាក់ ៖ {{ printData.cohort }}</div>
         <div>រៀងរាល់ថ្ងៃ {{ printData.daysStr || '..............' }} បន្ទប់ {{ printData.room || '......' }}</div>
       </div>
 
       <!-- Main Data Table -->
-      <table class="w-full border-collapse border border-black text-[12px] text-center mb-8">
+      <table class="w-full border-collapse border border-black text-[11px] text-center mb-6">
         <thead>
           <tr>
-            <th colspan="2" class="border border-black p-2 align-middle font-black">កាលបរិច្ឆេទ</th>
-            <th rowspan="2" class="border border-black p-2 align-middle font-black w-[15%] leading-tight">ម៉ោងបង្រៀន</th>
-            <th colspan="2" class="border border-black p-2 align-middle font-black">ការបរិយាយខ្លឹមសារមេរៀន</th>
-            <th rowspan="2" class="border border-black p-2 align-middle font-black w-[10%]">ម៉ោងសរុប</th>
+            <th colspan="2" class="border border-black p-1 align-middle font-bold">កាលបរិច្ឆេទ</th>
+            <th rowspan="2" class="border border-black p-1 align-middle font-bold w-[12%] leading-tight">ម៉ោងបង្រៀន</th>
+            <th colspan="2" class="border border-black p-1 align-middle font-bold">ការបរិយាយខ្លឹមសារមេរៀន</th>
+            <th rowspan="2" class="border border-black p-1 align-middle font-bold w-[8%]">ម៉ោងសរុប</th>
           </tr>
           <tr>
-            <th class="border border-black p-2 align-middle font-black w-[8%]">សប្តាហ៍</th>
-            <th class="border border-black p-2 align-middle font-black w-[15%]">ថ្ងៃខែឆ្នាំ</th>
-            <th class="border border-black p-2 align-middle font-black w-[15%]">មេរៀនទី</th>
-            <th class="border border-black p-2 align-middle font-black">ខ្លឹមសារមេរៀន</th>
+            <th class="border border-black p-1 align-middle font-bold w-[6%]">សប្តាហ៍</th>
+            <th class="border border-black p-1 align-middle font-bold w-[12%]">ថ្ងៃខែឆ្នាំ</th>
+            <th class="border border-black p-1 align-middle font-bold w-[12%]">មេរៀន</th>
+            <th class="border border-black p-1 align-middle font-bold">ខ្លឹមសារមេរៀន</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="lesson in printData.lessons" :key="lesson.week">
-            <td class="border border-black p-2">{{ lesson.week }}</td>
-            <td class="border border-black p-2">{{ formatDateKhmer(lesson.date) }}</td>
-            <td class="border border-black p-2 font-sans text-[11px]">{{ lesson.time }}</td>
-            <td class="border border-black p-2">{{ lesson.lessonNo }}</td>
-            <td class="border border-black p-2 text-left leading-relaxed">{{ lesson.content }}</td>
-            <td class="border border-black p-2 font-black">{{ parseNumericHours(lesson.hours) }}</td>
+          <tr v-for="lesson in printData.lessons" :key="lesson.week" class="break-inside-avoid page-break-inside-avoid">
+            <td class="border border-black p-1">{{ lesson.week }}</td>
+            <td class="border border-black p-1">{{ formatDateKhmer(lesson.date) }}</td>
+            <td class="border border-black p-1 font-sans text-[10px]">{{ lesson.time }}</td>
+            <td class="border border-black p-1">{{ lesson.lessonNo || '' }}</td>
+            <td class="border border-black p-1 text-left px-2 leading-relaxed">{{ lesson.content }}</td>
+            <td class="border border-black p-1 whitespace-nowrap">{{ parseNumericHours(lesson.hours) }}</td>
           </tr>
-          <tr>
-            <td colspan="5" class="border border-black p-2 text-right font-black pr-6">ចំនួនម៉ោងសរុប</td>
-            <td class="border border-black p-2 font-black">{{ printData.formattedHours }}</td>
+          
+          <!-- Ensure 20 rows total like the screenshot padding with empty rows -->
+          <template v-if="printData.lessons.length < 20">
+             <tr v-for="i in (20 - printData.lessons.length)" :key="'empty'+i" class="break-inside-avoid page-break-inside-avoid">
+               <td class="border border-black p-1">{{ printData.lessons.length + i }}</td>
+               <td class="border border-black p-1"></td>
+               <td class="border border-black p-1 font-sans text-[10px]">0:00 - 0:00</td>
+               <td class="border border-black p-1"></td>
+               <td class="border border-black p-1"></td>
+               <td class="border border-black p-1">0</td>
+             </tr>
+          </template>
+
+          <tr class="break-inside-avoid page-break-inside-avoid">
+            <td colspan="5" class="border border-black p-1 text-right pr-4">ចំនួនម៉ោងសរុប</td>
+            <td class="border border-black p-1 font-bold whitespace-nowrap">{{ printData.formattedHours }}</td>
           </tr>
         </tbody>
       </table>
 
       <!-- Signatures Footer -->
-      <div class="mt-10 text-[13px]">
-        <!-- Date lines, right-aligned, full width -->
-        <div class="text-right w-full mb-3 text-[12px] leading-relaxed whitespace-nowrap">
-          <div>ថ្ងៃ ..................ខែ .............. ឆ្នាំ ................ព.ស ២៥៦...</div>
-          <div>កំពង់ស្ពឺ ថ្ងៃទី........ ខែ ...............ឆ្នាំ២០២....</div>
+      <div class="flex justify-between mt-8 px-4 text-[12px] break-inside-avoid page-break-inside-avoid">
+        <!-- Admin/Head Signature -->
+        <div class="text-center flex flex-col items-center pt-20">
+          <div class="font-moul font-normal mb-16 leading-[1.6]">បានឃើញ និងឯកភាព<br>ប្រធានដេប៉ាតឺម៉ង់</div>
         </div>
-
-        <!-- Three signature columns -->
-        <div class="flex justify-between items-start">
-          <div class="text-center w-[30%] flex flex-col">
-            <div class="font-bold mb-1">បានឃើញ និងឯកភាព</div>
-            <div class="font-bold">ព្រឹទ្ធបុរស</div>
-          </div>
-
-          <div class="text-center w-[30%] flex flex-col">
-            <div class="font-bold mb-1">បានពិនិត្យ និងគោរពដូន</div>
-            <div class="font-bold">ប្រធានដេប៉ាតឺម៉ង់</div>
-          </div>
-
-          <div class="text-center w-[30%] flex flex-col items-center">
-            <div class="font-bold mb-1">បង្រៀនដោយ</div>
-            <!-- Teacher Signature Line -->
-            <div class="mt-16 w-3/4 border-b-[1.5px] border-dotted border-black"></div>
-          </div>
+        
+        <!-- Teacher Signature -->
+        <div class="text-center flex flex-col items-center">
+          <div class="mb-2">ថ្ងៃ ........................... ខែ .............................. ឆ្នាំរោង ឆស័ក ព.ស ២៥៧០</div>
+          <div class="mb-16">កំពង់ស្ពឺ ថ្ងៃទី......... ខែ .................... ឆ្នាំ២០២....<br><span class="font-moul font-normal mt-2 inline-block">ហត្ថលេខាគ្រូបង្រៀន</span></div>
         </div>
       </div>
 
@@ -269,6 +269,7 @@ const allHistory = ref([]);
 const scheduleData = ref([]); 
 const monthFilter = ref('');
 const fullMajorName = ref('');
+const fullFacultyName = ref('');
 
 // Print State
 const printData = ref(null);
@@ -342,11 +343,24 @@ const formatMins = (m) => {
     : `${h} hrs ${fM} mins`;
 };
 
-// Returns just the number "2" or "1" for the official print table
+// Returns just the number "2" or "1.5" for the official print table
 const parseNumericHours = (hourStr) => {
   if (!hourStr) return '0';
-  const match = hourStr.match(/(\d+)\s*ម៉ោង/);
-  if (match) return match[1];
+  
+  const hMatch = hourStr.match(/(\d+)\s*(?:ម៉ោង|hrs|hr|h)/i);
+  const mMatch = hourStr.match(/(\d+)\s*(?:នាទី|mins|min|m)/i);
+  
+  if (hMatch || mMatch) {
+    const h = hMatch ? parseInt(hMatch[1]) : 0;
+    const m = mMatch ? parseInt(mMatch[1]) : 0;
+    if (m === 0) return h.toString();
+    // Convert minutes to decimal (e.g. 30 mins -> 0.5)
+    return (h + m/60).toPrecision(2).replace(/\.0$/, ''); 
+  }
+  
+  const num = parseFloat(hourStr);
+  if (!isNaN(num)) return num.toString();
+  
   return hourStr;
 };
 
@@ -417,6 +431,15 @@ const fetchAllData = async () => {
       }
     } catch(err) { console.error(err); }
 
+    // Fetch Faculties for printing
+    try {
+      const facsRes = await fetch('https://duc-teacher-tracking.onrender.com/api/faculties');
+      const facsData = await facsRes.json();
+      if (facsData.success) {
+        fullFacultyName.value = facsData.data; 
+      }
+    } catch(err) { console.error(err); }
+
   } catch (error) {
     console.error("Failed to fetch analytics", error);
   } finally {
@@ -429,12 +452,31 @@ onMounted(() => {
 });
 
 const uniqueSubjects = computed(() => {
-  const subs = new Set();
+  const subs = new Map();
   allHistory.value.forEach(h => {
-    if (h.subject) subs.add(h.subject);
+    if (h.subject) {
+      const lower = h.subject.trim().toLowerCase();
+      if (!subs.has(lower)) {
+        subs.set(lower, h.subject.trim());
+      }
+    }
   });
-  return Array.from(subs).sort();
+  return Array.from(subs.values()).sort();
 });
+
+const getEnglishDayFromDate = (dateString) => {
+  if (!dateString) return '';
+  const parts = dateString.split('-');
+  let dateObj = null;
+  if (parts.length === 3 && parts[0].length <= 2) {
+    dateObj = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+  } else {
+    dateObj = new Date(dateString);
+  }
+  if (isNaN(dateObj.getTime())) return '';
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return days[dateObj.getDay()];
+};
 
 const computedStats = computed(() => {
   let totalMins = 0;
@@ -447,41 +489,57 @@ const computedStats = computed(() => {
       if (lessonMonth !== monthFilter.value) return; 
     }
 
-    if (classFilter.value && lesson.subject !== classFilter.value) return;
+    if (classFilter.value && (lesson.subject || '').trim().toLowerCase() !== classFilter.value.trim().toLowerCase()) return;
 
     let mins = 0;
     if (lesson.hours) {
-      const match = lesson.hours.match(/(\d+)\s*ម៉ោង\s*(\d+)\s*នាទី/);
-      if (match) {
-        mins = parseInt(match[1] || 0) * 60 + parseInt(match[2] || 0);
+      const hMatch = lesson.hours.match(/(\d+)\s*(?:ម៉ោង|hrs|hr|h)/i);
+      const mMatch = lesson.hours.match(/(\d+)\s*(?:នាទី|mins|min|m)/i);
+      
+      let h = 0;
+      let m = 0;
+      
+      if (hMatch || mMatch) {
+         if (hMatch) h = parseInt(hMatch[1] || 0);
+         if (mMatch) m = parseInt(mMatch[1] || 0);
+      } else {
+         const num = parseFloat(lesson.hours);
+         if (!isNaN(num)) {
+             h = Math.floor(num);
+             m = Math.round((num - h) * 60);
+         }
       }
+      mins = (h * 60) + m;
     }
     
     totalMins += mins;
     totalLessons++;
 
-    const key = `${lesson.subject}|${lesson.cohort}`;
+    // Normalize key to group "Strength of material II" and "Strength of Material II" together
+    const normSubject = (lesson.subject || '').trim().toLowerCase();
+    const key = `${normSubject}|${lesson.cohort}`;
+    
     if (!breakdown[key]) {
-      // Find room and days for the print template
-      const scheduleMatches = scheduleData.value.filter(c => c.subject === lesson.subject && c.group === lesson.cohort);
-      const room = scheduleMatches.length > 0 ? scheduleMatches[0].room : '';
-      const dept = scheduleMatches.length > 0 ? scheduleMatches[0].department : '';
-      
-      const daysSet = new Set();
-      scheduleMatches.forEach(c => daysSet.add(displayDay(c.day)));
-
       breakdown[key] = { 
-        subject: lesson.subject, 
+        subject: lesson.subject.trim(), // Use the first encountered case formatting as the display name
+
         cohort: lesson.cohort, 
-        room: room,
-        department: dept,
-        daysStr: Array.from(daysSet).join(' & '),
+        room: lesson.room || '',
+        daysSet: new Set(),
+        daysStr: '',
         mins: 0, 
         count: 0, 
         weeks: new Set(),
         lessons: [] // Keep lessons for printing
       };
     }
+    
+    if (lesson.room) breakdown[key].room = lesson.room;
+    
+    const engDay = getEnglishDayFromDate(lesson.date);
+    if (engDay) breakdown[key].daysSet.add(displayDay(engDay));
+    breakdown[key].daysStr = Array.from(breakdown[key].daysSet).join(' & ');
+
     
     breakdown[key].mins += mins;
     breakdown[key].count += 1;
@@ -522,15 +580,65 @@ const getMajorName = (cohortCode) => {
   else coreCode = parts[0];
   coreCode = stripNumbers(coreCode);
   
-  let matched = null;
-  const rows = Object.entries(fullMajorName.value).sort((a, b) => b[0].length - a[0].length);
+  const rows = Object.entries(fullMajorName.value);
+  
+  // 1. Try EXACT MATCH first
   for (const [k, v] of rows) {
+    if (normalize(k) === code) return v.trim();
+  }
+  
+  // 2. Try EXACT CORE MATCH next (e.g. 'DE' === 'DE')
+  for (const [k, v] of rows) {
+    if (normalize(k) === coreCode) return v.trim();
+  }
+
+  // 3. Try fallback substring matching (safe mode)
+  let matched = null;
+  const sortedRows = [...rows].sort((a, b) => b[0].length - a[0].length);
+  for (const [k, v] of sortedRows) {
     const sheetCode = normalize(k);
-    if (code === sheetCode || code.includes(sheetCode) || sheetCode.includes(code)) {
-        matched = v.trim(); break;
+    if (code.includes(sheetCode) || (coreCode.length >= 2 && sheetCode.includes(coreCode))) {
+        matched = v.trim(); 
+        break;
     }
-    if (coreCode.length >= 2 && sheetCode.includes(coreCode)) {
-        matched = v.trim(); break;
+  }
+  return matched || '';
+};
+
+// Helper to map Group Code to Faculty Name
+const getFacultyName = (cohortCode) => {
+  if (!fullFacultyName.value) return '';
+  const normalize = (str) => (str || '').replace(/\s+/g, '').replace(/[\u2013\u2014\u2011_]/g, '-').toUpperCase();
+  const stripNumbers = (str) => str.replace(/\d+$/, '').replace(/-[A-Z]$/, '');
+  
+  const code = normalize(cohortCode);
+  const parts = code.split('-');
+  let coreCode = code;
+  if (parts.length >= 3) coreCode = parts[1];
+  else if (parts.length === 2) coreCode = parts[1];
+  else coreCode = parts[0];
+  coreCode = stripNumbers(coreCode);
+  
+  const rows = Object.entries(fullFacultyName.value);
+  
+  // 1. Try EXACT MATCH first
+  for (const [k, v] of rows) {
+    if (normalize(k) === code) return v.trim();
+  }
+  
+  // 2. Try EXACT CORE MATCH next
+  for (const [k, v] of rows) {
+    if (normalize(k) === coreCode) return v.trim();
+  }
+
+  // 3. Try fallback substring matching
+  let matched = null;
+  const sortedRows = [...rows].sort((a, b) => b[0].length - a[0].length);
+  for (const [k, v] of sortedRows) {
+    const sheetCode = normalize(k);
+    if (code.includes(sheetCode) || (coreCode.length >= 2 && sheetCode.includes(coreCode))) {
+        matched = v.trim(); 
+        break;
     }
   }
   return matched || '';
@@ -538,12 +646,13 @@ const getMajorName = (cohortCode) => {
 
 // 🔥 NATIVE PDF PRINT GENERATOR
 const triggerPrint = (clsData) => {
-  // Find major name using the cohort code
-  const majorName = getMajorName(clsData.cohort);
+  const maj = getMajorName(clsData.cohort);
+  const dept = getFacultyName(clsData.cohort);
 
   printData.value = {
     ...clsData,
-    major: majorName
+    major: maj,
+    department: dept
   };
   
   // Wait for Vue to render the HTML, then trigger native browser print
@@ -555,13 +664,27 @@ const triggerPrint = (clsData) => {
 </script>
 
 <style scoped>
-/* Ensure Moul is loaded for the official headers */
-@import url('https://fonts.googleapis.com/css2?family=Moul&family=Kantumruy+Pro:wght@400;500;600;700;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
+/* Load the local Tacteing font from the public folder to bypass Vite cache */
+@font-face {
+  font-family: 'Tacteing';
+  src: url('/Tacteing.ttf') format('truetype');
+}
+.font-tacteing { font-family: 'Tacteing', sans-serif; }
 
 .font-sans { font-family: 'Inter', sans-serif; }
 .font-khmer { font-family: 'Kantumruy Pro', sans-serif; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
-.font-moul { font-family: 'Moul', 'Kantumruy Pro', cursive; }
+
+.force-bold {
+  font-weight: bold !important;
+  -webkit-text-stroke: 0.6px black;
+}
+
+/* 🔥 MOUL FONT SETUP */
+.font-moul { 
+  font-family: 'Moul', 'Khmer OS Muol', 'Khmer OS Muol Light', cursive !important; 
+  font-weight: normal !important;
+}
 
 input[type="month"]::-webkit-calendar-picker-indicator {
   filter: invert(0.5); cursor: pointer; opacity: 0.6; transition: 0.3s;
@@ -588,22 +711,29 @@ input[type="month"]::-webkit-calendar-picker-indicator:hover {
 
 /* 🔥 PRINT CSS MAGIC */
 @media print {
-  /* 
-    This is the magic fix! 
-    Because your <nav> is in Layout.vue, we use :global to target it 
-    and force it to hide during printing, even from inside Stats.vue! 
-  */
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+  
   :global(nav), 
   :global(div[class*="fixed bottom-"]) {
     display: none !important;
   }
-  
+
   /* Force background colors to print */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
+  /* CRITICAL: Forbid print engine from synthetic bolding of Moul font */
+  h1, h2, h3, h4, h5, h6, .font-moul {
+    font-weight: 400 !important;
+    -webkit-text-stroke: 0 !important;
+    text-shadow: none !important;
+  }
+
   /* Reset margins for A4 Paper */
   @page {
     size: A4 portrait;

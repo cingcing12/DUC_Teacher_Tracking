@@ -1,11 +1,10 @@
 <template>
-  <main class="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col items-center">
+  <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col items-center">
       
-    <!-- 🚀 Premium Floating Back Button -->
     <div class="w-full flex justify-start mb-6 sm:mb-8 animate-fade-in-up">
-      <button @click="goBack" :class="['group flex items-center gap-2 sm:gap-3 px-5 py-2.5 bg-white/40 dark:bg-slate-800/40 hover:bg-white/80 dark:hover:bg-slate-800/80 backdrop-blur-2xl rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-500 shadow-[0_4px_15px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_15px_rgba(0,0,0,0.2)] border border-white/60 dark:border-white/10 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:-translate-y-0.5', language === 'kh' ? 'font-khmer' : '']">
-        <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/30 group-hover:-translate-x-1 transition-all duration-300">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+      <button @click="goBack" :class="['group flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors w-max', language === 'kh' ? 'font-khmer' : '']">
+        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
+          <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
         </div>
         {{ t.back }}
       </button>

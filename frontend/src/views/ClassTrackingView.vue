@@ -1,11 +1,13 @@
 <template>
   <div class="w-full h-full relative min-h-screen">
     
-    <main class="relative z-10 w-full max-w-[28rem] sm:max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col">
+    <main class="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col">
       
       <div class="w-full flex justify-between items-center mb-6 animate-fade-in-up">
-        <button @click="router.push('/schedule')" :class="['group flex items-center gap-2 px-4 py-2 sm:py-2.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-2xl rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300 shadow-sm border border-slate-200 dark:border-slate-700/50 hover:scale-105', language === 'kh' ? 'font-khmer' : '']">
-          <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+        <button @click="router.push('/schedule')" :class="['group flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors w-max', language === 'kh' ? 'font-khmer' : '']">
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
+            <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+          </div>
           {{ t.backToSchedule }}
         </button>
       </div>
