@@ -558,7 +558,7 @@ router.post("/login", async (req, res) => {
           degree: String(row[7] || "").trim(), 
           major: String(row[8] || "").trim(),  
           phone: dbPhone, 
-          email: dbEmail
+          email: dbEmailRaw
         };
         break;
       }
