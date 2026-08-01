@@ -19,10 +19,10 @@
     <nav class="hidden sm:flex fixed top-6 left-0 right-0 z-50 justify-center px-4 animate-fade-in-down pointer-events-none">
       
       <!-- Ambient Outer Glow -->
-      <div class="absolute inset-0 max-w-4xl mx-auto rounded-full bg-gradient-to-r from-indigo-500/20 via-fuchsia-500/20 to-cyan-500/20 blur-2xl opacity-0 transition-opacity duration-700 nav-hover-target"></div>
+      <div class="absolute inset-0 max-w-6xl mx-auto rounded-full bg-gradient-to-r from-indigo-500/20 via-fuchsia-500/20 to-cyan-500/20 blur-2xl opacity-0 transition-opacity duration-700 nav-hover-target"></div>
 
       <!-- Core Glass Structure -->
-      <div class="pointer-events-auto relative p-[1.5px] rounded-full bg-gradient-to-r from-white/60 via-white/20 to-white/60 dark:from-indigo-500/50 dark:via-slate-800/50 dark:to-cyan-500/50 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)] w-full max-w-4xl group/nav transition-all duration-700 hover:shadow-[0_40px_80px_-15px_rgba(99,102,241,0.25)] dark:hover:shadow-[0_40px_80px_-15px_rgba(99,102,241,0.4)] hover:-translate-y-1">
+      <div class="pointer-events-auto relative p-[1.5px] rounded-full bg-gradient-to-r from-white/60 via-white/20 to-white/60 dark:from-indigo-500/50 dark:via-slate-800/50 dark:to-cyan-500/50 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)] w-full max-w-6xl group/nav transition-all duration-700 hover:shadow-[0_40px_80px_-15px_rgba(99,102,241,0.25)] dark:hover:shadow-[0_40px_80px_-15px_rgba(99,102,241,0.4)] hover:-translate-y-1">
         
         <!-- Deep Glass Inner Container -->
         <div class="bg-white/70 dark:bg-[#060B14]/80 backdrop-blur-[40px] rounded-full p-2 flex items-center justify-between w-full h-full relative overflow-visible">

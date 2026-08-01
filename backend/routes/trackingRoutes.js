@@ -107,6 +107,7 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
         const tabs = sheetMeta.data.sheets; 
 
         let targetSheetId = null;
+        let missingDates = [];
         let targetTabTitle = null;
         let targetRowIndex = -1;
         let targetColIndex = -1;
@@ -184,13 +185,23 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
                 }
 
                 if (blockHeaderRowIdx !== -1) {
+                    missingDates = []; // reset for this tab
                     const dayRow = rows[blockHeaderRowIdx];
+                    const teacherRow = rows[targetRowIndex];
+                    
                     for (let c = 7; c < Math.max(dayRow.length, 100); c++) {
                         const dayCell = String(dayRow[c] || "").trim();
-                        if (dayCell !== "" && !isNaN(dayCell) && monthMap[c] === khmerMonth) {
-                            if (parseInt(dayCell) === targetDay) {
+                        if (dayCell !== "" && !isNaN(dayCell)) {
+                            if (monthMap[c] === khmerMonth && parseInt(dayCell) === targetDay) {
                                 targetColIndex = c;
                                 break;
+                            }
+                            
+                            // Check if this date has not been tracked yet (empty or "A")
+                            const statusCell = teacherRow[c] ? String(teacherRow[c]).trim() : "";
+                            if (statusCell === "" || statusCell === "A") {
+                                const m = monthMap[c] || "";
+                                missingDates.push(`${m} ${dayCell}`.trim());
                             }
                         }
                     }
@@ -200,7 +211,13 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
         }
 
         if (targetRowIndex === -1 || targetColIndex === -1) {
-            return { success: false, message: `The date ${date} does not match the scheduled days for this class!` };
+            let errorMsg = `The date ${date} does not match the scheduled days for this class!`;
+            if (missingDates.length > 0) {
+                const displayDates = missingDates.slice(0, 5);
+                const moreText = missingDates.length > 5 ? ", ..." : "";
+                errorMsg += `\n(ថ្ងៃដែលមិនទាន់បំពេញ: ${displayDates.join(", ")}${moreText})`;
+            }
+            return { success: false, message: errorMsg };
         }
 
         let bgRed = 1, bgGreen = 1, bgBlue = 1; 

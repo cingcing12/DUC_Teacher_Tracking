@@ -1,7 +1,7 @@
 <template>
   <div class="w-full h-full relative min-h-screen">
     
-    <main class="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col items-center">
+    <main class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col items-center">
         
       <div class="w-full flex justify-start mb-6 sm:mb-8 animate-fade-in-up">
         <button @click="goBack" :class="['group flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors w-max', language === 'kh' ? 'font-khmer' : '']">

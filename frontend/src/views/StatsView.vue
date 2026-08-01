@@ -7,7 +7,7 @@
     <div class="print:hidden w-full h-full relative pb-32 sm:pb-0 font-sans selection:bg-indigo-500 selection:text-white">
       
       <!-- MAIN CONTENT AREA -->
-      <main class="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col">
+      <main class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-32 sm:pb-12 flex flex-col">
         
         <div class="w-full flex justify-start mb-6 sm:mb-8 animate-fade-in-up">
           <button @click="goBack" :class="['group flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors w-max', language === 'kh' ? 'font-khmer' : '']">
@@ -169,7 +169,7 @@
         <!-- Center: Nation Religion King -->
         <div class="w-full flex flex-col items-center text-center pt-2">
           <!-- 🔥 NO FONT-BOLD to match Google Sheets Moul format -->
-          <h1 class="font-moul text-[22px] text-black leading-none font-normal">ព្រះរាជាណាចក្រកម្ពុជា</h1>
+          <h1 class="font-moul text-[20px] text-black leading-none font-normal">ព្រះរាជាណាចក្រកម្ពុជា</h1>
           <h2 class="font-moul text-[18px] text-black mt-3 leading-none font-normal">ជាតិ សាសនា ព្រះមហាក្សត្រ</h2>
           
           <!-- 🔥 CUSTOM TACTEING FONT ORNAMENT -->
@@ -181,12 +181,12 @@
       </div>
 
       <!-- Document Titles -->
-      <div class="text-center mb-4 pt-5 text-[14px] font-khmer">
-        <h3 class="force-bold mb-1">បញ្ជីតាមដានការបង្រៀនរបស់សាស្ត្រាចារ្យ</h3>
-        <h3 class="force-bold mb-1">មហាវិទ្យាល័យ {{ printData.department ? printData.department.replace('មហាវិទ្យាល័យ', '') : '...........................................................' }}</h3>
-        <h3 class="force-bold mb-1">កម្រិតបរិញ្ញាបត្រ ជំនាញ {{ printData.major || '...........................................' }}</h3>
-        <h3 class="force-bold mb-1">មុខវិជ្ជា {{ cleanSubjectName(printData.subject) }}</h3>
-        <h3 class="force-bold mb-1">បង្រៀនដោយ ៖ លោកគ្រូ {{ teacher?.nameKh }}</h3>
+      <div class="text-center mb-4 pt-6 text-[14px] font-khmer">
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1 text-[16px]">បញ្ជីតាមដានការបង្រៀនរបស់សាស្ត្រាចារ្យ</p>
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">មហាវិទ្យាល័យ {{ printData.department ? printData.department.replace('មហាវិទ្យាល័យ', '') : '...........................................................' }}</p>
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">កម្រិតបរិញ្ញាបត្រ ជំនាញ {{ printData.major || '...........................................' }}</p>
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">មុខវិជ្ជា {{ cleanSubjectName(printData.subject) }}</p>
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">បង្រៀនដោយ ៖ លោកគ្រូ {{ teacher?.nameKh }}</p>
       </div>
 
       <!-- Meta Row -->
@@ -234,8 +234,8 @@
           </template>
 
           <tr class="break-inside-avoid page-break-inside-avoid">
-            <td colspan="5" class="border border-black p-1 text-right pr-4">ចំនួនម៉ោងសរុប</td>
-            <td class="border border-black p-1 font-bold whitespace-nowrap">{{ printData.formattedHours }}</td>
+            <td colspan="5" class="border border-black p-1 text-center">ចំនួនម៉ោងសរុប</td>
+            <td class="border border-black p-1 text-center font-bold whitespace-nowrap">{{ printData.formattedHours }}</td>
           </tr>
         </tbody>
       </table>
@@ -682,8 +682,8 @@ const triggerPrint = (clsData) => {
 
 /* 🔥 MOUL FONT SETUP */
 .font-moul { 
-  font-family: 'Moul', 'Khmer OS Muol', 'Khmer OS Muol Light', cursive !important; 
-  font-weight: normal !important;
+  font-family: 'Moul', 'Khmer OS Muol Light', 'Moul', 'Kantumruy Pro', sans-serif !important; 
+  font-weight: 400 !important;
 }
 
 input[type="month"]::-webkit-calendar-picker-indicator {

@@ -20,7 +20,7 @@
         </div>
       </div>
 
-      <div class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white dark:border-white/5 flex flex-col h-[750px] relative overflow-hidden isolate max-w-4xl mx-auto w-full">
+      <div class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white dark:border-white/5 flex flex-col h-[750px] relative overflow-hidden isolate max-w-6xl mx-auto w-full">
         
         <div class="p-6 sm:p-8 pb-6 border-b border-slate-100/50 dark:border-slate-700/50 relative z-10 flex flex-col gap-4 bg-white/40 dark:bg-slate-900/40">
           

@@ -1,7 +1,7 @@
 <template>
   <div class="w-full h-full relative">
     
-    <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
+    <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
       
       <div v-if="teacher" class="mb-6 sm:mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
         <p :class="['text-indigo-500 font-black tracking-widest uppercase text-[9px] sm:text-[10px] mb-1.5 sm:mb-2 flex items-center gap-2', language === 'kh' ? 'font-khmer text-xs' : '']">
@@ -177,23 +177,23 @@
                         {{ cls.room }}
                       </div>
 
-                      <div v-if="cls.department && cls.department !== '?'" class="flex items-center px-2 py-0.5 sm:py-1 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 rounded-md text-[9px] font-black font-khmer uppercase tracking-widest border border-fuchsia-100 dark:border-fuchsia-500/20 truncate max-w-[120px] sm:max-w-[150px]" :title="cls.department">
+                      <div v-if="cls.department && cls.department !== '?'" class="flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 rounded-md text-[9px] sm:text-xs font-black font-khmer uppercase tracking-widest border border-fuchsia-100 dark:border-fuchsia-500/20 truncate max-w-[120px] sm:max-w-xs" :title="cls.department">
                         {{ cls.department }}
                       </div>
 
-                      <div v-if="extractGen(cls.group)" class="flex items-center px-2 py-0.5 sm:py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md text-[9px] font-black font-khmer uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20">
+                      <div v-if="extractGen(cls.group)" class="flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md text-[9px] sm:text-xs font-black font-khmer uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20">
                         ជំនាន់ទី {{ extractGen(cls.group) }}
                       </div>
                       
-                      <div v-if="cls.year && cls.year !== '?'" class="flex items-center px-2 py-0.5 sm:py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md text-[9px] font-black font-khmer uppercase tracking-widest border border-blue-100 dark:border-blue-500/20">
+                      <div v-if="cls.year && cls.year !== '?'" class="flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md text-[9px] sm:text-xs font-black font-khmer uppercase tracking-widest border border-blue-100 dark:border-blue-500/20">
                         ឆ្នាំទី {{ cls.year }}
                       </div>
 
-                      <div v-if="cls.semester && cls.semester !== '?'" class="flex items-center px-2 py-0.5 sm:py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md text-[9px] font-black font-khmer uppercase tracking-widest border border-amber-100 dark:border-amber-500/20">
+                      <div v-if="cls.semester && cls.semester !== '?'" class="flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md text-[9px] sm:text-xs font-black font-khmer uppercase tracking-widest border border-amber-100 dark:border-amber-500/20">
                         ឆមាសទី {{ cls.semester }}
                       </div>
 
-                      <div v-if="cls.department === '?' || cls.year === '?' || cls.semester === '?'" :class="['flex items-center gap-1 px-2 py-0.5 sm:py-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-md text-[9px] font-black uppercase tracking-widest border border-red-200 dark:border-red-500/30 shadow-sm animate-pulse', language === 'kh' ? 'font-khmer' : '']">
+                      <div v-if="cls.department === '?' || cls.year === '?' || cls.semester === '?'" :class="['flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-md text-[9px] sm:text-xs font-black uppercase tracking-widest border border-red-200 dark:border-red-500/30 shadow-sm animate-pulse', language === 'kh' ? 'font-khmer' : '']">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                         {{ t.incompleteData }}
                       </div>
@@ -229,6 +229,12 @@
                       <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                       {{ t.history }}
                     </button>
+
+                    <!-- Latest Tracked Week Indicator -->
+                    <div v-if="cls.lastWeek > 0" :class="['flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-sm', language === 'kh' ? 'font-khmer' : '']">
+                      <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                      {{ language === 'kh' ? 'ដល់សប្តាហ៍ទី ' : 'Week ' }}{{ cls.lastWeek }}
+                    </div>
                   </div>
 
                 </div>
@@ -456,7 +462,36 @@ const refreshTeacherData = async (showLoader = true) => {
       
       const data = await res.json();
       if (data.success) {
-        mySchedule.value = data.data;
+        let scheduleData = data.data;
+
+        try {
+          const histRes = await fetch(`https://duc-teacher-tracking.onrender.com/api/my-full-history?teacher=${encodeURIComponent(teacher.value.nameKh)}`);
+          if (histRes.ok) {
+            const histData = await histRes.json();
+            if (histData.success && histData.data) {
+              const teacherName = teacher.value?.nameKh || '';
+              const cleanTeacherName = teacherName.replace(/លោកគ្រូ|អ្នកគ្រូ/g, '').trim();
+              
+              scheduleData = scheduleData.map(cls => {
+                const exactFullTabName = `${cls.group}-${cleanTeacherName}-${cls.subject}`;
+                const relatedHist = histData.data.filter(h => 
+                   h.cohort === exactFullTabName || (h.subject === cls.subject && h.cohort.includes(cls.group))
+                );
+                
+                let maxWeek = 0;
+                if (relatedHist.length > 0) {
+                  maxWeek = Math.max(...relatedHist.map(h => parseInt(h.week) || 0));
+                }
+                
+                return { ...cls, lastWeek: maxWeek };
+              });
+            }
+          }
+        } catch (histErr) {
+          console.error("Could not fetch history for weeks", histErr);
+        }
+
+        mySchedule.value = scheduleData;
       } else {
         throw new Error('API returned unsuccessful response');
       }

@@ -50,8 +50,7 @@
 
       <transition name="tab-fade" mode="out-in">
         
-        <section v-if="activeTab === 'majors'" key="majors" class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white dark:border-white/5 flex flex-col h-[700px] relative overflow-hidden isolate max-w-4xl mx-auto w-full">
-          
+        <section v-if="activeTab === 'majors'" key="majors" class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white dark:border-white/5 flex flex-col h-[700px] relative overflow-hidden isolate max-w-6xl mx-auto w-full">
           <div class="p-8 pb-6 border-b border-slate-100/50 dark:border-slate-700/50 relative z-10 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <div>
               <h2 class="text-xl font-black text-slate-800 dark:text-white mb-1 flex items-center gap-3">

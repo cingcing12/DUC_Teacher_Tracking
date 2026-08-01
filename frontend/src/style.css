@@ -1,3 +1,15 @@
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
+
+/* Smooth global color transitions for dark/light mode toggle */
+*, ::before, ::after {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 500ms;
+}
+
+/* Ensure we don't break the disable-animations setting */
+html.disable-animations *, html.disable-animations *::before, html.disable-animations *::after {
+  transition-duration: 0s !important;
+}

@@ -7,7 +7,7 @@
       <div class="absolute bottom-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[140px] opacity-40 dark:opacity-20 animate-blob animation-delay-4000 bg-fuchsia-200 dark:bg-fuchsia-800 transition-opacity"></div>
     </div>
 
-    <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-16 animate-fade-in-up">
+    <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-16 animate-fade-in-up">
       
       <div class="mb-12">
         <button @click="router.push('/admin')" class="group flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-8 transition-colors">

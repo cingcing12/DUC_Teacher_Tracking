@@ -1,7 +1,7 @@
 <template>
   <div class="w-full h-full relative">
     
-    <main class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
+    <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-2 pb-24 sm:pb-12">
       
       <button @click="router.push('/schedule')" :class="['group flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-6 sm:mb-8 transition-colors w-max animate-fade-in-up', language === 'kh' ? 'font-khmer' : '']">
         <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
