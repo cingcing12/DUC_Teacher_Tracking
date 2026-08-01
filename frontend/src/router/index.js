@@ -13,6 +13,7 @@ import AdminSettingsView from "../views/AdminSettingsView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import HelpSupportView from "../views/HelpSupportView.vue";
 import StatsView from "../views/StatsView.vue";
+import AdminTeacherManagementView from "../views/AdminTeacherManagementView.vue";
 
 const routes = [
   {
@@ -96,6 +97,12 @@ const routes = [
     path: "/admin/settings",
     name: "admin-settings",
     component: AdminSettingsView,
+    meta: { requiresAdmin: true },
+  },
+  {
+    path: "/admin/teachers",
+    name: "admin-teachers",
+    component: AdminTeacherManagementView,
     meta: { requiresAdmin: true },
   },
 

@@ -144,4 +144,99 @@ router.post('/admin/login', (req, res) => { // <-- Change to /admin/login here
     res.status(401).json({ success: false, message: "Invalid Admin Password" });
   }
 });
+
+// ==========================================
+// ADMIN TEACHER MANAGEMENT
+// ==========================================
+const TEACHER_DATA_SHEET_ID = "1wCRweEDDuNIZtXYq-qiOSIE-zYgvMQ2zA8m594DtevQ"; 
+const TEACHER_DATA_TAB = "ទិន្នន័យលោកគ្រូអ្នកគ្រូ";
+
+router.get('/admin/teachers', async (req, res) => {
+  try {
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: TEACHER_DATA_SHEET_ID,
+      range: `'${TEACHER_DATA_TAB}'!A4:P`
+    });
+
+    const rows = response.data.values || [];
+    const teachers = rows.map((row, index) => {
+      return {
+        rowIndex: index + 4, // A4 is row 4
+        id: String(row[0] || "").trim(),
+        nameKh: String(row[1] || "").trim(),
+        nameEn: String(row[2] || "").trim(),
+        dob: String(row[3] || "").trim(),
+        gender: String(row[4] || "").trim(),
+        role: String(row[5] || "").trim(),
+        classGrade: String(row[6] || "").trim(), // ថ្នាក់ទី
+        degree: String(row[7] || "").trim(),
+        major: String(row[8] || "").trim(),
+        phone: String(row[9] || "").trim(),
+        email: String(row[10] || "").trim(),
+        avatarUrl: String(row[11] || "").trim(),
+        joinDate: String(row[12] || "").trim(),
+        cerNumber: String(row[13] || "").trim(),
+        password: String(row[14] || "").trim(),
+        isBlocked: String(row[15] || "").trim().toUpperCase() === "TRUE"
+      };
+    });
+
+    res.json({ success: true, data: teachers });
+  } catch (error) {
+    console.error("Error fetching teachers in admin:", error);
+    res.status(500).json({ success: false, message: "Error fetching teachers" });
+  }
+});
+
+router.post('/admin/teachers/update', async (req, res) => {
+  try {
+    const { 
+      rowIndex, nameKh, nameEn, dob, gender, role, classGrade, 
+      degree, major, phone, email, avatarUrl, joinDate, 
+      cerNumber, password, isBlocked 
+    } = req.body;
+    
+    if (!rowIndex) return res.status(400).json({ success: false, message: "Row index required" });
+
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+
+    // Update Columns B through P
+    const values = [
+      [
+        nameKh || "",         // B: Name Kh
+        nameEn || "",         // C: Name En
+        dob || "",            // D: DOB
+        gender || "",         // E: Gender
+        role || "",           // F: Role
+        classGrade || "",     // G: Class Grade
+        degree || "",         // H: Degree
+        major || "",          // I: Major
+        phone || "",          // J: Phone
+        email || "",          // K: Email
+        avatarUrl || "",      // L: Avatar URL
+        joinDate || "",       // M: Join Date
+        cerNumber || "",      // N: Cer Number
+        password || "",       // O: Password
+        isBlocked ? "TRUE" : "FALSE" // P: Blocked
+      ]
+    ];
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: TEACHER_DATA_SHEET_ID,
+      range: `'${TEACHER_DATA_TAB}'!B${rowIndex}:P${rowIndex}`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { values: values }
+    });
+
+    res.json({ success: true, message: "Teacher updated successfully!" });
+  } catch (error) {
+    console.error("Error updating teacher:", error);
+    res.status(500).json({ success: false, message: "Error updating teacher" });
+  }
+});
+
 module.exports = router;
