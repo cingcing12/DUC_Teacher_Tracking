@@ -88,7 +88,9 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <!-- English -->
           <button @click="setLanguage('en')" :class="['relative overflow-hidden py-4 sm:py-5 px-5 rounded-2xl sm:rounded-[1.5rem] flex items-center justify-start gap-4 transition-all duration-300 border outline-none group hover:-translate-y-1', language === 'en' ? 'bg-white dark:bg-slate-800 shadow-[0_15px_30px_rgba(6,182,212,0.15)] border-cyan-200 dark:border-cyan-500/50 ring-2 ring-cyan-500/20' : 'bg-slate-50 dark:bg-white/5 border-transparent hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg hover:border-slate-200 dark:hover:border-slate-700']">
-            <div :class="['w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-inner transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110', language === 'en' ? 'bg-cyan-50 dark:bg-cyan-900/30' : 'bg-slate-200/50 dark:bg-slate-700/50']">🇬🇧</div>
+            <div :class="['w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-inner transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110', language === 'en' ? 'bg-cyan-50 dark:bg-cyan-900/30' : 'bg-slate-200/50 dark:bg-slate-700/50']">
+              <img src="https://flagcdn.com/gb.svg" alt="English" class="w-6 h-6 sm:w-8 sm:h-8 object-cover rounded-sm drop-shadow-sm" />
+            </div>
             <div class="text-left flex-grow">
               <p :class="['font-black uppercase tracking-wider text-sm sm:text-base font-sans', language === 'en' ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-700 dark:text-slate-300']">English</p>
               <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Global</p>
@@ -100,7 +102,9 @@
           
           <!-- Khmer -->
           <button @click="setLanguage('kh')" :class="['relative overflow-hidden py-4 sm:py-5 px-5 rounded-2xl sm:rounded-[1.5rem] flex items-center justify-start gap-4 transition-all duration-300 border outline-none group hover:-translate-y-1', language === 'kh' ? 'bg-white dark:bg-slate-800 shadow-[0_15px_30px_rgba(6,182,212,0.15)] border-cyan-200 dark:border-cyan-500/50 ring-2 ring-cyan-500/20' : 'bg-slate-50 dark:bg-white/5 border-transparent hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg hover:border-slate-200 dark:hover:border-slate-700']">
-            <div :class="['w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-inner transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110', language === 'kh' ? 'bg-cyan-50 dark:bg-cyan-900/30' : 'bg-slate-200/50 dark:bg-slate-700/50']">🇰🇭</div>
+            <div :class="['w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-inner transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110', language === 'kh' ? 'bg-cyan-50 dark:bg-cyan-900/30' : 'bg-slate-200/50 dark:bg-slate-700/50']">
+              <img src="https://flagcdn.com/kh.svg" alt="Khmer" class="w-6 h-6 sm:w-8 sm:h-8 object-cover rounded-sm drop-shadow-sm" />
+            </div>
             <div class="text-left flex-grow">
               <p :class="['font-black uppercase tracking-wider text-base sm:text-lg font-khmer leading-none', language === 'kh' ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-700 dark:text-slate-300']">ភាសាខ្មែរ</p>
               <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 mt-1 font-khmer uppercase tracking-widest">កម្ពុជា</p>
