@@ -17,6 +17,11 @@
         
         <div class="relative z-10 flex flex-col md:flex-row gap-5 sm:gap-8 justify-between items-start md:items-center">
           <div>
+            <div v-if="substituteFor" class="mb-3 sm:mb-4 bg-emerald-100/80 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30 rounded-xl p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 text-emerald-800 dark:text-emerald-300 font-khmer font-bold shadow-sm text-xs sm:text-sm">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              អ្នកកំពុងស្រង់វត្តមានជំនួសលោកគ្រូ/អ្នកគ្រូ {{ substituteFor }}
+            </div>
+
             <div :class="['inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4', language === 'kh' ? 'font-khmer' : '']">
               <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-500 animate-pulse"></span>
               {{ t.activeSessionTracker }}
@@ -250,6 +255,8 @@ const classData = ref({
   department: route.query.department || 'Unknown Department'
 });
 
+const substituteFor = ref(route.query.substituteFor || null);
+
 // 🔥 THE FIX: Cleans out the brackets for UI display only!
 const cleanSubjectName = (name) => {
   if (!name) return '';
@@ -369,11 +376,12 @@ const submitTrackingData = async () => {
     content: form.value.content,
     notes: form.value.notes,
     year: classData.value.year,
-    semester: classData.value.semester
+    semester: classData.value.semester,
+    substituteFor: substituteFor.value
   };
 
   try {
-    const res = await fetch('https://duc-teacher-tracking.onrender.com/api/track-lesson', {
+    const res = await fetch(import.meta.env.VITE_API_URL + '/api/track-lesson', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

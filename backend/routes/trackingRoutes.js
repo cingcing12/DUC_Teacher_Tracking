@@ -83,7 +83,7 @@ const normalizeText = (str) => {
 // ==========================================
 // 🔥 HELPER: STRICT VISUAL ATTENDANCE VALIDATOR + PAINTER
 // ==========================================
-const markVisualAttendance = async (sheets, cohort, subject, teacher, date, status) => {
+const markVisualAttendance = async (sheets, cohort, subject, teacher, date, status, substituteFor = null) => {
     try {
         const dateObj = new Date(date);
         const monthNum = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -112,7 +112,9 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
         let targetRowIndex = -1;
         let targetColIndex = -1;
 
-        const cleanTeacher = normalizeText(String(teacher).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
+        // If substituteFor is provided, we search for the original teacher's row
+        const targetTeacherName = substituteFor || teacher;
+        const cleanTeacher = normalizeText(String(targetTeacherName).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
         const cleanSubject = normalizeText(subject);
         const cleanCohort = normalizeText(String(cohort).replace(/^g\d+-/i, ''));
 
@@ -213,9 +215,7 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
         if (targetRowIndex === -1 || targetColIndex === -1) {
             let errorMsg = `The date ${date} does not match the scheduled days for this class!`;
             if (missingDates.length > 0) {
-                const displayDates = missingDates.slice(0, 5);
-                const moreText = missingDates.length > 5 ? ", ..." : "";
-                errorMsg += `\n(ថ្ងៃដែលមិនទាន់បំពេញ: ${displayDates.join(", ")}${moreText})`;
+                errorMsg += `\n(ថ្ងៃដែលមិនទាន់បំពេញ: ${missingDates.join(", ")})`;
             }
             return { success: false, message: errorMsg };
         }
@@ -229,9 +229,31 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
         } else if (status === "A") {
             bgRed = 0.8; bgGreen = 0.0; bgBlue = 0.0; 
             txtRed = 1; txtGreen = 1; txtBlue = 1; 
+        } else if (status === "P") {
+            // Yellow background for Permission/Substitute
+            bgRed = 1.0; bgGreen = 0.89; bgBlue = 0.6; 
+            txtRed = 0; txtGreen = 0; txtBlue = 0; // Black text
         } else if (status === "") {
             bgRed = 1; bgGreen = 1; bgBlue = 1; 
         }
+
+        const cellData = {
+            userEnteredValue: { stringValue: status },
+            userEnteredFormat: {
+                backgroundColor: { red: bgRed, green: bgGreen, blue: bgBlue },
+                textFormat: { foregroundColor: { red: txtRed, green: txtGreen, blue: txtBlue }, bold: true },
+                horizontalAlignment: "CENTER",
+                verticalAlignment: "MIDDLE"
+            }
+        };
+
+        if (substituteFor) {
+            cellData.note = `បង្រៀនជំនួសដោយ: ${teacher}`;
+        }
+
+        const fieldsToUpdate = substituteFor 
+            ? "userEnteredValue,userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment),note"
+            : "userEnteredValue,userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)";
 
         const requests = [{
             updateCells: {
@@ -243,17 +265,9 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
                     endColumnIndex: targetColIndex + 1
                 },
                 rows: [{
-                    values: [{
-                        userEnteredValue: { stringValue: status },
-                        userEnteredFormat: {
-                            backgroundColor: { red: bgRed, green: bgGreen, blue: bgBlue },
-                            textFormat: { foregroundColor: { red: txtRed, green: txtGreen, blue: txtBlue }, bold: true },
-                            horizontalAlignment: "CENTER",
-                            verticalAlignment: "MIDDLE"
-                        }
-                    }]
+                    values: [cellData]
                 }],
-                fields: "userEnteredValue,userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
+                fields: fieldsToUpdate
             }
         }];
 
@@ -275,11 +289,12 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
 // ==========================================
 router.post("/track-lesson", async (req, res) => {
   try {
-    const { teacherNameKh, department, subject, cohort, room, week, date, startTime, endTime, lessonNo, hours, content, notes, year, semester } = req.body;
+    const { teacherNameKh, department, subject, cohort, room, week, date, startTime, endTime, lessonNo, hours, content, notes, year, semester, substituteFor } = req.body;
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
-    const visualRes = await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, "✓");
+    const attendanceStatus = substituteFor ? "P" : "✓";
+    const visualRes = await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, attendanceStatus, substituteFor);
     if (!visualRes.success) {
         return res.status(400).json({ success: false, message: visualRes.message });
     }

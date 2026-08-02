@@ -327,7 +327,7 @@ const handleSaveTeacher = async (updatedData) => {
     isSaving.value = true; // Show loading overlay
     const tabName = activeDepartment.value || updatedData.department;
     
-    const response = await fetch('https://duc-teacher-tracking.onrender.com/api/update-teacher', {
+    const response = await fetch(import.meta.env.VITE_API_URL + '/api/update-teacher', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -382,7 +382,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await fetch('https://duc-teacher-tracking.onrender.com/api/departments');
+    const response = await fetch(import.meta.env.VITE_API_URL + '/api/departments');
     const result = await response.json();
     if (result.success) departments.value = result.data;
   } catch (error) {
@@ -405,7 +405,7 @@ const selectDepartment = async (deptName) => {
   allTeachersInDept.value = [];
 
   try {
-    const response = await fetch(`https://duc-teacher-tracking.onrender.com/api/teachers?tab=${encodeURIComponent(deptName)}`);
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/teachers?tab=${encodeURIComponent(deptName)}`);
     const result = await response.json();
     if (result.success) allTeachersInDept.value = result.data;
   } catch (error) {

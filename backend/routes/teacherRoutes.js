@@ -614,6 +614,39 @@ router.post("/login", async (req, res) => {
 });
 
 // ==========================================
+// CHECK STATUS (POLLING FOR BLOCKED USER)
+// ==========================================
+router.get("/check-status", async (req, res) => {
+  try {
+    const teacherName = req.query.name;
+    if (!teacherName) return res.status(400).json({ success: false, message: "Missing name" });
+
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+    
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: TEACHER_DATA_SHEET_ID, 
+      range: `'${TEACHER_DATA_TAB}'!A2:Q`
+    });
+
+    const rows = response.data.values || [];
+    let isBlocked = false;
+
+    for (const row of rows) {
+      if (String(row[1] || "").trim() === teacherName) {
+        isBlocked = String(row[15] || "").trim().toUpperCase() === "TRUE";
+        break;
+      }
+    }
+
+    res.json({ success: true, isBlocked });
+  } catch (error) {
+    console.error("Check Status Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ==========================================
 // UPLOAD AVATAR & SAVE TO "Avatars" TAB
 // ==========================================
 router.post("/upload-avatar", upload.single("image"), async (req, res) => {

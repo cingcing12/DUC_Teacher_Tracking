@@ -407,7 +407,7 @@ const fetchHistory = async () => {
     const token = localStorage.getItem('duc_teacher_token');
     const teacherName = token ? JSON.parse(token).nameKh || '' : '';
 
-    const url = new URL('https://duc-teacher-tracking.onrender.com/api/class-history');
+    const url = new URL(import.meta.env.VITE_API_URL + '/api/class-history');
     url.searchParams.append('cohort', classData.value.group);
     url.searchParams.append('subject', classData.value.subject);
     
@@ -453,7 +453,7 @@ onMounted(async () => {
   fetchHistory();
 
   try {
-    const res = await fetch('https://duc-teacher-tracking.onrender.com/api/majors');
+    const res = await fetch(import.meta.env.VITE_API_URL + '/api/majors');
     const data = await res.json();
     if (data.success) {
       const majorsMap = data.data;
@@ -548,7 +548,7 @@ const executeDelete = async (lesson) => {
     const token = localStorage.getItem('duc_teacher_token');
     const teacherName = token ? JSON.parse(token).nameKh || '' : '';
 
-    const url = new URL('https://duc-teacher-tracking.onrender.com/api/class-history');
+    const url = new URL(import.meta.env.VITE_API_URL + '/api/class-history');
     url.searchParams.append('cohort', classData.value.group);
     url.searchParams.append('week', lesson.week);
     url.searchParams.append('date', lesson.date); 

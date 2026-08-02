@@ -375,8 +375,13 @@ const formatDateKhmer = (dateStr) => {
 };
 
 const khmerDays = {
-  'Monday': 'ច័ន្ទ', 'Tuesday': 'អង្គារ', 'Wednesday': 'ពុធ',
-  'Thursday': 'ព្រហស្បតិ៍', 'Friday': 'សុក្រ', 'Saturday': 'សៅរ៍', 'Sunday': 'អាទិត្យ'
+  'Monday': 'ថ្ងៃច័ន្ទ',
+  'Tuesday': 'ថ្ងៃអង្គារ',
+  'Wednesday': 'ថ្ងៃពុធ',
+  'Thursday': 'ថ្ងៃព្រហស្បតិ៍',
+  'Friday': 'ថ្ងៃសុក្រ',
+  'Saturday': 'ថ្ងៃសៅរ៍',
+  'Sunday': 'ថ្ងៃអាទិត្យ'
 };
 
 const displayDay = (day) => {
@@ -415,7 +420,7 @@ const fetchAllData = async () => {
     const teacherName = teacher.value.nameKh;
 
     // Fetch the new full history route instead of the schedule
-    const histRes = await fetch(`https://duc-teacher-tracking.onrender.com/api/my-full-history?teacher=${encodeURIComponent(teacherName)}`);
+    const histRes = await fetch(`${import.meta.env.VITE_API_URL}/api/my-full-history?teacher=${encodeURIComponent(teacherName)}`);
     const histData = await histRes.json();
     
     if (histData.success) {
@@ -424,7 +429,7 @@ const fetchAllData = async () => {
 
     // Fetch Majors for printing
     try {
-      const majorsRes = await fetch('https://duc-teacher-tracking.onrender.com/api/majors');
+      const majorsRes = await fetch(import.meta.env.VITE_API_URL + '/api/majors');
       const majorsData = await majorsRes.json();
       if (majorsData.success) {
         fullMajorName.value = majorsData.data; 
@@ -433,7 +438,7 @@ const fetchAllData = async () => {
 
     // Fetch Faculties for printing
     try {
-      const facsRes = await fetch('https://duc-teacher-tracking.onrender.com/api/faculties');
+      const facsRes = await fetch(import.meta.env.VITE_API_URL + '/api/faculties');
       const facsData = await facsRes.json();
       if (facsData.success) {
         fullFacultyName.value = facsData.data; 

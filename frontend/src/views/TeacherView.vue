@@ -51,6 +51,15 @@
               </div>
             </transition>
           </div>
+
+          <!-- Substitute Button -->
+          <button 
+            @click="isSubstituteModalOpen = true" 
+            :class="['px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300 bg-emerald-50 text-emerald-600 border border-emerald-200/50 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 hover:bg-emerald-100 hover:shadow-md dark:hover:bg-emerald-500/20 ml-2 sm:ml-4 flex items-center gap-1.5', language === 'kh' ? 'font-khmer' : '']"
+          >
+            <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+            {{ language === 'kh' ? 'ជំនួសម៉ោង' : 'Substitute' }}
+          </button>
         </div>
       </div>
 
@@ -193,7 +202,7 @@
                         ឆមាសទី {{ cls.semester }}
                       </div>
 
-                      <div v-if="cls.department === '?' || cls.year === '?' || cls.semester === '?'" :class="['flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-md text-[9px] sm:text-xs font-black uppercase tracking-widest border border-red-200 dark:border-red-500/30 shadow-sm animate-pulse', language === 'kh' ? 'font-khmer' : '']">
+                      <div v-if="cls.department === '?' || cls.year === '?' || cls.semester === '?' || !cls.room || cls.room.trim() === ''" :class="['flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-md text-[9px] sm:text-xs font-black uppercase tracking-widest border border-red-200 dark:border-red-500/30 shadow-sm animate-pulse', language === 'kh' ? 'font-khmer' : '']">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                         {{ t.incompleteData }}
                       </div>
@@ -208,7 +217,7 @@
                   <div class="flex flex-row items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-100 dark:border-slate-700/50">
                     
                     <button 
-                      v-if="cls.department !== '?' && cls.year !== '?' && cls.semester !== '?'"
+                      v-if="cls.department !== '?' && cls.year !== '?' && cls.semester !== '?' && cls.room && cls.room.trim() !== ''"
                       @click="openTrackingForm(cls)" 
                       :class="['flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-indigo-50 dark:bg-indigo-500/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all duration-300', language === 'kh' ? 'font-khmer' : '']"
                     >
@@ -261,23 +270,32 @@
             {{ t.dbErrorMsg }}
           </p>
           
-          <button @click="closeAlert" :class="['w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:scale-[1.02]', language === 'kh' ? 'font-khmer' : '']">
+          <a href="https://t.me/Vongsokpheak" target="_blank" @click="closeAlert" :class="['w-full block py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg text-white bg-[#0088cc] hover:bg-[#0077b5] hover:scale-[1.02] mb-3', language === 'kh' ? 'font-khmer' : '']">
+            {{ language === 'kh' ? 'ទាក់ទងមកខ្ញុំតាមតេឡេក្រាម' : 'Contact me on Telegram' }}
+          </a>
+          <button @click="closeAlert" :class="['w-full py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200', language === 'kh' ? 'font-khmer' : '']">
             {{ t.understood }}
           </button>
         </div>
       </div>
     </transition>
 
+    <SubstituteModal 
+      :isOpen="isSubstituteModalOpen" 
+      @close="isSubstituteModalOpen = false" 
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
+import SubstituteModal from '../components/SubstituteModal.vue';
 
 const router = useRouter();
 const teacher = ref(null);
 const mySchedule = ref([]);
+const isSubstituteModalOpen = ref(false);
 const isLoading = ref(true);
 const hasError = ref(false);
 
@@ -308,13 +326,13 @@ window.addEventListener('storage', (e) => {
 });
 
 const khmerDays = {
-  'Monday': 'ច័ន្ទ',
-  'Tuesday': 'អង្គារ',
-  'Wednesday': 'ពុធ',
-  'Thursday': 'ព្រហស្បតិ៍',
-  'Friday': 'សុក្រ',
-  'Saturday': 'សៅរ៍',
-  'Sunday': 'អាទិត្យ'
+  'Monday': 'ថ្ងៃច័ន្ទ',
+  'Tuesday': 'ថ្ងៃអង្គារ',
+  'Wednesday': 'ថ្ងៃពុធ',
+  'Thursday': 'ថ្ងៃព្រហស្បតិ៍',
+  'Friday': 'ថ្ងៃសុក្រ',
+  'Saturday': 'ថ្ងៃសៅរ៍',
+  'Sunday': 'ថ្ងៃអាទិត្យ'
 };
 
 const displayDay = (day) => {
@@ -347,7 +365,7 @@ const t = computed(() => {
       connectionError: 'មិនអាចភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេបានទេ។ សូមពិនិត្យមើលការតភ្ជាប់អ៊ីនធឺណិតរបស់អ្នក។',
       tryAgain: 'ព្យាយាមម្តងទៀត',
       dbError: 'កំហុសទិន្នន័យ',
-      dbErrorMsg: 'ថ្នាក់នេះមិនអាចស្រង់វត្តមានបានទេ ដោយសារតែខ្វះ ជំនាញ ឆ្នាំ ឬឆមាស នៅក្នុងប្រព័ន្ធទិន្នន័យមេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង។',
+      dbErrorMsg: 'ថ្នាក់នេះមិនអាចស្រង់វត្តមានបានទេ ដោយសារតែខ្វះ ជំនាញ ឆ្នាំ ឆមាស ឬបន្ទប់ នៅក្នុងប្រព័ន្ធទិន្នន័យមេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង។',
       understood: 'យល់ព្រម'
     };
   }
@@ -375,7 +393,7 @@ const t = computed(() => {
     connectionError: 'We couldn\'t reach the server. Please check your internet connection.',
     tryAgain: 'Try Again',
     dbError: 'Database Error',
-    dbErrorMsg: 'This class cannot be tracked because its Department, Year, or Semester is missing from the Master Database. Please contact the administrator to fix the database alignment.',
+    dbErrorMsg: 'This class cannot be tracked because its Department, Year, Semester, or Room is missing from the Master Database. Please contact the administrator to fix the database alignment.',
     understood: 'Understood'
   };
 });
@@ -457,7 +475,7 @@ const refreshTeacherData = async (showLoader = true) => {
     hasError.value = false;
     
     try {
-      const res = await fetch(`https://duc-teacher-tracking.onrender.com/api/my-schedule?name=${encodeURIComponent(teacher.value.nameKh)}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/my-schedule?name=${encodeURIComponent(teacher.value.nameKh)}`);
       if (!res.ok) throw new Error('Network response was not ok');
       
       const data = await res.json();
@@ -465,7 +483,7 @@ const refreshTeacherData = async (showLoader = true) => {
         let scheduleData = data.data;
 
         try {
-          const histRes = await fetch(`https://duc-teacher-tracking.onrender.com/api/my-full-history?teacher=${encodeURIComponent(teacher.value.nameKh)}`);
+          const histRes = await fetch(`${import.meta.env.VITE_API_URL}/api/my-full-history?teacher=${encodeURIComponent(teacher.value.nameKh)}`);
           if (histRes.ok) {
             const histData = await histRes.json();
             if (histData.success && histData.data) {

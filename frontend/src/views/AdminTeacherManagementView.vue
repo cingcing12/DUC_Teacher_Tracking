@@ -226,7 +226,7 @@ const selectedTeacher = ref(null);
 const toast = ref({ show: false, message: '', type: 'success' });
 
 // We try to use same API base URL logic. Since local development port might be 3000
-const API_BASE = 'https://duc-teacher-tracking.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_URL + '/api';
 
 const showToast = (message, type = 'success') => {
   toast.value = { show: true, message, type };

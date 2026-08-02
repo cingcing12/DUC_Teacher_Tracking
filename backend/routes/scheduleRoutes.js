@@ -4,227 +4,263 @@ const { google, auth, SPREADSHEETS } = require("../config/googleClient");
 
 // ==========================================
 // HELPER: FUZZY MATCHER
-// Removes all spaces and casing to guarantee a perfect match
 // ==========================================
 const normalize = (str) => {
   return String(str || "").replace(/\s+/g, '').toLowerCase();
 };
 
 // ==========================================
-// GET: TEACHER SCHEDULE (WITH DEEP ROW SCANNER)
+// HELPER: EXTRACT METADATA FROM TAB NAME
+// ==========================================
+const extractTabMeta = (tabName) => {
+    let generation = "?";
+    let year = "?";
+    let semester = "?";
+
+    const khmerToArabic = {'១':'1','២':'2','៣':'3','៤':'4','៥':'5','៦':'6','៧':'7','៨':'8','៩':'9','០':'0'};
+    const parseNum = (str) => {
+        if (!str) return "?";
+        let match = str.match(/([០-៩1-9])/);
+        if (match) return khmerToArabic[match[1]] || match[1];
+        return "?";
+    };
+
+    if (tabName.includes("ជំនាន់ទី")) {
+        const genPart = tabName.split("ជំនាន់ទី")[1].trim().split(" ")[0];
+        generation = parseNum(genPart);
+    }
+    
+    if (tabName.includes("ឆ្នាំសិក្សាមូលដ្ឋាន") || tabName.includes("ឆ្នាំទី១")) {
+        year = "1";
+    } else if (tabName.includes("ឆ្នាំទី")) {
+        const yrPart = tabName.split("ឆ្នាំទី")[1].trim().split(" ")[0];
+        year = parseNum(yrPart);
+    }
+
+    if (tabName.includes("ឆមាសទី")) {
+        const semPart = tabName.split("ឆមាសទី")[1].trim().split(" ")[0];
+        semester = parseNum(semPart);
+    }
+
+    return { generation, year, semester };
+};
+
+// ==========================================
+// HELPER: PARSE ATTENDANCE TAB ROWS
+// ==========================================
+const mapDayToEnglish = (khmerOrMixed) => {
+    const s = khmerOrMixed.toLowerCase();
+    if (s.includes('ច័ន្ទ') || s.includes('monday')) return 'Monday';
+    if (s.includes('អង្គារ') || s.includes('tuesday')) return 'Tuesday';
+    if (s.includes('ពុធ') || s.includes('wednesday')) return 'Wednesday';
+    if (s.includes('ព្រហស្បតិ៍') || s.includes('thursday')) return 'Thursday';
+    if (s.includes('សុក្រ') || s.includes('friday')) return 'Friday';
+    if (s.includes('សៅរ៍') || s.includes('saturday')) return 'Saturday';
+    if (s.includes('អាទិត្យ') || s.includes('sunday')) return 'Sunday';
+    return khmerOrMixed.split("-")[0].trim();
+};
+
+const parseAttendanceTab = (rows, tabMeta, filterTeacherObj, filterTeachersArray, fallbackDepartment, facultiesList) => {
+    const classes = [];
+    if (!rows || rows.length < 7) return classes;
+
+    let currentDay = "Unknown";
+    
+    // Row 6 (index 5) has headers. Data starts from index 6.
+    for (let i = 6; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length === 0) continue;
+
+        const colA = String(row[0] || "").trim();
+        const colB = String(row[1] || "").trim();
+        
+        if (colA.includes("ថ្ងៃ") || /monday|tuesday|wednesday|thursday|friday|saturday|sunday/i.test(colA)) {
+            currentDay = mapDayToEnglish(colA); 
+            continue;
+        }
+        
+        if (colB && colB.includes(":")) {
+            const time = colB;
+            const subject = String(row[2] || "").trim();
+            const teacher = String(row[3] || "").trim();
+            const room = String(row[4] || "").trim();
+            const major = String(row[5] || "").trim();
+            const group = String(row[6] || "").trim();
+            
+            if (!subject || !teacher) continue;
+            
+            const cleanRowTeacher = normalize(teacher);
+            
+            let isMatch = false;
+            let matchedTeacherName = teacher; 
+            
+            if (filterTeacherObj) {
+                // /my-schedule logic
+                if (cleanRowTeacher.includes(filterTeacherObj.cleanName)) {
+                    isMatch = true;
+                }
+            } else if (filterTeachersArray) {
+                // /department-schedule logic
+                const matched = filterTeachersArray.find(t => cleanRowTeacher.includes(t.cleanName) && t.cleanName.length > 2);
+                if (matched) {
+                    isMatch = true;
+                    matchedTeacherName = matched.originalName;
+                }
+            }
+            
+            if (isMatch) {
+                classes.push({
+                    scheduleType: "Attendance Tab",
+                    day: currentDay,
+                    time: time,
+                    room: room,
+                    group: group,
+                    subject: subject,
+                    generation: tabMeta.generation,
+                    year: tabMeta.year,
+                    semester: tabMeta.semester,
+                    department: (() => {
+                        if (fallbackDepartment) return fallbackDepartment;
+                        if (facultiesList && facultiesList.length > 0) {
+                            const normalizedGroup = String(group || '').replace(/-/g, '').toLowerCase();
+                            const match = facultiesList.find(r => r[0] && normalizedGroup.includes(String(r[0]).toLowerCase()));
+                            if (match && match[1]) return String(match[1]).trim();
+                        }
+                        return "?"; // Force it to missing so teacher cannot track it!
+                    })(),
+                    teacherName: matchedTeacherName
+                });
+            }
+        }
+    }
+    return classes;
+};
+
+// ==========================================
+// GET: TEACHER SCHEDULE
 // ==========================================
 router.get("/my-schedule", async (req, res) => {
   try {
     const teacherName = req.query.name;
     if (!teacherName) return res.status(400).json({ success: false, message: "Teacher name required" });
 
-    const cleanSearchName = teacherName
-      .replace(/លោកគ្រូ|អ្នកគ្រូ|បណ្ឌិត|សាស្ត្រាចារ្យ|Dr\./g, "")
-      .trim().toLowerCase();
+    const cleanSearchName = normalize(teacherName.replace(/លោកគ្រូ|អ្នកគ្រូ|បណ្ឌិត|សាស្ត្រាចារ្យ|Dr\./g, ""));
+    const filterTeacherObj = { cleanName: cleanSearchName };
 
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
-    const myClasses = [];
-    const tab = "Current Schedule"; 
+    let facultiesList = [];
+    try {
+        const facRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A2:B" });
+        facultiesList = facRes.data.values || [];
+    } catch (e) {
+        console.error("Could not fetch Faculties:", e.message);
+    }
 
-    // 1. FETCH THE SCHEDULE TAB
-    const scheduleData = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEETS.SCHEDULE,
-      range: `'${tab}'!A7:Q200`,
+    // 1. Fetch tabs from ATTENDANCE spreadsheet
+    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
+    const tabs = sheetMeta.data.sheets.map(s => s.properties.title);
+    
+    // 2. Fetch all tab data
+    const ranges = tabs.map(t => `'${t}'!A1:G200`);
+    const attendanceDataRes = await sheets.spreadsheets.values.batchGet({
+      spreadsheetId: SPREADSHEETS.ATTENDANCE,
+      ranges: ranges
     });
 
-    const rows = scheduleData.data.values || [];
+    let myClasses = [];
 
-    if (rows.length > 0) {
-      const rooms = rows[0];
-      let currentDay = "Unknown";
-
-      for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (!row || row.length === 0) continue;
-
-        const dayCell = row[1] ? row[1].trim() : "";
-        if (dayCell && dayCell !== "DAY" && dayCell !== "LUNCH TIME" && dayCell.length > 1) {
-          currentDay = dayCell.replace(/[\n\s]/g, "");
-        }
-
-        for (let c = 3; c <= 16; c++) {
-          const cellValue = row[c];
-          if (cellValue && cellValue.toLowerCase().includes(cleanSearchName)) {
-            const lines = cellValue.split("\n").map((l) => l.trim()).filter((l) => l);
-            const roomName = rooms[c] || `DUC${c - 2}`;
-            const group = lines[0] || "";
-            const subject = lines[1] || "";
-            
-            // 🔥 THE FIX: SMART TIME LOOKAHEAD V3 (Ignores Empty Merged Cells)
-            let fallbackTime = row[2] || "";
-            
-            if (fallbackTime && !lines[lines.length - 1].includes(":")) {
-              let startTimeStr = fallbackTime.split("-")[0]?.trim() || "";
-              let endTimeStr = fallbackTime.split("-")[1]?.trim() || "";
-              let currentEndTimeCompare = endTimeStr.replace(/\s+/g, '');
-
-              // Look down the column to see how far this merged cell stretches
-              for (let nextR = i + 1; nextR < rows.length; nextR++) {
-                const nextRow = rows[nextR] || [];
-                
-                // Stop if a new Day starts or it's Lunch time
-                if (nextRow[1] && nextRow[1].trim() !== "" && nextRow[1].trim() !== "DAY") break;
-                if (nextRow[2] && String(nextRow[2]).toUpperCase().includes("LUNCH")) break;
-                
-                // Stop if we hit a cell with text (meaning our merged class ended)
-                if (nextRow[c] && nextRow[c].trim() !== "") break;
-
-                const nextTimeCell = nextRow[2] ? String(nextRow[2]).trim() : "";
-
-                // If we find a new time block, check if the times connect!
-                if (nextTimeCell !== "" && nextTimeCell.includes("-")) {
-                  let nextStartTimeStr = nextTimeCell.split("-")[0]?.trim() || "";
-                  let nextEndTimeStr = nextTimeCell.split("-")[1]?.trim() || "";
-                  let nextStartTimeCompare = nextStartTimeStr.replace(/\s+/g, '');
-
-                  // Only stretch the time if the blocks connect perfectly (e.g., 16:00 matches 16:00)
-                  if (currentEndTimeCompare === nextStartTimeCompare) {
-                    endTimeStr = nextEndTimeStr;
-                    currentEndTimeCompare = nextEndTimeStr.replace(/\s+/g, '');
-                  } else {
-                    // GAP FOUND (e.g., 16:00 ended, but 17:00 started). Stop stretching!
-                    break;
-                  }
-                }
-                // Notice we removed the 'else { break }' here! 
-                // Now it just safely ignores empty time cells and keeps looking down.
-              }
-              
-              if (startTimeStr && endTimeStr) {
-                fallbackTime = `${startTimeStr}-${endTimeStr}`;
-              }
-            }
-
-            const exactTime = lines[lines.length - 1].includes(":")
-              ? lines[lines.length - 1].replace(/[()]/g, "").trim()
-              : fallbackTime;
-
-            myClasses.push({
-              scheduleType: tab, 
-              day: currentDay, 
-              time: exactTime,
-              room: roomName, 
-              group: group, 
-              subject: subject,
-              year: "?",       
-              semester: "?",   
-              department: "?"  
-            });
-          }
-        }
-      }
-    }
-
-    // 🔥 2. SMART GRID SCANNER: CROSS-REFERENCE TEACHER DATABASE HEADERS & DATA ROWS
-    try {
-      const teacherMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TEACHER });
-      const teacherTabs = teacherMeta.data.sheets.map(s => s.properties.title);
-      
-      const ranges = teacherTabs.map(t => `'${t}'!A1:BM200`); 
-      const teacherDataRes = await sheets.spreadsheets.values.batchGet({
-        spreadsheetId: SPREADSHEETS.TEACHER,
-        ranges: ranges
-      });
-
-      const courseInfoMap = {};
-      const khmerToArabic = {'១':'1','២':'2','៣':'3','៤':'4','៥':'5','៦':'6'};
-
-      teacherDataRes.data.valueRanges.forEach((rangeData, index) => {
-        const tabName = teacherTabs[index]; 
-        const tRows = rangeData.values || [];
-        if (tRows.length < 4) return;
-
-        let yearRowIdx = -1;
-        let semRowIdx = -1;
-        let headerRowIdx = -1;
-
-        for (let r = 0; r < Math.min(8, tRows.length); r++) {
-          const rowStr = normalize(tRows[r].join(""));
-          if (yearRowIdx === -1 && (rowStr.includes("ឆ្នាំទី") || rowStr.includes("year"))) yearRowIdx = r;
-          if (semRowIdx === -1 && (rowStr.includes("ឆមាសទី") || rowStr.includes("sem"))) semRowIdx = r;
-          if (headerRowIdx === -1 && (rowStr.includes("មុខវិជ្ជា") || rowStr.includes("english") || rowStr.includes("khmer"))) headerRowIdx = r;
-        }
-
-        if (yearRowIdx === -1) yearRowIdx = 1;
-        if (semRowIdx === -1) semRowIdx = 2;
-        if (headerRowIdx === -1) headerRowIdx = 3;
-
-        const yearRow = tRows[yearRowIdx] || [];
-        const semRow = tRows[semRowIdx] || [];
-        const headerRow = tRows[headerRowIdx] || [];
-
-        let currentYear = "?";
-        let currentSem = "?";
-        const columnMeta = {};
-
-        const maxCols = Math.max(yearRow.length, semRow.length, headerRow.length);
-
-        for (let c = 0; c < maxCols; c++) {
-          if (yearRow[c] && yearRow[c].includes("ឆ្នាំ")) {
-            const ym = yearRow[c].match(/([១-៩1-9])/);
-            if (ym) currentYear = khmerToArabic[ym[1]] || ym[1];
-          }
-          
-          if (semRow[c] && semRow[c].includes("ឆមាស")) {
-            const sm = semRow[c].match(/([១-៩1-9])/);
-            if (sm) currentSem = khmerToArabic[sm[1]] || sm[1];
-          }
-
-          const hCell = normalize(headerRow[c]);
-          const isSubjectColumn = hCell.includes("មុខវិជ្ជា") || hCell.includes("english") || hCell.includes("khmer") || hCell.includes("subject");
-          
-          columnMeta[c] = {
-            year: currentYear,
-            semester: currentSem,
-            isSubject: isSubjectColumn
-          };
-        }
-
-        for (let r = headerRowIdx + 1; r < tRows.length; r++) {
-          const row = tRows[r];
-          if (!row) continue;
-
-          for (let c = 0; c < row.length; c++) {
-            if (columnMeta[c] && columnMeta[c].isSubject) {
-              const subName = String(row[c] || "").trim();
-              
-              if (subName.length > 2) {
-                courseInfoMap[normalize(subName)] = { 
-                  year: columnMeta[c].year, 
-                  semester: columnMeta[c].semester, 
-                  department: tabName 
-                };
-              }
-            }
-          }
-        }
-      });
-
-      // 3. INJECT EXACT DATA INTO SCHEDULE CLASSES
-      myClasses.forEach(cls => {
-        const cleanSubj = normalize(cls.subject);
-        if (courseInfoMap[cleanSubj]) {
-          cls.year = courseInfoMap[cleanSubj].year;
-          cls.semester = courseInfoMap[cleanSubj].semester;
-          cls.department = courseInfoMap[cleanSubj].department; 
-        }
-      });
-
-    } catch (dbError) {
-      console.error("Could not cross-reference Teacher DB", dbError);
-    }
+    // 3. Process each tab
+    attendanceDataRes.data.valueRanges.forEach((rangeData, index) => {
+        const tabName = tabs[index];
+        const rows = rangeData.values || [];
+        const tabMeta = extractTabMeta(tabName);
+        
+        const classesInTab = parseAttendanceTab(rows, tabMeta, filterTeacherObj, null, null, facultiesList);
+        myClasses = myClasses.concat(classesInTab);
+    });
 
     res.json({ success: true, data: myClasses });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Error reading schedule" });
+  }
+});
+
+// ==========================================
+// GET: DEPARTMENT SCHEDULE FOR SUBSTITUTE
+// ==========================================
+router.get("/department-schedule", async (req, res) => {
+  try {
+    const departmentName = req.query.department;
+    if (!departmentName) return res.status(400).json({ success: false, message: "Department required" });
+
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+
+    // 1. FETCH ALL TEACHERS IN DEPARTMENT
+    const teacherDataRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEETS.TEACHER,
+      range: `'${departmentName}'!A1:G200`
+    });
+    
+    const tRows = teacherDataRes.data.values || [];
+    const teacherNames = [];
+    
+    for (let i = 4; i < tRows.length; i++) {
+      const row = tRows[i] || [];
+      const colA = row[0] ? String(row[0]).trim() : "";
+      const colB = row[1] ? String(row[1]).trim() : "";
+      const colC = row[2] ? String(row[2]).trim() : "";
+      const colD = row[3] ? String(row[3]).trim() : "";
+      
+      const potentialHeader = colB || colA;
+      const isJustANumber = !isNaN(potentialHeader) && potentialHeader !== "";
+
+      if (potentialHeader && !isJustANumber && !colC && !colD && colB !== "ឈ្មោះគ្រូបង្រៀន") {
+         continue; // It's a category header
+      }
+      
+      if (colB && colB !== "ឈ្មោះគ្រូបង្រៀន" && colB !== "No Name") {
+         teacherNames.push({
+            originalName: colB,
+            cleanName: normalize(colB.replace(/លោកគ្រូ|អ្នកគ្រូ|បណ្ឌិត|សាស្ត្រាចារ្យ|Dr\./g, ""))
+         });
+      }
+    }
+
+    if (teacherNames.length === 0) {
+       return res.json({ success: true, data: [] });
+    }
+
+    // 2. Fetch tabs from ATTENDANCE spreadsheet
+    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
+    const tabs = sheetMeta.data.sheets.map(s => s.properties.title);
+    
+    // 3. Fetch all tab data
+    const ranges = tabs.map(t => `'${t}'!A1:G200`);
+    const attendanceDataRes = await sheets.spreadsheets.values.batchGet({
+      spreadsheetId: SPREADSHEETS.ATTENDANCE,
+      ranges: ranges
+    });
+
+    let myClasses = [];
+
+    // 4. Process each tab
+    attendanceDataRes.data.valueRanges.forEach((rangeData, index) => {
+        const tabName = tabs[index];
+        const rows = rangeData.values || [];
+        const tabMeta = extractTabMeta(tabName);
+        
+        const classesInTab = parseAttendanceTab(rows, tabMeta, null, teacherNames, departmentName);
+        myClasses = myClasses.concat(classesInTab);
+    });
+
+    res.json({ success: true, data: myClasses });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Error reading department schedule" });
   }
 });
 

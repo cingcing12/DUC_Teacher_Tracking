@@ -344,7 +344,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await fetch('https://duc-teacher-tracking.onrender.com/api/majors');
+    const response = await fetch(import.meta.env.VITE_API_URL + '/api/majors');
     const result = await response.json();
     if (result.success) majorMap.value = result.data;
   } catch (error) {
@@ -352,7 +352,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await fetch('https://duc-teacher-tracking.onrender.com/api/faculties');
+    const response = await fetch(import.meta.env.VITE_API_URL + '/api/faculties');
     const result = await response.json();
     if (result.success) facultyMap.value = result.data;
   } catch (error) {
@@ -369,7 +369,7 @@ const addNewMajor = async () => {
     const codes = newMajorForm.value.code.split(',').map(c => c.trim().toUpperCase()).filter(c => c !== '');
     const fullName = newMajorForm.value.fullName;
     for (const code of codes) {
-      const res = await fetch('https://duc-teacher-tracking.onrender.com/api/majors', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/majors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: code, fullName: fullName })
@@ -393,7 +393,7 @@ const addNewFaculty = async () => {
     const codes = newFacultyForm.value.code.split(',').map(c => c.trim().toUpperCase()).filter(c => c !== '');
     const fullName = newFacultyForm.value.fullName;
     for (const code of codes) {
-      const res = await fetch('https://duc-teacher-tracking.onrender.com/api/faculties', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/faculties', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: code, fullName: fullName })
@@ -421,7 +421,7 @@ const submitEdit = async () => {
   
   const endpoint = type === 'majors' ? '/api/majors' : '/api/faculties';
   try {
-    const res = await fetch(`https://duc-teacher-tracking.onrender.com${endpoint}/${originalCode}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}/${originalCode}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ newCode: newCode.toUpperCase().trim(), fullName: newName.trim() })
@@ -453,7 +453,7 @@ const confirmDelete = async () => {
   deleteModal.value.isSubmitting = true;
   const endpoint = deleteModal.value.type === 'majors' ? '/api/majors' : '/api/faculties';
   try {
-    const res = await fetch(`https://duc-teacher-tracking.onrender.com${endpoint}/${deleteModal.value.code}`, { method: 'DELETE' });
+    const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}/${deleteModal.value.code}`, { method: 'DELETE' });
     const data = await res.json();
     if (data.success) {
       if (deleteModal.value.type === 'majors') delete majorMap.value[deleteModal.value.code];
