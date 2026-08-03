@@ -14,26 +14,26 @@
       </div>
 
       <div v-if="teacher && !isLoading && !hasError" class="relative z-50 mb-6 sm:mb-10 animate-fade-in-up" style="animation-delay: 0.2s;">
-        <div class="flex items-center gap-1 sm:gap-2 bg-white/40 dark:bg-slate-800/40 p-1.5 rounded-[1.25rem] w-max backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+        <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 bg-white/40 dark:bg-slate-800/40 p-1.5 rounded-2xl sm:rounded-[1.25rem] w-full sm:w-max backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
           
           <button 
             @click="activeTab = 'today'; isDropdownOpen = false" 
-            :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'today' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer' : '']"
+            :class="['whitespace-nowrap flex-1 sm:flex-none text-center px-2 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'today' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer' : '']"
           >
             {{ t.todayClasses }}
           </button>
 
           <button 
             @click="activeTab = 'week'; selectedDayFilter = 'All'; isDropdownOpen = false" 
-            :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'week' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer' : '']"
+            :class="['whitespace-nowrap flex-1 sm:flex-none text-center px-2 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-black uppercase tracking-widest transition-all duration-300', activeTab === 'week' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer' : '']"
           >
             {{ t.fullWeek }}
           </button>
 
-          <div v-if="activeTab === 'week'" class="relative flex items-center border-l border-slate-300/50 dark:border-slate-600/50 pl-1 sm:pl-2 ml-1 sm:ml-0 animate-fade-in">
+          <div v-if="activeTab === 'week'" class="relative flex-1 sm:flex-none flex items-center sm:border-l border-slate-300/50 dark:border-slate-600/50 sm:pl-2 animate-fade-in min-w-[40%] sm:min-w-0">
             <button 
               @click="isDropdownOpen = !isDropdownOpen" 
-              :class="['flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300', selectedDayFilter !== 'All' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer' : '']"
+              :class="['w-full justify-center whitespace-nowrap flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-black uppercase tracking-widest transition-all duration-300', selectedDayFilter !== 'All' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50', language === 'kh' ? 'font-khmer' : '']"
             >
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
               <span class="hidden sm:inline">{{ selectedDayFilter === 'All' ? t.filterDays : displayDay(selectedDayFilter) }}</span>
@@ -55,7 +55,7 @@
           <!-- Substitute Button -->
           <button 
             @click="isSubstituteModalOpen = true" 
-            :class="['px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all duration-300 bg-emerald-50 text-emerald-600 border border-emerald-200/50 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 hover:bg-emerald-100 hover:shadow-md dark:hover:bg-emerald-500/20 ml-2 sm:ml-4 flex items-center gap-1.5', language === 'kh' ? 'font-khmer' : '']"
+            :class="['whitespace-nowrap flex-1 sm:flex-none justify-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-black uppercase tracking-widest transition-all duration-300 bg-emerald-50 text-emerald-600 border border-emerald-200/50 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 hover:bg-emerald-100 hover:shadow-md dark:hover:bg-emerald-500/20 sm:ml-2 flex items-center gap-1.5', language === 'kh' ? 'font-khmer' : '']"
           >
             <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
             {{ language === 'kh' ? 'ជំនួសម៉ោង' : 'Substitute' }}
@@ -209,9 +209,15 @@
                     </div>
 
                     <!-- 🔥 THE FIX IS HERE -->
-                    <h4 class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-khmer leading-snug sm:leading-tight mb-4 sm:mb-6">
-                      {{ cleanSubjectName(cls.subject) }}
-                    </h4>
+                    <div class="flex flex-col sm:block gap-2 mb-4 sm:mb-6">
+                      <h4 class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-khmer leading-snug sm:leading-tight">
+                        {{ cleanSubjectName(cls.subject) }}
+                      </h4>
+                      <div v-if="cls.lastWeek > 0" class="sm:hidden flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-sm w-max">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        {{ language === 'kh' ? 'ដល់សប្តាហ៍ទី ' : 'Week ' }}{{ cls.lastWeek }}
+                      </div>
+                    </div>
                   </div>
                   
                   <div class="flex flex-row items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-100 dark:border-slate-700/50">
@@ -240,7 +246,7 @@
                     </button>
 
                     <!-- Latest Tracked Week Indicator -->
-                    <div v-if="cls.lastWeek > 0" :class="['flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-sm', language === 'kh' ? 'font-khmer' : '']">
+                    <div v-if="cls.lastWeek > 0" :class="['hidden sm:flex flex-none items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-sm', language === 'kh' ? 'font-khmer' : '']">
                       <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                       {{ language === 'kh' ? 'ដល់សប្តាហ៍ទី ' : 'Week ' }}{{ cls.lastWeek }}
                     </div>
@@ -427,7 +433,8 @@ const selectDay = (day) => {
 // 🔥 THE FIX: Delete ALL text inside parentheses (G2-Y2) and clean spaces
 const cleanSubjectName = (subject) => {
   if (!subject) return '';
-  return String(subject).replace(/\s*\(.*?\)\s*/g, '').trim();
+  const cleaned = String(subject).replace(/\s*\(.*?\)\s*/g, '').trim();
+  return cleaned || subject || 'Unknown Subject';
 };
 
 const openTrackingForm = (cls) => {
@@ -564,7 +571,12 @@ const displayedSchedule = computed(() => {
 
   Object.keys(groups).forEach(day => {
     groups[day].sort((a, b) => {
-      const getHour = (t) => t ? parseInt(t.match(/(\d+):/)?.[1] || 99) : 99;
+      const getHour = (t) => {
+        if (!t) return 99;
+        let h = parseInt(t.match(/(\d+):/)?.[1] || 99);
+        if (h >= 1 && h <= 6) h += 12;
+        return h;
+      };
       return getHour(a.time) - getHour(b.time);
     });
   });
@@ -575,6 +587,8 @@ const displayedSchedule = computed(() => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Siemreap&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&family=Kantumruy+Pro:wght@400;500;600;700&display=swap');
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .font-sans { font-family: 'Inter', sans-serif; }
 .font-khmer { font-family: 'Kantumruy Pro', 'Siemreap', sans-serif; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }

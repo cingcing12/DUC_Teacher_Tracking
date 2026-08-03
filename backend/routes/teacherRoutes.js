@@ -31,6 +31,15 @@ const getNormalizedPhoneArray = (phoneStr) => {
 };
 
 // ==========================================
+// HELPER: OBLITERATE SPACES FOR FUZZY MATCHING
+// ==========================================
+const normalizeText = (str) => {
+    return String(str || "")
+        .replace(/[\s\u200B-\u200D\uFEFF]/g, '') 
+        .toLowerCase();
+};
+
+// ==========================================
 // HELPER: GET AVATAR URL
 // ==========================================
 async function getAvatarUrl(sheets, nameKh, phone) {
@@ -42,15 +51,12 @@ async function getAvatarUrl(sheets, nameKh, phone) {
     const rows = res.data.values;
     if (!rows) return null;
 
-    const inputPhones = getNormalizedPhoneArray(phone);
-    const cleanInputName = nameKh ? String(nameKh).trim() : "";
+    const cleanInputName = normalizeText(nameKh ? String(nameKh).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '') : "");
 
     for (const row of rows) {
-      const sheetNameKh = row[0] ? String(row[0]).trim() : "";
-      const sheetPhones = getNormalizedPhoneArray(row[1]);
-      const hasPhoneMatch = inputPhones.some(p => sheetPhones.includes(p));
+      const sheetNameKh = normalizeText(row[0] ? String(row[0]).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '') : "");
 
-      if (sheetNameKh === cleanInputName && hasPhoneMatch) {
+      if (sheetNameKh && sheetNameKh === cleanInputName) {
         return row[2]; 
       }
     }

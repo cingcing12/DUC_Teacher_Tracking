@@ -390,7 +390,8 @@ router.get("/class-history", noCache, async (req, res) => {
               lessonNo: String(row[12] || ""),
               content: String(row[13] || ""),
               hours: String(row[14] || ""),
-              notes: String(row[15] || "")
+              notes: String(row[15] || ""),
+              room: String(row[16] || "")
             });
 
             const hrMatch = String(row[14] || "").match(/(\d+)\s*ម៉ោង/);
@@ -411,6 +412,49 @@ router.get("/class-history", noCache, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Error fetching history" });
+  }
+});
+
+// ==========================================
+// GET: TEACHER HISTORY (ALL CLASSES)
+// ==========================================
+router.get("/teacher-history", noCache, async (req, res) => {
+  try {
+    const { teacher } = req.query;
+    if (!teacher) return res.status(400).json({ success: false, message: "Teacher required" });
+
+    const targetTeacher = normalizeText(teacher.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
+
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+
+    const forceFresh = req.query.fresh === 'true';
+    const rows = await getMasterRows(sheets, forceFresh); 
+    
+    const history = [];
+
+    rows.forEach(row => {
+      const dbTeacher = normalizeText(row[7] || '');
+
+      if (targetTeacher && dbTeacher.includes(targetTeacher)) {
+          history.push({
+            major: String(row[1] || "").trim(),
+            generation: String(row[2] || "").trim(),
+            subject: String(row[5] || "").trim(),
+            cohort: String(row[6] || "").trim(),
+            date: String(row[9] || "").trim(),
+            startTime: String(row[10] || "").trim(),
+            endTime: String(row[11] || "").trim(),
+            hours: String(row[14] || "").trim()
+          });
+      }
+    });
+
+    // Sort by date (descending, assuming simple string compare for now or frontend will handle it)
+    res.json({ success: true, data: history });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Error fetching teacher history" });
   }
 });
 
@@ -574,9 +618,9 @@ router.get('/tracking-directory', noCache, async (req, res) => {
         const name = String(row[0] || '').trim();
         const imgUrl = String(row[2] || '').trim(); 
         if (name && imgUrl) {
-          const cleanName = name.replace(/លោកគ្រូ|អ្នកគ្រូ/g, '').trim();
+          const cleanName = normalizeText(name.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
           avatarMap[cleanName] = imgUrl;
-          avatarMap[name] = imgUrl;
+          avatarMap[normalizeText(name)] = imgUrl;
         }
       });
     } catch (e) {}
@@ -603,7 +647,8 @@ router.get('/tracking-directory', noCache, async (req, res) => {
       
       if (!dirMap[key]) {
           let cleanTeacherName = teacher.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '').trim();
-          let avatarUrl = avatarMap[cleanTeacherName] || avatarMap[teacher] || null;
+          let normalizedTeacher = normalizeText(cleanTeacherName);
+          let avatarUrl = avatarMap[normalizedTeacher] || avatarMap[normalizeText(teacher)] || null;
           
           dirMap[key] = {
               tab: `${cohort}-${cleanTeacherName}-${subject}`, 

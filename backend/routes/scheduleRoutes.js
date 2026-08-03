@@ -60,7 +60,7 @@ const mapDayToEnglish = (khmerOrMixed) => {
     return khmerOrMixed.split("-")[0].trim();
 };
 
-const parseAttendanceTab = (rows, tabMeta, filterTeacherObj, filterTeachersArray, fallbackDepartment, facultiesList) => {
+const parseAttendanceTab = (rows, tabMeta, filterTeacherObj, filterTeachersArray, fallbackDepartment, facultiesList, fetchAll = false) => {
     const classes = [];
     if (!rows || rows.length < 7) return classes;
 
@@ -94,7 +94,9 @@ const parseAttendanceTab = (rows, tabMeta, filterTeacherObj, filterTeachersArray
             let isMatch = false;
             let matchedTeacherName = teacher; 
             
-            if (filterTeacherObj) {
+            if (fetchAll) {
+                isMatch = true;
+            } else if (filterTeacherObj) {
                 // /my-schedule logic
                 if (cleanRowTeacher.includes(filterTeacherObj.cleanName)) {
                     isMatch = true;
@@ -261,6 +263,60 @@ router.get("/department-schedule", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Error reading department schedule" });
+  }
+});
+
+// ==========================================
+// GET: ALL ATTENDANCE TABS
+// ==========================================
+router.get("/attendance-tabs", async (req, res) => {
+  try {
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
+    const tabs = sheetMeta.data.sheets
+      .map(s => s.properties.title)
+      .filter(title => title.includes('ជំនាន់ទី') || title.includes('ឆ្នាំទី') || title.includes('ឆមាសទី'));
+    res.json({ success: true, data: tabs });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Error fetching tabs" });
+  }
+});
+
+// ==========================================
+// GET: TAB SCHEDULE FOR SUBSTITUTE
+// ==========================================
+router.get("/tab-schedule", async (req, res) => {
+  try {
+    const tabName = req.query.tabName;
+    if (!tabName) return res.status(400).json({ success: false, message: "Tab name required" });
+
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+
+    let facultiesList = [];
+    try {
+        const facRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A2:B" });
+        facultiesList = facRes.data.values || [];
+    } catch (e) {
+        console.error("Could not fetch Faculties:", e.message);
+    }
+
+    const rangeData = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEETS.ATTENDANCE,
+      range: `'${tabName}'!A1:G200`
+    });
+
+    const rows = rangeData.data.values || [];
+    const tabMeta = extractTabMeta(tabName);
+    
+    const classes = parseAttendanceTab(rows, tabMeta, null, null, null, facultiesList, true);
+
+    res.json({ success: true, data: classes });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Error reading tab schedule" });
   }
 });
 

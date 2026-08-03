@@ -186,11 +186,118 @@
         </div>
       </div>
     </transition>
+
+    <!-- PRELOAD ASSETS FOR PRINT (Forces browser to cache them instantly) -->
+    <img src="../assets/DUC.png" alt="" class="absolute w-0 h-0 opacity-0 pointer-events-none" />
+
+    <!-- ========================================== -->
+    <!-- OFFICIAL PDF PRINT TEMPLATE (HIDDEN IN APP)-->
+    <!-- ========================================== -->
+    <div v-if="printData" id="print-area" class="hidden print:block w-full bg-white text-black font-khmer px-6">
+      
+      <!-- Header Section -->
+      <div class="relative w-full mb-6 min-h-[120px]">
+        <!-- Left: Logo & University Name -->
+        <div class="absolute left-0 top-9 flex flex-col items-center w-64 text-center">
+          <img src="../assets/DUC.png" alt="DUC Logo" class="h-20 w-auto mb-1 object-contain" />
+          <h2 class="font-moul text-[15px] text-black leading-none mt-2 font-normal">សាកលវិទ្យាល័យឌីជីថលកម្ពុជា</h2>
+          <h3 class="text-[10px] font-black font-sans mt-1">DIGITAL UNIVERSITY OF CAMBODIA</h3>
+        </div>
+
+        <!-- Center: Nation Religion King -->
+        <div class="w-full flex flex-col items-center text-center pt-2">
+          <!-- 🔥 NO FONT-BOLD to match Google Sheets Moul format -->
+          <h1 class="font-moul text-[20px] text-black leading-none font-normal">ព្រះរាជាណាចក្រកម្ពុជា</h1>
+          <h2 class="font-moul text-[18px] text-black mt-3 leading-none font-normal">ជាតិ សាសនា ព្រះមហាក្សត្រ</h2>
+          
+          <!-- 🔥 CUSTOM TACTEING FONT ORNAMENT -->
+          <div class="flex items-center justify-center mt-2 mb-2 text-black">
+            <span class="font-tacteing text-3xl" style="line-height: 1;">3</span>
+          </div>
+          <!-- END DIVIDER -->
+        </div>
+      </div>
+
+      <!-- Document Titles -->
+      <div class="text-center mb-4 pt-6 text-[14px] font-khmer">
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1 text-[16px]">បញ្ជីតាមដានការបង្រៀនរបស់សាស្ត្រាចារ្យ</p>
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">មហាវិទ្យាល័យ {{ printData.department ? printData.department.replace('មហាវិទ្យាល័យ', '') : '...........................................................' }}</p>
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">កម្រិតបរិញ្ញាបត្រ ជំនាញ {{ printData.major || '...........................................' }}</p>
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">មុខវិជ្ជា {{ cleanSubjectName(printData.subject) }}</p>
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">បង្រៀនដោយ ៖ លោកគ្រូ {{ printData.teacher || '........................' }}</p>
+      </div>
+
+      <!-- Meta Row -->
+      <div class="flex justify-between font-bold text-[12px] mb-1 px-1">
+        <div>ថ្នាក់ ៖ {{ printData.cohort }}</div>
+        <div>រៀងរាល់ថ្ងៃ {{ printData.daysStr || '..............' }} បន្ទប់ {{ printData.room || '......' }}</div>
+      </div>
+
+      <!-- Main Data Table -->
+      <table class="w-full border-collapse border border-black text-[11px] text-center mb-6">
+        <thead>
+          <tr>
+            <th colspan="2" class="border border-black p-1 align-middle font-bold">កាលបរិច្ឆេទ</th>
+            <th rowspan="2" class="border border-black p-1 align-middle font-bold w-[12%] leading-tight">ម៉ោងបង្រៀន</th>
+            <th colspan="2" class="border border-black p-1 align-middle font-bold">ការបរិយាយខ្លឹមសារមេរៀន</th>
+            <th rowspan="2" class="border border-black p-1 align-middle font-bold w-[8%]">ម៉ោងសរុប</th>
+          </tr>
+          <tr>
+            <th class="border border-black p-1 align-middle font-bold w-[6%]">សប្តាហ៍</th>
+            <th class="border border-black p-1 align-middle font-bold w-[12%]">ថ្ងៃខែឆ្នាំ</th>
+            <th class="border border-black p-1 align-middle font-bold w-[12%]">មេរៀន</th>
+            <th class="border border-black p-1 align-middle font-bold">ខ្លឹមសារមេរៀន</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="lesson in printData.lessons" :key="lesson.week" class="break-inside-avoid page-break-inside-avoid">
+            <td class="border border-black p-1">{{ lesson.week }}</td>
+            <td class="border border-black p-1">{{ formatDateKhmer(lesson.date) }}</td>
+            <td class="border border-black p-1 font-sans text-[10px]">0:00 - 0:00</td>
+            <td class="border border-black p-1">{{ lesson.lessonNo || '' }}</td>
+            <td class="border border-black p-1 text-left px-2 leading-relaxed">{{ lesson.content }}</td>
+            <td class="border border-black p-1 whitespace-nowrap">{{ parseNumericHours(lesson.hours) }}</td>
+          </tr>
+          
+          <!-- Ensure 20 rows total like the screenshot padding with empty rows -->
+          <template v-if="printData.lessons.length < 20">
+             <tr v-for="i in (20 - printData.lessons.length)" :key="'empty'+i" class="break-inside-avoid page-break-inside-avoid">
+               <td class="border border-black p-1">{{ printData.lessons.length + i }}</td>
+               <td class="border border-black p-1"></td>
+               <td class="border border-black p-1 font-sans text-[10px]">0:00 - 0:00</td>
+               <td class="border border-black p-1"></td>
+               <td class="border border-black p-1"></td>
+               <td class="border border-black p-1">0</td>
+             </tr>
+          </template>
+
+          <tr class="break-inside-avoid page-break-inside-avoid">
+            <td colspan="5" class="border border-black p-1 text-center">ចំនួនម៉ោងសរុប</td>
+            <td class="border border-black p-1 text-center font-bold whitespace-nowrap">{{ printData.formattedHours }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Signatures Footer -->
+      <div class="flex justify-between mt-8 px-4 text-[12px] break-inside-avoid page-break-inside-avoid">
+        <!-- Admin/Head Signature -->
+        <div class="text-center flex flex-col items-center pt-20">
+          <div class="font-moul font-normal mb-16 leading-[1.6]">បានឃើញ និងឯកភាព<br>ប្រធានដេប៉ាតឺម៉ង់</div>
+        </div>
+        
+        <!-- Teacher Signature -->
+        <div class="text-center flex flex-col items-center">
+          <div class="mb-2">ថ្ងៃ ........................... ខែ .............................. ឆ្នាំរោង ឆស័ក ព.ស ២៥៧០</div>
+          <div class="mb-16">កំពង់ស្ពឺ ថ្ងៃទី......... ខែ .................... ឆ្នាំ២០២....<br><span class="font-moul font-normal mt-2 inline-block">ហត្ថលេខាគ្រូបង្រៀន</span></div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
@@ -198,6 +305,7 @@ const route = useRoute();
 
 // ADMIN MODE DETECTION
 const isAdmin = computed(() => route.query.admin === 'true');
+const autoPrint = computed(() => route.query.print === 'true');
 
 // --- LANGUAGE STATE & DICTIONARY ---
 const language = ref(localStorage.getItem('app_lang') || 'en');
@@ -384,10 +492,50 @@ const goToPage = (page) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// 🔥 THE FIX: Delete ALL text inside parentheses (G2-Y2) and clean spaces
 const cleanSubjectName = (subject) => {
   if (!subject) return '';
   return String(subject).replace(/\s*\(.*?\)\s*/g, '').trim();
+};
+
+const parseNumericHours = (hourStr) => {
+  if (!hourStr) return '0';
+  const hMatch = hourStr.match(/(\d+)\s*(?:ម៉ោង|hrs|hr|h)/i);
+  const mMatch = hourStr.match(/(\d+)\s*(?:នាទី|mins|min|m)/i);
+  if (hMatch || mMatch) {
+    const h = hMatch ? parseInt(hMatch[1]) : 0;
+    const m = mMatch ? parseInt(mMatch[1]) : 0;
+    if (m === 0) return h.toString();
+    return (h + m/60).toPrecision(2).replace(/\.0$/, ''); 
+  }
+  const num = parseFloat(hourStr);
+  if (!isNaN(num)) return num.toString();
+  return hourStr;
+};
+
+const formatDateKhmer = (dateStr) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`; 
+  }
+  return dateStr;
+};
+
+const triggerPrint = () => {
+  const sortedLessons = [...historyData.value].sort((a,b) => a.week - b.week);
+  printData.value = {
+    cohort: classData.value.group,
+    department: classData.value.department,
+    major: fullMajorName.value,
+    subject: classData.value.subject,
+    teacher: classData.value.teacher,
+    lessons: sortedLessons,
+    formattedHours: displayedTotalHours.value
+  };
+  
+  nextTick(() => {
+    window.print();
+  });
 };
 
 const customAlert = ref({ show: false, type: 'success', message: '', confirmAction: null });
@@ -434,6 +582,12 @@ const fetchHistory = async () => {
       historyData.value = data.data;
       totalHours.value = data.totalHours;
       currentPage.value = 1;
+      
+      if (autoPrint.value) {
+        setTimeout(() => {
+          triggerPrint();
+        }, 500); // Give time for majors to load
+      }
     }
   } catch (error) {
     console.error("Failed to load history", error);
@@ -594,6 +748,18 @@ const executeDelete = async (lesson) => {
 .font-khmer { font-family: 'Kantumruy Pro', sans-serif; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 
+/* Load the local Tacteing font from the public folder to bypass Vite cache */
+@font-face {
+  font-family: 'Tacteing';
+  src: url('/Tacteing.ttf') format('truetype');
+}
+.font-tacteing { font-family: 'Tacteing', sans-serif; }
+
+.font-moul { 
+  font-family: 'Moul', 'Khmer OS Muol Light', 'Moul', 'Kantumruy Pro', sans-serif !important; 
+  font-weight: 400 !important;
+}
+
 /* Properly formats the date/month picker icons for light and dark modes */
 input[type="month"]::-webkit-calendar-picker-indicator {
   filter: invert(0.5);
@@ -601,6 +767,66 @@ input[type="month"]::-webkit-calendar-picker-indicator {
 }
 .dark input[type="month"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
+}
+
+/* 🔥 PRINT CSS MAGIC */
+@media print {
+  html, body {
+    background-color: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  /* Hide UI elements */
+  .z-10, main, nav, header, footer, button, .animate-fade-in-up {
+    display: none !important;
+  }
+  
+  /* Show print template */
+  #print-area {
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Force print styles */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Handle fonts for print */
+  .font-moul { 
+    font-family: 'Moul', serif !important; 
+    font-weight: normal !important;
+    -webkit-text-stroke: 0px !important;
+    text-shadow: none !important;
+  }
+
+  .font-sans, .font-khmer, td {
+    font-family: 'Kantumruy Pro', sans-serif !important;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  @page {
+    size: A4;
+    margin: 1.5cm 1cm 1cm 1cm;
+  }
 }
 
 .animate-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }

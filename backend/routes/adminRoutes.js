@@ -148,6 +148,14 @@ router.post('/admin/login', (req, res) => { // <-- Change to /admin/login here
 // ==========================================
 // ADMIN TEACHER MANAGEMENT
 // ==========================================
+// HELPER: OBLITERATE SPACES FOR FUZZY MATCHING
+// ==========================================
+const normalizeText = (str) => {
+    return String(str || "")
+        .replace(/[\s\u200B-\u200D\uFEFF]/g, '') 
+        .toLowerCase();
+};
+
 const TEACHER_DATA_SHEET_ID = "1wCRweEDDuNIZtXYq-qiOSIE-zYgvMQ2zA8m594DtevQ"; 
 const TEACHER_DATA_TAB = "ទិន្នន័យលោកគ្រូអ្នកគ្រូ";
 
@@ -156,6 +164,21 @@ router.get('/admin/teachers', async (req, res) => {
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
+    let avatarMap = {};
+    try {
+      const avatarRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Avatars'!A2:C" });
+      const avatarRows = avatarRes.data.values || [];
+      avatarRows.forEach(row => {
+        const name = String(row[0] || '').trim();
+        const imgUrl = String(row[2] || '').trim(); 
+        if (name && imgUrl) {
+          const cleanName = normalizeText(name.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
+          avatarMap[cleanName] = imgUrl;
+          avatarMap[normalizeText(name)] = imgUrl;
+        }
+      });
+    } catch (e) {}
+
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: TEACHER_DATA_SHEET_ID,
       range: `'${TEACHER_DATA_TAB}'!A4:P`
@@ -163,10 +186,14 @@ router.get('/admin/teachers', async (req, res) => {
 
     const rows = response.data.values || [];
     const teachers = rows.map((row, index) => {
+      const nameKh = String(row[1] || "").trim();
+      const normalizedName = normalizeText(nameKh.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
+      const avatarUrl = avatarMap[normalizedName] || avatarMap[normalizeText(nameKh)] || String(row[11] || "").trim();
+
       return {
         rowIndex: index + 4, // A4 is row 4
         id: String(row[0] || "").trim(),
-        nameKh: String(row[1] || "").trim(),
+        nameKh: nameKh,
         nameEn: String(row[2] || "").trim(),
         dob: String(row[3] || "").trim(),
         gender: String(row[4] || "").trim(),
@@ -176,7 +203,7 @@ router.get('/admin/teachers', async (req, res) => {
         major: String(row[8] || "").trim(),
         phone: String(row[9] || "").trim(),
         email: String(row[10] || "").trim(),
-        avatarUrl: String(row[11] || "").trim(),
+        avatarUrl: avatarUrl,
         joinDate: String(row[12] || "").trim(),
         cerNumber: String(row[13] || "").trim(),
         password: String(row[14] || "").trim(),
