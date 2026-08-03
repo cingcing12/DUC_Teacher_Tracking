@@ -307,10 +307,10 @@ router.post("/track-lesson", async (req, res) => {
     const generation = genMatch ? `ជំនាន់ទី ${genMatch[1]}` : "Unknown";
 
     let formattedYear = String(year || "?").trim();
-    if (formattedYear === "1") formattedYear = "ឆ្នាំសិក្សាមូលដ្ឋាន";
-    else if (formattedYear === "2") formattedYear = "ឆ្នាំទី២";
-    else if (formattedYear === "3") formattedYear = "ឆ្នាំទី៣";
-    else if (formattedYear === "4") formattedYear = "ឆ្នាំទី៤";
+    if (formattedYear === "1" || formattedYear === "១") formattedYear = "ឆ្នាំសិក្សាមូលដ្ឋាន";
+    else if (formattedYear === "2" || formattedYear === "២") formattedYear = "2";
+    else if (formattedYear === "3" || formattedYear === "៣") formattedYear = "3";
+    else if (formattedYear === "4" || formattedYear === "៤") formattedYear = "4";
 
     try {
         const majorRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Majors'!A2:B" });
