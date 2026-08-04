@@ -266,4 +266,112 @@ router.post('/admin/teachers/update', async (req, res) => {
   }
 });
 
+router.post('/admin/teachers/add', async (req, res) => {
+  try {
+    const { 
+      id, nameKh, nameEn, dob, gender, role, classGrade, 
+      degree, major, phone, email, avatarUrl, joinDate, 
+      cerNumber, password, isBlocked 
+    } = req.body;
+
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+
+    // Fetch existing rows to calculate the next ID (ល.រ)
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: TEACHER_DATA_SHEET_ID,
+      range: `'${TEACHER_DATA_TAB}'!A4:A`
+    });
+    
+    const rows = response.data.values || [];
+    let nextId = 1;
+    if (rows.length > 0) {
+      // Try to parse the last row's ID
+      const lastRowIdStr = rows[rows.length - 1][0];
+      const lastId = parseInt(lastRowIdStr);
+      if (!isNaN(lastId)) {
+        nextId = lastId + 1;
+      } else {
+        // Fallback to row count if parsing fails
+        nextId = rows.length + 1;
+      }
+    }
+
+    // Append to columns A through P
+    const values = [
+      [
+        id || nextId,         // A: ID (ល.រ)
+        nameKh || "",         // B: Name Kh
+        nameEn || "",         // C: Name En
+        dob || "",            // D: DOB
+        gender || "",         // E: Gender
+        role || "",           // F: Role
+        classGrade || "",     // G: Class Grade
+        degree || "",         // H: Degree
+        major || "",          // I: Major
+        phone || "",          // J: Phone
+        email || "",          // K: Email
+        avatarUrl || "",      // L: Avatar URL
+        joinDate || "",       // M: Join Date
+        cerNumber || "",      // N: Cer Number
+        password || "",       // O: Password
+        isBlocked ? "TRUE" : "FALSE" // P: Blocked
+      ]
+    ];
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: TEACHER_DATA_SHEET_ID,
+      range: `'${TEACHER_DATA_TAB}'!A:P`,
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: { values: values }
+    });
+
+    res.json({ success: true, message: "Teacher added successfully!" });
+  } catch (error) {
+    console.error("Error adding teacher:", error);
+    res.status(500).json({ success: false, message: "Error adding teacher" });
+  }
+});
+
+router.delete('/admin/teachers/delete/:rowIndex', async (req, res) => {
+  try {
+    const { rowIndex } = req.params;
+    if (!rowIndex) return res.status(400).json({ success: false, message: "Row index required" });
+
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+
+    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: TEACHER_DATA_SHEET_ID });
+    const targetSheet = sheetMeta.data.sheets.find(s => s.properties.title === TEACHER_DATA_TAB);
+    if (!targetSheet) return res.status(404).json({ success: false, message: "Tab not found" });
+    const sheetId = targetSheet.properties.sheetId;
+
+    // Google Sheets API uses 0-based indexing for deleteDimension
+    // The rowIndex passed from frontend is 1-based (A4 is row 4, meaning index 3 for deleteDimension)
+    const index = parseInt(rowIndex) - 1;
+
+    await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: TEACHER_DATA_SHEET_ID,
+        requestBody: {
+            requests: [{
+                deleteDimension: {
+                    range: { 
+                        sheetId: sheetId, 
+                        dimension: "ROWS", 
+                        startIndex: index, 
+                        endIndex: index + 1 
+                    }
+                }
+            }]
+        }
+    });
+
+    res.json({ success: true, message: "Teacher deleted successfully!" });
+  } catch (error) {
+    console.error("Error deleting teacher:", error);
+    res.status(500).json({ success: false, message: "Error deleting teacher" });
+  }
+});
+
 module.exports = router;

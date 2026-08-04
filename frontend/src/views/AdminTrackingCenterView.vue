@@ -308,7 +308,7 @@
         <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">មហាវិទ្យាល័យ {{ printData.department ? printData.department.replace('មហាវិទ្យាល័យ', '') : '...........................................................' }}</p>
         <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">កម្រិតបរិញ្ញាបត្រ ជំនាញ {{ printData.major || '...........................................' }}</p>
         <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">មុខវិជ្ជា {{ cleanSubjectName(printData.subject) }}</p>
-        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">បង្រៀនដោយ ៖ លោកគ្រូ {{ printData.teacher || '........................' }}</p>
+        <p style="-webkit-text-stroke: 0.5px white;" class="font-moul font-normal mb-1">បង្រៀនដោយ ៖ {{ getTeacherPrefix(printData.teacher) }} {{ printData.teacher || '........................' }}</p>
       </div>
 
       <!-- Meta Row -->
@@ -401,7 +401,7 @@
           <!-- Document Title -->
           <div class="flex flex-col items-center text-center mt-4">
             <h2 class="font-moul text-[15px] text-black leading-normal font-normal">
-              សរុបម៉ោងបង្រៀនគ្រូបង្រៀន ប្រចាំខែ{{ printData.selectedMonthLabel !== 'ទាំងអស់' ? printData.selectedMonthLabel : '...........' }}<br>
+              សរុបម៉ោងបង្រៀនគ្រូបង្រៀន ប្រចាំខែ {{ printData.selectedMonthLabel }}<br>
               {{ printData.headerYear === 'ឆ្នាំសិក្សាមូលដ្ឋាន' ? 'ថ្នាក់' + printData.headerYear : (printData.headerYear === 'ថ្នាក់មូលដ្ឋាន' ? printData.headerYear : 'ឆ្នាំទី ' + (printData.headerYear || '...')) }} ឆមាសទី {{ printData.headerSemester || '......' }} {{ printData.headerGeneration || '.....................' }}<br>
               កម្រិតបរិញ្ញាបត្រ
             </h2>
@@ -409,9 +409,8 @@
         </div>
       </div>
 
-      <!-- Teacher Name Label -->
       <div class="w-full text-left mb-2 text-[14px]">
-        <span class="font-bold font-moul">បង្រៀនដោយ៖ លោកគ្រូ </span>
+        <span class="font-bold font-moul">បង្រៀនដោយ៖ {{ getTeacherPrefix(printData.teacher) }} </span>
         <span class="font-bold font-moul inline-block px-2">{{ printData.teacher }}</span>
       </div>
 
@@ -479,6 +478,32 @@ const router = useRouter();
 // --- INLINE PRINT LOGIC ---
 const printData = ref(null);
 const printingSubjectId = ref(null);
+const teachersGenderMap = ref({});
+
+const normalizeForMatch = (str) => {
+  return String(str || "")
+    .replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '')
+    .replace(/[\s\u200B-\u200D\uFEFF\u17C9\u17CA]/g, '')
+    .toLowerCase();
+};
+
+const getTeacherPrefix = (name) => {
+  if (!name) return 'លោកគ្រូ';
+  
+  if (Object.keys(teachersGenderMap.value).length === 0) {
+    // Debug: map is empty! (probably fetch failed or didn't run)
+    return 'លោកគ្រូ'; 
+  }
+  
+  const cleanName = normalizeForMatch(name);
+  const gender = teachersGenderMap.value[cleanName];
+  
+  // Also check if gender contains the Khmer characters for female just to be super safe
+  if (gender && String(gender).includes('ស្រី')) return 'អ្នកគ្រូ';
+  if (gender && String(gender).toLowerCase().includes('f')) return 'អ្នកគ្រូ';
+  
+  return 'លោកគ្រូ';
+};
 
 const cleanSubjectName = (subject) => {
   if (!subject) return '';
@@ -538,6 +563,25 @@ const khmerMonthsMap = {
 
 const executePrint = async () => {
     isPrintModalOpen.value = false;
+    
+    // Force fetch teachers if map is empty to ensure correct gender title
+    if (Object.keys(teachersGenderMap.value).length === 0) {
+      try {
+        const tRes = await fetch(import.meta.env.VITE_API_URL + '/api/admin/teachers');
+        const tData = await tRes.json();
+        if (tData.success) {
+          const map = {};
+          (tData.data || []).forEach(t => {
+            if (t.nameKh) map[normalizeForMatch(t.nameKh)] = t.gender;
+            if (t.nameEn) map[normalizeForMatch(t.nameEn)] = t.gender;
+          });
+          teachersGenderMap.value = map;
+        }
+      } catch (e) {
+        console.error('Print gender fetch failed', e);
+      }
+    }
+
     const { teacherNode, historyData, fullMajorName, room, daysStr } = printModalData.value;
     
     let filteredHistory = historyData;
@@ -638,7 +682,39 @@ const executePrint = async () => {
     style.innerHTML = `@page { size: ${orientation} !important; margin: 1.5cm 1cm 1cm 1cm; }`;
     document.head.appendChild(style);
     
+    const originalTitle = document.title;
+    try {
+        let gen = 'Generation', yr = 'Year', sem = 'Semester', tName = 'Teacher';
+        if (printMode.value === 'class') {
+            const cls = printModalData.value.teacherNode || {};
+            gen = cls.tab || gen;
+            yr = cls.year || yr;
+            sem = cls.semester || sem;
+            tName = cls.teacher || tName;
+        } else if (printMode.value === 'teacher') {
+            gen = printData.value.headerGeneration || gen;
+            yr = printData.value.headerYear || yr;
+            sem = printData.value.headerSemester || sem;
+            tName = printData.value.teacher || tName;
+        }
+        
+        // Determine if it's a specific month or all (in Khmer)
+        let monthSuffix = 'ទាំងអស់';
+        if (selectedPrintMonth.value) {
+            const found = printModalMonths.value.find(m => m.value === selectedPrintMonth.value);
+            monthSuffix = found ? found.label.replace(/\s+/g, '_') : selectedPrintMonth.value;
+        }
+        
+        // Remove periods or bad characters that might mess up file extensions, but keep it readable
+        let cleanName = `${gen}_${yr}_${sem}_${tName}_${monthSuffix}`.replace(/[\/\\]/g, '-');
+        document.title = cleanName;
+    } catch(e) {
+        console.error('Error setting filename:', e);
+    }
+    
     window.print();
+    
+    document.title = originalTitle;
     
     setTimeout(() => {
         if (document.head.contains(style)) {
@@ -991,6 +1067,23 @@ onMounted(async () => {
     const res = await fetch(import.meta.env.VITE_API_URL + '/api/tracking-directory');
     const data = await res.json();
     if (data.success) trackingDirectory.value = data.data;
+    
+    // Fetch teachers for gender mapping
+    try {
+      const tRes = await fetch(import.meta.env.VITE_API_URL + '/api/admin/teachers');
+      const tData = await tRes.json();
+      if (tData.success) {
+        const map = {};
+        (tData.data || []).forEach(t => {
+          if (t.nameKh) map[normalizeForMatch(t.nameKh)] = t.gender;
+          if (t.nameEn) map[normalizeForMatch(t.nameEn)] = t.gender;
+        });
+        teachersGenderMap.value = map;
+      }
+    } catch (e) {
+      console.error('Failed to load teachers map for genders.');
+    }
+    
   } catch (err) {
     console.error('Failed to load tracking directory from server.');
   } finally {

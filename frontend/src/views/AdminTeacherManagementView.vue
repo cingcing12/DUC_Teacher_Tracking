@@ -33,6 +33,10 @@
             <p class="text-[10px] text-indigo-200 font-bold tracking-widest uppercase mb-1">Total Teachers</p>
             <p class="text-xl font-black text-white leading-none">{{ teachers.length }}</p>
           </div>
+          <button @click="openAddModal" class="bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 backdrop-blur-md px-5 py-2.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 transition-all group active:scale-95">
+            <svg class="w-5 h-5 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span class="font-bold text-sm">Add Teacher</span>
+          </button>
         </div>
       </div>
     </header>
@@ -141,9 +145,14 @@
                 </td>
 
                 <td class="p-5 pr-8 text-right">
-                  <button @click="openEditModal(teacher)" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all ml-auto shadow-sm group/btn hover:scale-105 active:scale-95">
-                    <svg class="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                  </button>
+                  <div class="flex items-center justify-end gap-2">
+                    <button @click="openEditModal(teacher)" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all shadow-sm group/btn hover:scale-105 active:scale-95" title="Edit">
+                      <svg class="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+                    <button @click="deleteTeacher(teacher)" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-rose-500 dark:text-rose-400 flex items-center justify-center hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:border-rose-200 dark:hover:border-rose-800 transition-all shadow-sm group/btn hover:scale-105 active:scale-95" title="Delete">
+                      <svg class="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -185,6 +194,7 @@
     <AdminTeacherModal 
       :is-open="isModalOpen" 
       :teacher="selectedTeacher" 
+      :mode="modalMode"
       @close="isModalOpen = false" 
       @save="saveTeacherDetails" 
     />
@@ -200,6 +210,31 @@
         <div>
           <p class="font-black text-sm uppercase tracking-wider">{{ toast.type === 'success' ? 'Success' : 'Error' }}</p>
           <p class="text-sm opacity-90 mt-0.5">{{ toast.message }}</p>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Delete Confirmation Modal -->
+    <transition name="modal-fade">
+      <div v-if="deleteModal.show" class="fixed inset-0 z-[150] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="deleteModal.show = false"></div>
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-sm relative z-10 overflow-hidden transform transition-all border border-slate-200 dark:border-slate-700 text-center p-8">
+          <div class="w-16 h-16 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-rose-200 dark:border-rose-800/50">
+            <svg class="w-8 h-8 text-rose-500 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          </div>
+          <h3 class="text-xl font-black text-slate-800 dark:text-white mb-2">Delete Teacher?</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+            Are you sure you want to delete <span class="font-bold text-slate-700 dark:text-slate-300">{{ deleteModal.teacherName }}</span>? This action cannot be undone.
+          </p>
+          <div class="flex gap-3 w-full">
+            <button @click="deleteModal.show = false" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+              Cancel
+            </button>
+            <button @click="confirmDelete" :disabled="isDeleting" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md shadow-rose-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 flex justify-center items-center gap-2">
+              <svg v-if="isDeleting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+              {{ isDeleting ? 'Deleting...' : 'Yes, Delete' }}
+            </button>
+          </div>
         </div>
       </div>
     </transition>
@@ -223,7 +258,11 @@ const filterStatus = ref('ALL');
 
 const isModalOpen = ref(false);
 const selectedTeacher = ref(null);
+const modalMode = ref('edit');
 const toast = ref({ show: false, message: '', type: 'success' });
+
+const deleteModal = ref({ show: false, teacher: null, teacherName: '' });
+const isDeleting = ref(false);
 
 // We try to use same API base URL logic. Since local development port might be 3000
 const API_BASE = import.meta.env.VITE_API_URL + '/api';
@@ -303,35 +342,98 @@ const changePage = (page) => {
   }
 };
 
+const openAddModal = () => {
+  modalMode.value = 'add';
+  selectedTeacher.value = null;
+  isModalOpen.value = true;
+};
+
 const openEditModal = (teacher) => {
+  modalMode.value = 'edit';
   selectedTeacher.value = teacher;
   isModalOpen.value = true;
 };
 
 const saveTeacherDetails = async (updateData) => {
+  if (modalMode.value === 'add') {
+    try {
+      const res = await fetch(`${API_BASE}/admin/teachers/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      });
+      const result = await res.json();
+      
+      if (result.success) {
+        showToast('Teacher added successfully!');
+        isModalOpen.value = false;
+        fetchTeachers(); // Refetch to get new data and rowIndex
+      } else {
+        showToast(result.message || 'Failed to add', 'error');
+      }
+    } catch (err) {
+      console.error('Add error:', err);
+      showToast('Network error while adding.', 'error');
+    }
+  } else {
+    try {
+      const res = await fetch(`${API_BASE}/admin/teachers/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      });
+      const result = await res.json();
+      
+      if (result.success) {
+        showToast('Teacher details updated successfully!');
+        isModalOpen.value = false;
+        
+        // Update local state so we don't have to refetch all
+        const index = teachers.value.findIndex(t => t.rowIndex === updateData.rowIndex);
+        if (index !== -1) {
+          Object.assign(teachers.value[index], updateData);
+        }
+      } else {
+        showToast(result.message || 'Failed to update', 'error');
+      }
+    } catch (err) {
+      console.error('Update error:', err);
+      showToast('Network error while updating.', 'error');
+    }
+  }
+};
+
+const deleteTeacher = (teacher) => {
+  deleteModal.value = {
+    show: true,
+    teacher: teacher,
+    teacherName: teacher.nameKh || teacher.nameEn || 'this teacher'
+  };
+};
+
+const confirmDelete = async () => {
+  const teacher = deleteModal.value.teacher;
+  if (!teacher) return;
+  
+  isDeleting.value = true;
   try {
-    const res = await fetch(`${API_BASE}/admin/teachers/update`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updateData)
+    const res = await fetch(`${API_BASE}/admin/teachers/delete/${teacher.rowIndex}`, {
+      method: 'DELETE',
     });
     const result = await res.json();
     
     if (result.success) {
-      showToast('Teacher details updated successfully!');
-      isModalOpen.value = false;
-      
-      // Update local state so we don't have to refetch all
-      const index = teachers.value.findIndex(t => t.rowIndex === updateData.rowIndex);
-      if (index !== -1) {
-        Object.assign(teachers.value[index], updateData);
-      }
+      showToast('Teacher deleted successfully!');
+      deleteModal.value.show = false;
+      fetchTeachers(); // Refetch to ensure rowIndices match Google Sheets
     } else {
-      showToast(result.message || 'Failed to update', 'error');
+      showToast(result.message || 'Failed to delete', 'error');
     }
   } catch (err) {
-    console.error('Update error:', err);
-    showToast('Network error while updating.', 'error');
+    console.error('Delete error:', err);
+    showToast('Network error while deleting.', 'error');
+  } finally {
+    isDeleting.value = false;
   }
 };
 </script>
@@ -345,4 +447,22 @@ const saveTeacherDetails = async (updateData) => {
 .toast-enter-active, .toast-leave-active { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 .toast-enter-from { opacity: 0; transform: translateX(50px) scale(0.9); }
 .toast-leave-to { opacity: 0; transform: translateX(50px) scale(0.9); }
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+.modal-fade-enter-active > div:nth-child(2),
+.modal-fade-leave-active > div:nth-child(2) {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.modal-fade-enter-from > div:nth-child(2),
+.modal-fade-leave-to > div:nth-child(2) {
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+}
 </style>
