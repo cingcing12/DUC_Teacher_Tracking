@@ -1,47 +1,35 @@
 <template>
-  <div class="min-h-screen bg-[#F4F7FA] dark:bg-[#0B1120] font-sans text-slate-800 dark:text-slate-100 selection:bg-indigo-500 selection:text-white transition-colors duration-500 relative pb-24">
+  <div class="min-h-screen bg-transparent font-sans text-slate-800 dark:text-slate-100 selection:bg-indigo-500 selection:text-white transition-colors duration-500 relative pb-24">
     
-    <!-- Top Nav / Header -->
-    <header class="relative bg-slate-900 pt-16 pb-24 overflow-hidden isolate">
-      <div class="absolute top-0 right-0 -mr-20 -mt-20 w-[40rem] h-[40rem] bg-indigo-600 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-pulse-slow"></div>
-      <div class="absolute bottom-0 left-10 w-[30rem] h-[30rem] bg-cyan-500 rounded-full mix-blend-screen filter blur-[100px] opacity-20"></div>
-      <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxwYXRoIGQ9Ik0wIDBoNDB2NDBIMHoiIGZpbGw9Im5vbmUiLz4KPHBhdGggZD0iTTAgMTBoNDBNMTAgMHY0ME0wIDIwaDQwTTIwIDB2NDBNMCAzMGg0ME0zMCAwdjQwIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMSIvPgo8L3N2Zz4=')] opacity-30 mask-image:linear-gradient(to_bottom,white,transparent)"></div>
-      
-      <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="flex items-center gap-6">
-          <button @click="router.push('/admin')" class="w-12 h-12 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md transition-all text-white shadow-lg group">
-            <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-          </button>
-          <div>
-            <h1 class="text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-lg">Teacher Management</h1>
-            <p class="text-indigo-200 font-khmer font-medium tracking-wider mt-2 flex items-center gap-3 text-sm md:text-base opacity-90">
-              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping-slow shadow-[0_0_10px_#22d3ee]"></span>
-              គ្រប់គ្រងគណនី និងទិន្នន័យគ្រូបង្រៀន
-            </p>
-          </div>
-        </div>
-        <div class="text-right flex items-center justify-end gap-3 flex-wrap">
-          <div class="bg-white/10 border border-white/20 backdrop-blur-md px-5 py-2.5 rounded-2xl flex flex-col items-center">
-            <p class="text-[10px] text-pink-300 font-bold tracking-widest uppercase mb-1">Female</p>
-            <p class="text-xl font-black text-white leading-none">{{ totalFemale }}</p>
-          </div>
-          <div class="bg-white/10 border border-white/20 backdrop-blur-md px-5 py-2.5 rounded-2xl flex flex-col items-center">
-            <p class="text-[10px] text-cyan-300 font-bold tracking-widest uppercase mb-1">Male</p>
-            <p class="text-xl font-black text-white leading-none">{{ totalMale }}</p>
-          </div>
-          <div class="bg-indigo-500/30 border border-indigo-400/50 backdrop-blur-md px-5 py-2.5 rounded-2xl flex flex-col items-center shadow-lg shadow-indigo-500/20">
-            <p class="text-[10px] text-indigo-200 font-bold tracking-widest uppercase mb-1">Total Teachers</p>
-            <p class="text-xl font-black text-white leading-none">{{ teachers.length }}</p>
-          </div>
-          <button @click="openAddModal" class="bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 backdrop-blur-md px-5 py-2.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 transition-all group active:scale-95">
-            <svg class="w-5 h-5 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            <span class="font-bold text-sm">Add Teacher</span>
-          </button>
-        </div>
+    <!-- Header Controls -->
+    <div class="pt-8 pb-6 px-6 sm:px-10 w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-6 relative z-20">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-black text-slate-800 dark:text-white tracking-tight">Teacher Management</h1>
+        <p class="text-indigo-600 dark:text-indigo-400 font-khmer font-bold mt-1">គ្រប់គ្រងគណនី និងទិន្នន័យគ្រូបង្រៀន</p>
       </div>
-    </header>
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="flex gap-4 mr-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700 p-3 rounded-2xl shadow-sm">
+          <div class="text-center px-2">
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Female</p>
+            <p class="text-lg font-black text-slate-800 dark:text-white leading-none mt-1">{{ totalFemale }}</p>
+          </div>
+          <div class="text-center px-2">
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Male</p>
+            <p class="text-lg font-black text-slate-800 dark:text-white leading-none mt-1">{{ totalMale }}</p>
+          </div>
+          <div class="text-center px-2 pl-4 border-l border-slate-200 dark:border-slate-700">
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Total</p>
+            <p class="text-lg font-black text-slate-800 dark:text-white leading-none mt-1">{{ teachers.length }}</p>
+          </div>
+        </div>
+        <button @click="openAddModal" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 transition-all group active:scale-95 h-max">
+          <svg class="w-5 h-5 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          <span class="font-bold text-sm">Add Teacher</span>
+        </button>
+      </div>
+    </div>
 
-    <main class="max-w-7xl mx-auto px-6 -mt-10 relative z-20">
+    <main class="w-full mx-auto px-6 sm:px-10 relative z-20">
       
       <!-- Controls -->
       <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-2xl border border-white/60 dark:border-slate-700/60 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-full p-2.5 transition-all flex flex-col md:flex-row justify-between items-center w-full mb-8">
@@ -66,11 +54,11 @@
 
       <!-- Loading State -->
       <div v-if="isLoading" class="py-32 flex flex-col items-center justify-center">
-        <div class="relative w-20 h-20">
-          <div class="absolute inset-0 border-4 border-indigo-100 dark:border-indigo-900 rounded-full"></div>
-          <div class="absolute inset-0 border-4 border-indigo-600 dark:border-indigo-400 rounded-full border-t-transparent animate-spin"></div>
+        <div class="relative w-16 h-16 mb-6">
+          <div class="absolute inset-0 rounded-full border-y-[3px] border-l-[3px] border-transparent border-t-cyan-400 border-l-cyan-400 animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" style="animation-duration: 1.2s;"></div>
+          <div class="absolute inset-2 rounded-full border-y-[3px] border-r-[3px] border-transparent border-b-indigo-500 border-r-indigo-500 animate-spin shadow-[0_0_15px_rgba(99,102,241,0.4)]" style="animation-duration: 0.9s; animation-direction: reverse;"></div>
         </div>
-        <p class="mt-6 text-indigo-600 dark:text-indigo-400 font-black tracking-widest uppercase text-sm animate-pulse">Loading Teachers...</p>
+        <p class="text-xs font-black uppercase tracking-widest animate-pulse text-indigo-600 dark:text-indigo-400">Loading Teachers...</p>
       </div>
 
       <!-- Error State -->
@@ -81,11 +69,11 @@
       </div>
 
       <!-- Table -->
-      <div v-else class="bg-white dark:bg-slate-800 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="overflow-x-auto">
+      <div v-else class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white dark:border-white/5 overflow-hidden flex flex-col min-h-[500px]">
+        <div class="overflow-x-auto flex-grow custom-scrollbar">
           <table class="w-full text-left border-collapse min-w-[800px]">
             <thead>
-              <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              <tr class="bg-white/40 dark:bg-slate-900/40 border-b border-slate-100/50 dark:border-slate-700/50 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest backdrop-blur-md">
                 <th class="p-5 pl-8">Teacher Info</th>
                 <th class="p-5">Contact Details</th>
                 <th class="p-5">Role & Academics</th>
@@ -93,8 +81,8 @@
                 <th class="p-5 text-right pr-8">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
-              <tr v-for="teacher in paginatedTeachers" :key="teacher.rowIndex" class="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group">
+            <tbody class="divide-y divide-slate-100/50 dark:divide-slate-700/50">
+              <tr v-for="teacher in paginatedTeachers" :key="teacher.rowIndex" class="hover:bg-white/80 dark:hover:bg-slate-700/50 transition-colors duration-300 group">
                 
                 <td class="p-5 pl-8">
                   <div class="flex items-center gap-4">
@@ -163,7 +151,7 @@
         </div>
         
         <!-- Pagination UI -->
-        <div v-if="totalPages > 1" class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div v-if="totalPages > 1" class="px-8 py-6 border-t border-slate-100/50 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto">
           <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">
             Showing <span class="font-bold text-slate-800 dark:text-white">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> to 
             <span class="font-bold text-slate-800 dark:text-white">{{ Math.min(currentPage * itemsPerPage, filteredTeachers.length) }}</span> of 

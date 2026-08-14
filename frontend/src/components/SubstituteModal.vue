@@ -88,7 +88,7 @@
                         :class="['w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all', selectedDayFilter !== 'All' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200']"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <span class="truncate max-w-[60px]">{{ selectedDayFilter === 'All' ? 'Day' : displayDay(selectedDayFilter).substring(0,3) }}</span>
+                        <span class="truncate max-w-[60px]">{{ selectedDayFilter === 'All' ? 'Day' : displayDay(selectedDayFilter) }}</span>
                       </button>
 
                       <transition name="fade-scale">
@@ -149,9 +149,9 @@
               </div>
               
               <div v-if="isLoadingSchedule" class="py-12 flex flex-col items-center justify-center">
-                <div class="relative w-16 h-16">
-                  <div class="absolute inset-0 rounded-full border-t-2 border-blue-500 animate-spin"></div>
-                  <div class="absolute inset-2 rounded-full border-r-2 border-indigo-500 animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+                <div class="relative w-16 h-16 mb-6">
+                  <div class="absolute inset-0 rounded-full border-y-[3px] border-l-[3px] border-transparent border-t-cyan-400 border-l-cyan-400 animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" style="animation-duration: 1.2s;"></div>
+                  <div class="absolute inset-2 rounded-full border-y-[3px] border-r-[3px] border-transparent border-b-indigo-500 border-r-indigo-500 animate-spin shadow-[0_0_15px_rgba(99,102,241,0.4)]" style="animation-duration: 0.9s; animation-direction: reverse;"></div>
                 </div>
                 <p class="mt-4 font-semibold text-slate-500 dark:text-slate-400">Loading schedules...</p>
               </div>

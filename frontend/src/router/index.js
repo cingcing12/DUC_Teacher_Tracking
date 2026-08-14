@@ -14,6 +14,7 @@ import NotFoundView from "../views/NotFoundView.vue";
 import HelpSupportView from "../views/HelpSupportView.vue";
 import StatsView from "../views/StatsView.vue";
 import AdminTeacherManagementView from "../views/AdminTeacherManagementView.vue";
+import AdminLayout from "../components/AdminLayout.vue";
 
 const routes = [
   {
@@ -77,33 +78,35 @@ const routes = [
   // ==========================================
   {
     path: "/admin",
-    name: "AdminDashboard",
-    component: AdminView,
+    component: AdminLayout,
     meta: { requiresAdmin: true },
-  },
-  {
-    path: "/admin/system-mappings",
-    name: "admin-system-mappings",
-    component: SystemMappingsView,
-    meta: { requiresAdmin: true },
-  },
-  {
-    path: "/admin/tracking",
-    name: "admin-tracking",
-    component: AdminTrackingCenterView,
-    meta: { requiresAdmin: true },
-  },
-  {
-    path: "/admin/settings",
-    name: "admin-settings",
-    component: AdminSettingsView,
-    meta: { requiresAdmin: true },
-  },
-  {
-    path: "/admin/teachers",
-    name: "admin-teachers",
-    component: AdminTeacherManagementView,
-    meta: { requiresAdmin: true },
+    children: [
+      {
+        path: "",
+        name: "AdminDashboard",
+        component: AdminView,
+      },
+      {
+        path: "system-mappings",
+        name: "admin-system-mappings",
+        component: SystemMappingsView,
+      },
+      {
+        path: "tracking",
+        name: "admin-tracking",
+        component: AdminTrackingCenterView,
+      },
+      {
+        path: "settings",
+        name: "admin-settings",
+        component: AdminSettingsView,
+      },
+      {
+        path: "teachers",
+        name: "admin-teachers",
+        component: AdminTeacherManagementView,
+      }
+    ]
   },
 
   {

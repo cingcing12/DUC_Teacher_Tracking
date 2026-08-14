@@ -13,3 +13,15 @@
 html.disable-animations *, html.disable-animations *::before, html.disable-animations *::after {
   transition-duration: 0s !important;
 }
+
+/* Disable layout entry animations */
+html.disable-animations .animate-fade-in-up,
+html.disable-animations .animate-fade-in {
+  animation: none !important;
+}
+
+/* Pause heavy background animations instead of hiding them to preserve the design */
+html.disable-animations .animate-blob,
+html.disable-animations .animate-pulse-slow {
+  animation-play-state: paused !important;
+}

@@ -29,7 +29,10 @@
         </div>
 
         <div v-if="isLoading" class="flex flex-col items-center justify-center py-24 animate-pulse">
-          <div class="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(99,102,241,0.4)]"></div>
+          <div class="relative w-16 h-16 mb-6">
+            <div class="absolute inset-0 rounded-full border-y-[3px] border-l-[3px] border-transparent border-t-cyan-400 border-l-cyan-400 animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" style="animation-duration: 1.2s;"></div>
+            <div class="absolute inset-2 rounded-full border-y-[3px] border-r-[3px] border-transparent border-b-indigo-500 border-r-indigo-500 animate-spin shadow-[0_0_15px_rgba(99,102,241,0.4)]" style="animation-duration: 0.9s; animation-direction: reverse;"></div>
+          </div>
           <p :class="['text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-widest', language === 'kh' ? 'font-khmer' : '']">{{ t.scanningDb }}</p>
         </div>
 

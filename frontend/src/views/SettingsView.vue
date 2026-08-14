@@ -306,14 +306,7 @@ const goBack = () => {
 </script>
 
 <style>
-/* ─── Motion Disabler ─────────────────────────────────────────────────────── */
-/* Must stay last so !important wins over the injected theme-transition style */
-.disable-animations *,
-.disable-animations *::before,
-.disable-animations *::after {
-  animation: none !important;
-  transition: none !important;
-}
+
 
 /* ─── Base Animations ─────────────────────────────────────────────────────── */
 .animate-fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }

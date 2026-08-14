@@ -7,18 +7,9 @@
       <div class="absolute top-[30%] left-[20%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-40 dark:opacity-20 animate-blob animation-delay-4000 bg-fuchsia-100 dark:bg-fuchsia-900/40 transition-colors duration-700"></div>
     </div>
 
-    <main class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-12 animate-fade-in-up">
+    <main class="relative z-10 w-full mx-auto px-6 sm:px-10 pt-12 animate-fade-in-up flex flex-col min-h-screen">
       
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 pb-4">
-        <div>
-          <button @click="router.push('/admin')" class="group flex items-center gap-3 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-4 transition-colors w-max">
-            <div class="w-8 h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-            </div>
-            Return to Dashboard
-          </button>
-        </div>
-      </div>
+
 
       <div class="flex justify-center mb-10">
         <div class="flex items-center p-1.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl border border-white dark:border-slate-700/50 rounded-2xl shadow-sm overflow-x-auto max-w-full">
@@ -50,8 +41,8 @@
 
       <transition name="tab-fade" mode="out-in">
         
-        <section v-if="activeTab === 'majors'" key="majors" class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white dark:border-white/5 flex flex-col h-[700px] relative overflow-hidden isolate max-w-6xl mx-auto w-full">
-          <div class="p-8 pb-6 border-b border-slate-100/50 dark:border-slate-700/50 relative z-10 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <section v-if="activeTab === 'majors'" key="majors" class="flex flex-col relative isolate w-full pb-8">
+          <div class="pb-6 relative z-10 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <div>
               <h2 class="text-xl font-black text-slate-800 dark:text-white mb-1 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20 shadow-sm">
@@ -69,7 +60,7 @@
             </div>
           </div>
 
-          <div class="p-8 flex-grow flex flex-col gap-6 relative z-10 overflow-hidden">
+          <div class="flex-grow flex flex-col gap-6 relative z-10 overflow-hidden">
             <form @submit.prevent="addNewMajor" class="bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all duration-300">
               <input v-model="newMajorForm.code" type="text" required class="flex-1 bg-transparent border-transparent focus:border-transparent focus:ring-0 outline-none shadow-none px-4 py-3 text-sm font-bold text-slate-700 dark:text-white uppercase placeholder-slate-400 w-full" placeholder="CODES (E.G. G1-DSM, G1-DSM1)">
               <div class="hidden sm:block w-px h-8 bg-slate-100 dark:bg-slate-800 my-auto mx-2"></div>
@@ -80,13 +71,16 @@
               </button>
             </form>
 
-            <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 relative">
-              <div v-if="Object.keys(majorMap).length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-                 <div class="w-10 h-10 border-4 border-indigo-100 dark:border-indigo-900 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+            <div class="flex-grow relative -mx-4 px-4 -mt-4 pt-4">
+              <div v-if="Object.keys(majorMap).length === 0" class="flex flex-col items-center justify-center py-32 text-slate-400">
+                 <div class="relative w-16 h-16 mb-6">
+                   <div class="absolute inset-0 rounded-full border-y-[3px] border-l-[3px] border-transparent border-t-cyan-400 border-l-cyan-400 animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" style="animation-duration: 1.2s;"></div>
+                   <div class="absolute inset-2 rounded-full border-y-[3px] border-r-[3px] border-transparent border-b-indigo-500 border-r-indigo-500 animate-spin shadow-[0_0_15px_rgba(99,102,241,0.4)]" style="animation-duration: 0.9s; animation-direction: reverse;"></div>
+                 </div>
                  <p class="text-xs font-black uppercase tracking-widest animate-pulse">Syncing Map...</p>
               </div>
               
-              <div v-else-if="Object.keys(filteredMajorMap).length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+              <div v-else-if="Object.keys(filteredMajorMap).length === 0" class="flex flex-col items-center justify-center py-32 text-slate-400">
                 <svg class="w-12 h-12 mb-3 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <p class="text-xs font-bold">No majors found matching "{{ majorSearch }}"</p>
               </div>
@@ -112,9 +106,9 @@
           </div>
         </section>
 
-        <section v-else-if="activeTab === 'faculties'" key="faculties" class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white dark:border-white/5 flex flex-col h-[700px] relative overflow-hidden isolate max-w-4xl mx-auto w-full">
+        <section v-else-if="activeTab === 'faculties'" key="faculties" class="flex flex-col relative isolate w-full pb-8">
           
-          <div class="p-8 pb-6 border-b border-slate-100/50 dark:border-slate-700/50 relative z-10 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+          <div class="pb-6 relative z-10 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <div>
               <h2 class="text-xl font-black text-slate-800 dark:text-white mb-1 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-fuchsia-50 dark:bg-fuchsia-900/50 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center border border-fuchsia-100 dark:border-fuchsia-500/20 shadow-sm">
@@ -132,7 +126,7 @@
             </div>
           </div>
 
-          <div class="p-8 flex-grow flex flex-col gap-6 relative z-10 overflow-hidden">
+          <div class="flex-grow flex flex-col gap-6 relative z-10 overflow-hidden">
             <form @submit.prevent="addNewFaculty" class="bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] focus-within:ring-2 focus-within:ring-fuchsia-500/20 transition-all duration-300">
               <input v-model="newFacultyForm.code" type="text" required class="flex-1 bg-transparent border-transparent focus:border-transparent focus:ring-0 outline-none shadow-none px-4 py-3 text-sm font-bold text-slate-700 dark:text-white uppercase placeholder-slate-400 w-full" placeholder="CODES (E.G. F-CS, F-IT)">
               <div class="hidden sm:block w-px h-8 bg-slate-100 dark:bg-slate-800 my-auto mx-2"></div>
@@ -143,13 +137,16 @@
               </button>
             </form>
 
-            <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 relative">
-              <div v-if="Object.keys(facultyMap).length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-                 <div class="w-10 h-10 border-4 border-fuchsia-100 dark:border-fuchsia-900 border-t-fuchsia-500 rounded-full animate-spin mb-4"></div>
+            <div class="flex-grow relative -mx-4 px-4 -mt-4 pt-4">
+              <div v-if="Object.keys(facultyMap).length === 0" class="flex flex-col items-center justify-center py-32 text-slate-400">
+                 <div class="relative w-16 h-16 mb-6">
+                   <div class="absolute inset-0 rounded-full border-y-[3px] border-l-[3px] border-transparent border-t-cyan-400 border-l-cyan-400 animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" style="animation-duration: 1.2s;"></div>
+                   <div class="absolute inset-2 rounded-full border-y-[3px] border-r-[3px] border-transparent border-b-fuchsia-500 border-r-fuchsia-500 animate-spin shadow-[0_0_15px_rgba(217,70,239,0.4)]" style="animation-duration: 0.9s; animation-direction: reverse;"></div>
+                 </div>
                  <p class="text-xs font-black uppercase tracking-widest animate-pulse">Syncing Map...</p>
               </div>
 
-              <div v-else-if="Object.keys(filteredFacultyMap).length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+              <div v-else-if="Object.keys(filteredFacultyMap).length === 0" class="flex flex-col items-center justify-center py-32 text-slate-400">
                 <svg class="w-12 h-12 mb-3 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <p class="text-xs font-bold">No faculties found matching "{{ facultySearch }}"</p>
               </div>
@@ -472,13 +469,7 @@ const confirmDelete = async () => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* Global Override to instantly kill all animations when toggle is off */
-html.disable-animations *, html.disable-animations *::before, html.disable-animations *::after {
-  animation-duration: 0s !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0s !important;
-  scroll-behavior: auto !important;
-}
+
 
 .font-sans { font-family: 'Plus Jakarta Sans', sans-serif; }
 .font-khmer { font-family: 'Kantumruy Pro', sans-serif; }

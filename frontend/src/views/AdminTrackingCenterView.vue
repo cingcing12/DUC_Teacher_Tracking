@@ -7,22 +7,11 @@
       <div class="absolute top-[30%] left-[20%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-40 dark:opacity-20 animate-blob animation-delay-4000 bg-emerald-100 dark:bg-emerald-900/40 transition-colors duration-700"></div>
     </div>
 
-    <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-12 animate-fade-in-up print:hidden">
+    <main class="relative z-10 w-full mx-auto px-6 sm:px-10 pt-12 pb-12 animate-fade-in-up print:hidden flex flex-col min-h-screen">
       
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 pb-4">
-        <div>
-          <button @click="router.push('/admin')" class="group flex items-center gap-3 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 mb-4 transition-colors w-max">
-            <div class="w-8 h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-            </div>
-            Return to Dashboard
-          </button>
-        </div>
-      </div>
-
-      <div class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white dark:border-white/5 flex flex-col h-auto min-h-[500px] relative overflow-hidden isolate max-w-6xl mx-auto w-full">
+      <div class="flex flex-col relative isolate w-full">
         
-        <div class="p-6 sm:p-8 pb-6 border-b border-slate-100/50 dark:border-slate-700/50 relative z-10 flex flex-col gap-4 bg-white/40 dark:bg-slate-900/40">
+        <div class="pb-6 relative z-10 flex flex-col gap-4 mb-6">
           
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h2 class="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-4">
@@ -41,61 +30,79 @@
           </div>
         </div>
 
-        <div class="p-8 flex-grow overflow-y-auto custom-scrollbar relative z-10">
+        <div class="flex-grow relative z-10 pb-8 -mx-4 px-4 -mt-4 pt-4">
           
-          <div v-if="isFetchingDirectory" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-             <div class="w-10 h-10 border-4 border-emerald-100 dark:border-emerald-900 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
-             <p class="text-xs font-black uppercase tracking-widest animate-pulse">Scanning Master Sheet...</p>
+          <div v-if="isFetchingDirectory" class="flex flex-col items-center justify-center py-32 text-slate-400">
+             <div class="relative w-16 h-16 mb-6">
+               <div class="absolute inset-0 rounded-full border-y-[3px] border-l-[3px] border-transparent border-t-cyan-400 border-l-cyan-400 animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" style="animation-duration: 1.2s;"></div>
+               <div class="absolute inset-2 rounded-full border-y-[3px] border-r-[3px] border-transparent border-b-emerald-500 border-r-emerald-500 animate-spin shadow-[0_0_15px_rgba(16,185,129,0.4)]" style="animation-duration: 0.9s; animation-direction: reverse;"></div>
+             </div>
+             <p class="text-xs font-black uppercase tracking-widest animate-pulse">Scanning Master Directory...</p>
           </div>
 
           <transition name="tab-fade" mode="out-in">
             
             <div v-if="trackingLevel === 0 && !isFetchingDirectory" key="lvl0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <button v-for="gen in availableGenerations" :key="gen" @click="selectGen(gen)" class="group text-left bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-full group-hover:scale-150 transition-transform duration-500 -z-10"></div>
-                <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mb-4">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+              <button v-for="gen in availableGenerations" :key="gen" @click="selectGen(gen)" class="group text-left bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700/80 p-8 rounded-[2rem] border border-slate-200/60 dark:border-slate-700/60 hover:border-emerald-300 dark:hover:border-emerald-500/50 shadow-sm hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden backdrop-blur-xl isolate">
+                
+                <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 group-hover:to-emerald-500/10 dark:from-emerald-400/0 dark:via-emerald-400/0 dark:to-emerald-400/10 transition-colors duration-500 -z-10"></div>
+                <div class="absolute -right-8 -top-8 w-32 h-32 bg-emerald-400/10 dark:bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-400/20 group-hover:scale-150 transition-all duration-700 -z-10"></div>
+                
+                <div class="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-emerald-100 dark:ring-emerald-500/20 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </div>
-                <h3 class="text-2xl font-black text-slate-800 dark:text-white font-khmer">{{ gen }}</h3>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center justify-between">
-                  View Years
-                  <svg class="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                <h3 class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white font-khmer tracking-tight">{{ gen }}</h3>
+                <p class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-3 flex items-center justify-between group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
+                  Explore Years
+                  <span class="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                     <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                  </span>
                 </p>
               </button>
             </div>
 
             <div v-else-if="trackingLevel === 1 && !isFetchingDirectory" key="lvl1" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <button v-for="year in availableYears" :key="year" @click="selectYear(year)" class="group text-left bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-full group-hover:scale-150 transition-transform duration-500 -z-10"></div>
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-4">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <button v-for="year in availableYears" :key="year" @click="selectYear(year)" class="group text-left bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700/80 p-8 rounded-[2rem] border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-300 dark:hover:border-blue-500/50 shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden backdrop-blur-xl isolate">
+                
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-blue-500/0 to-blue-500/5 group-hover:to-blue-500/10 dark:from-blue-400/0 dark:via-blue-400/0 dark:to-blue-400/10 transition-colors duration-500 -z-10"></div>
+                <div class="absolute -right-8 -top-8 w-32 h-32 bg-blue-400/10 dark:bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-400/20 group-hover:scale-150 transition-all duration-700 -z-10"></div>
+                
+                <div class="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-blue-100 dark:ring-blue-500/20 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
-                <h3 class="text-2xl font-black text-slate-800 dark:text-white font-khmer">ឆ្នាំទី {{ year }}</h3>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center justify-between">
-                  View Semesters
-                  <svg class="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                <h3 class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white font-khmer tracking-tight">ឆ្នាំទី {{ year }}</h3>
+                <p class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-3 flex items-center justify-between group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
+                  Explore Semesters
+                  <span class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                     <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                  </span>
                 </p>
               </button>
             </div>
 
             <div v-else-if="trackingLevel === 2 && !isFetchingDirectory" key="lvl2" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <button v-for="sem in availableSemesters" :key="sem" @click="selectSem(sem)" class="group text-left bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 dark:bg-amber-900/20 rounded-full group-hover:scale-150 transition-transform duration-500 -z-10"></div>
-                <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-4">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <button v-for="sem in availableSemesters" :key="sem" @click="selectSem(sem)" class="group text-left bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700/80 p-8 rounded-[2rem] border border-slate-200/60 dark:border-slate-700/60 hover:border-amber-300 dark:hover:border-amber-500/50 shadow-sm hover:shadow-2xl hover:shadow-amber-500/10 hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden backdrop-blur-xl isolate">
+                
+                <div class="absolute inset-0 bg-gradient-to-br from-amber-500/0 via-amber-500/0 to-amber-500/5 group-hover:to-amber-500/10 dark:from-amber-400/0 dark:via-amber-400/0 dark:to-amber-400/10 transition-colors duration-500 -z-10"></div>
+                <div class="absolute -right-8 -top-8 w-32 h-32 bg-amber-400/10 dark:bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-400/20 group-hover:scale-150 transition-all duration-700 -z-10"></div>
+                
+                <div class="w-14 h-14 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-amber-100 dark:ring-amber-500/20 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
-                <h3 class="text-2xl font-black text-slate-800 dark:text-white font-khmer">ឆមាសទី {{ sem }}</h3>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center justify-between">
-                  View Departments
-                  <svg class="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                <h3 class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white font-khmer tracking-tight">ឆមាសទី {{ sem }}</h3>
+                <p class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-3 flex items-center justify-between group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors">
+                  Explore Departments
+                  <span class="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                     <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                  </span>
                 </p>
               </button>
             </div>
 
-            <div v-else-if="trackingLevel === 3 && !isFetchingDirectory" key="lvl3" class="flex flex-col h-full">
+            <div v-else-if="trackingLevel === 3 && !isFetchingDirectory" key="lvl3" class="flex flex-col">
               <!-- Search Bar with Dropdown -->
               <div class="mb-6 relative max-w-md z-20">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 z-30">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
                 <input 
@@ -1204,12 +1211,7 @@ const navigateToHistory = (teacherNode, autoPrint = false) => {
   }
 }
 
-html.disable-animations *, html.disable-animations *::before, html.disable-animations *::after {
-  animation-duration: 0s !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0s !important;
-  scroll-behavior: auto !important;
-}
+
 
 .font-sans { font-family: 'Plus Jakarta Sans', sans-serif; }
 .font-khmer { font-family: 'Kantumruy Pro', sans-serif; }

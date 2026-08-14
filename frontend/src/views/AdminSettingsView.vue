@@ -7,15 +7,10 @@
       <div class="absolute bottom-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[140px] opacity-40 dark:opacity-20 animate-blob animation-delay-4000 bg-fuchsia-200 dark:bg-fuchsia-800 transition-opacity"></div>
     </div>
 
-    <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-16 animate-fade-in-up">
+    <main class="relative z-10 w-full mx-auto px-6 sm:px-10 pt-16 animate-fade-in-up">
       
       <div class="mb-12">
-        <button @click="router.push('/admin')" class="group flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-8 transition-colors">
-          <div class="w-8 h-8 rounded-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-          </div>
-          Back to Admin Dashboard
-        </button>
+
 
         <h1 class="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-none mb-4">System Preferences</h1>
         <p class="text-slate-500 dark:text-slate-400 font-medium">Customize your administrative workspace experience.</p>
@@ -100,22 +95,7 @@
           </button>
         </div>
 
-        <div class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl rounded-[2.5rem] shadow-xl shadow-rose-500/5 dark:shadow-black/50 border border-white dark:border-white/5 p-8 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div class="flex items-center gap-5">
-            <div class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-500/20 shrink-0">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-            </div>
-            <div>
-              <h2 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">Account Session</h2>
-              <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Securely log out of the admin portal</p>
-            </div>
-          </div>
-          
-          <button @click="handleSignOut" class="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-black tracking-widest uppercase text-xs transition-all shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50 hover:-translate-y-0.5 shrink-0 flex items-center gap-2">
-            Sign Out
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-          </button>
-        </div>
+
 
       </div>
     </main>
@@ -146,7 +126,7 @@
           </div>
 
           <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2 font-sans tracking-tight">
-            {{ customAlert.type === 'success' ? 'Success!' : customAlert.type === 'error' ? 'Error Occurred' : 'Sign Out?' }}
+            {{ customAlert.type === 'success' ? 'Success!' : customAlert.type === 'error' ? 'Error Occurred' : 'Action Required' }}
           </h3>
           <p class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-8 font-khmer">
             {{ customAlert.message }}
@@ -259,23 +239,7 @@ const executeConfirm = () => {
   closeAlert();
 };
 
-// --- AUTH LOGIC ---
-const handleSignOut = () => {
-  // Trigger the confirmation alert instead of directly logging out
-  triggerAlert(
-    'confirm', 
-    'Are you sure you want to securely terminate this admin session?', 
-    'Log Out', 
-    logout
-  );
-};
 
-const logout = () => {
-  // Remove the admin authentication token
-  localStorage.removeItem('duc_admin_token');
-  // Redirect to the hidden admin login route
-  router.push('/admin/login');
-};
 </script>
 
 <style scoped>
