@@ -192,6 +192,7 @@
                           <svg class="w-4 h-4 opacity-50 group-hover/subject:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                           <span class="underline decoration-dashed decoration-slate-300 dark:decoration-slate-600 group-hover/subject:decoration-emerald-500 transition-colors">{{ cls.subject }}</span>
                           <span class="text-[9px] font-mono font-normal bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 group-hover/subject:text-emerald-500 group-hover/subject:bg-emerald-50 dark:group-hover/subject:bg-emerald-500/10 transition-colors">{{ getCohortName(cls) }}</span>
+                          <span v-if="cls.isClosed" class="text-[9px] font-black uppercase text-rose-500 bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 rounded ml-1 tracking-widest border border-rose-100 dark:border-rose-500/20">Closed</span>
                         </button>
                         <button 
                           @click="triggerInlinePrint(cls)" 

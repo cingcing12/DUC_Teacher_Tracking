@@ -373,5 +373,150 @@ router.delete('/admin/teachers/delete/:rowIndex', async (req, res) => {
     res.status(500).json({ success: false, message: "Error deleting teacher" });
   }
 });
+// ==========================================
+// ADMIN ATTENDANCE SHEET DATA
+// ==========================================
+router.get('/admin/attendance-sheet', async (req, res) => {
+  try {
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
 
-module.exports = router;
+    // 1. Fetch metadata to get the tabs
+    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
+    if (!sheetMeta.data.sheets || sheetMeta.data.sheets.length === 0) {
+      return res.status(404).json({ success: false, message: "No tabs found in attendance sheet" });
+    }
+    
+    // Extract all tab titles
+    const availableTabs = sheetMeta.data.sheets.map(s => s.properties.title);
+    
+    // Determine which tab to read
+    let targetTabTitle = req.query.tab;
+    if (!targetTabTitle || !availableTabs.includes(targetTabTitle)) {
+        targetTabTitle = availableTabs[0]; // Default to the first tab
+    }
+
+    // 2. Fetch the raw data
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEETS.ATTENDANCE,
+      range: `'${targetTabTitle}'!A1:AZ200`
+    });
+
+    const rows = response.data.values || [];
+
+    res.json({ 
+      success: true, 
+      data: rows,
+      tabTitle: targetTabTitle,
+      availableTabs: availableTabs
+    });
+
+  } catch (error) {
+    console.error("Error fetching attendance sheet:", error);
+    res.status(500).json({ success: false, message: "Error fetching attendance sheet" });
+  }
+});
+
+// ==========================================
+// ADMIN ATTENDANCE SHEET TABS (LIGHTWEIGHT)
+// ==========================================
+router.get('/admin/attendance-sheet/tabs', async (req, res) => {
+  try {
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+
+    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
+    if (!sheetMeta.data.sheets || sheetMeta.data.sheets.length === 0) {
+      return res.status(404).json({ success: false, message: "No tabs found in attendance sheet" });
+    }
+    
+    const availableTabs = sheetMeta.data.sheets.map(s => s.properties.title);
+    
+    res.json({ success: true, availableTabs });
+  } catch (error) {
+    console.error("Error fetching attendance tabs:", error);
+    res.status(500).json({ success: false, message: "Error fetching attendance tabs" });
+  }
+});
+
+// ==========================================
+// ADMIN CLOSED CLASSES MANAGEMENT
+// ==========================================
+
+router.get('/admin/closed-classes', async (req, res) => {
+    try {
+        const authClient = await auth.getClient();
+        const sheets = google.sheets({ version: "v4", auth: authClient });
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEETS.TRACKING,
+            range: "'ClosedClasses'!A:A"
+        });
+        const rows = response.data.values || [];
+        const classes = rows.map(r => r[0]).filter(c => c && c !== "Class Key");
+        res.json({ success: true, data: classes });
+    } catch (e) {
+        // Tab probably doesn't exist yet
+        res.json({ success: true, data: [] });
+    }
+});
+
+router.post('/admin/closed-classes/toggle', async (req, res) => {
+    const { key } = req.body;
+    if (!key) return res.status(400).json({ success: false, message: "Class key required" });
+    
+    try {
+        const authClient = await auth.getClient();
+        const sheets = google.sheets({ version: "v4", auth: authClient });
+        
+        let classes = [];
+        try {
+            const response = await sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEETS.TRACKING,
+                range: "'ClosedClasses'!A:A"
+            });
+            const rows = response.data.values || [];
+            classes = rows.map(r => r[0]).filter(c => c && c !== "Class Key");
+        } catch (error) {
+            // Tab might not exist, create it
+            if (error.message && error.message.includes("Unable to parse range")) {
+                await sheets.spreadsheets.batchUpdate({
+                    spreadsheetId: SPREADSHEETS.TRACKING,
+                    requestBody: {
+                        requests: [{ addSheet: { properties: { title: "ClosedClasses" } } }]
+                    }
+                });
+            } else {
+                throw error;
+            }
+        }
+        
+        const index = classes.indexOf(key);
+        if (index === -1) {
+            classes.push(key);
+        } else {
+            classes.splice(index, 1);
+        }
+        
+        const updatedValues = [["Class Key"], ...classes.map(c => [c])];
+        
+        await sheets.spreadsheets.values.clear({
+            spreadsheetId: SPREADSHEETS.TRACKING,
+            range: "'ClosedClasses'!A:A"
+        });
+        
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEETS.TRACKING,
+            range: "'ClosedClasses'!A:A",
+            valueInputOption: "USER_ENTERED",
+            insertDataOption: "OVERWRITE",
+            requestBody: { values: updatedValues }
+        });
+        
+        res.json({ success: true, message: "Toggled successfully", isClosed: index === -1 });
+    } catch (e) {
+        console.error("Error toggling closed class:", e);
+        res.status(500).json({ success: false, message: "Error toggling closed class" });
+    }
+});
+
+module.exports = router;

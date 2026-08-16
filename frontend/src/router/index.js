@@ -9,11 +9,13 @@ import EditLessonView from "../views/EditLessonView.vue";
 import ProfileView from "../views/ProfileView.vue";
 import SystemMappingsView from "../views/SystemMappingsView.vue";
 import AdminTrackingCenterView from "../views/AdminTrackingCenterView.vue";
+import AdminAttendanceSheetView from "../views/AdminAttendanceSheetView.vue";
 import AdminSettingsView from "../views/AdminSettingsView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import HelpSupportView from "../views/HelpSupportView.vue";
 import StatsView from "../views/StatsView.vue";
 import AdminTeacherManagementView from "../views/AdminTeacherManagementView.vue";
+import AdminManageClassesView from "../views/AdminManageClassesView.vue";
 import AdminLayout from "../components/AdminLayout.vue";
 
 const routes = [
@@ -97,6 +99,11 @@ const routes = [
         component: AdminTrackingCenterView,
       },
       {
+        path: "attendance-sheet",
+        name: "admin-attendance-sheet",
+        component: AdminAttendanceSheetView,
+      },
+      {
         path: "settings",
         name: "admin-settings",
         component: AdminSettingsView,
@@ -105,6 +112,11 @@ const routes = [
         path: "teachers",
         name: "admin-teachers",
         component: AdminTeacherManagementView,
+      },
+      {
+        path: "manage-classes",
+        name: "admin-manage-classes",
+        component: AdminManageClassesView,
       }
     ]
   },

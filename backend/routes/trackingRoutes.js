@@ -605,6 +605,9 @@ router.delete("/class-history", noCache, async (req, res) => {
 // ==========================================
 // GET: ADMIN TRACKING DIRECTORY
 // ==========================================
+const fs = require('fs');
+const path = require('path');
+
 router.get('/tracking-directory', noCache, async (req, res) => {
   try {
     const authClient = await auth.getClient();
@@ -628,6 +631,16 @@ router.get('/tracking-directory', noCache, async (req, res) => {
     const forceFresh = req.query.fresh === 'true';
     const rows = await getMasterRows(sheets, forceFresh);
     
+    let closedClasses = [];
+    try {
+        const closedFile = path.join(__dirname, '../data/closed_classes.json');
+        if (fs.existsSync(closedFile)) {
+            closedClasses = JSON.parse(fs.readFileSync(closedFile, 'utf8')) || [];
+        }
+    } catch (e) {
+        console.error("Error reading closed classes", e);
+    }
+
     const dirMap = {};
 
     rows.forEach(row => {
@@ -651,9 +664,11 @@ router.get('/tracking-directory', noCache, async (req, res) => {
           let avatarUrl = avatarMap[normalizedTeacher] || avatarMap[normalizeText(teacher)] || null;
           
           dirMap[key] = {
+              key: key,
               tab: `${cohort}-${cleanTeacherName}-${subject}`, 
               cohort: cohort,
-              generation: generation, year: year, semester: semester, department: dept, major: major, subject: subject, teacher: teacher, avatarUrl: avatarUrl, filledWeeks: []
+              generation: generation, year: year, semester: semester, department: dept, major: major, subject: subject, teacher: teacher, avatarUrl: avatarUrl, filledWeeks: [],
+              isClosed: closedClasses.includes(key)
           };
       }
       

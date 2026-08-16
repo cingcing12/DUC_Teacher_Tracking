@@ -42,11 +42,25 @@
           <span class="font-bold text-sm tracking-wide group-hover:text-slate-800 dark:group-hover:text-white group-[.active-nav-link]:text-blue-700 dark:group-[.active-nav-link]:text-blue-300">Tracking Center</span>
         </router-link>
 
+        <router-link to="/admin/attendance-sheet" active-class="active-nav-link" class="nav-link group">
+          <div class="nav-icon-wrapper group-hover:bg-teal-100 dark:group-hover:bg-teal-500/20 group-[.active-nav-link]:bg-teal-500 group-[.active-nav-link]:text-white group-[.active-nav-link]:shadow-lg group-[.active-nav-link]:shadow-teal-500/30">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          </div>
+          <span class="font-bold text-sm tracking-wide group-hover:text-slate-800 dark:group-hover:text-white group-[.active-nav-link]:text-teal-700 dark:group-[.active-nav-link]:text-teal-300">Attendance Sheet</span>
+        </router-link>
+
         <router-link to="/admin/teachers" active-class="active-nav-link" class="nav-link group">
           <div class="nav-icon-wrapper group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 group-[.active-nav-link]:bg-emerald-500 group-[.active-nav-link]:text-white group-[.active-nav-link]:shadow-lg group-[.active-nav-link]:shadow-emerald-500/30">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
           </div>
           <span class="font-bold text-sm tracking-wide group-hover:text-slate-800 dark:group-hover:text-white group-[.active-nav-link]:text-emerald-700 dark:group-[.active-nav-link]:text-emerald-300">Manage Teachers</span>
+        </router-link>
+        
+        <router-link to="/admin/manage-classes" active-class="active-nav-link" class="nav-link group">
+          <div class="nav-icon-wrapper group-hover:bg-rose-100 dark:group-hover:bg-rose-500/20 group-[.active-nav-link]:bg-rose-500 group-[.active-nav-link]:text-white group-[.active-nav-link]:shadow-lg group-[.active-nav-link]:shadow-rose-500/30">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+          </div>
+          <span class="font-bold text-sm tracking-wide group-hover:text-slate-800 dark:group-hover:text-white group-[.active-nav-link]:text-rose-700 dark:group-[.active-nav-link]:text-rose-300">Manage Classes</span>
         </router-link>
         
         <div class="my-4 border-t border-slate-200/50 dark:border-slate-800/50 mx-4"></div>
