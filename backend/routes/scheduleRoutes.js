@@ -68,6 +68,44 @@ const extractTabMeta = (tabName) => {
 };
 
 // ==========================================
+// HELPER: GET CLOSED CLASSES
+// ==========================================
+const getClosedClasses = async (sheets) => {
+    try {
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEETS.TRACKING,
+            range: "'ClosedClasses'!A:A"
+        });
+        const rows = response.data.values || [];
+        return rows.map(r => r[0]).filter(c => c && c !== "Class Key");
+    } catch (e) {
+        console.error("Tab ClosedClasses might not exist yet", e.message);
+        return [];
+    }
+};
+
+// ==========================================
+// HELPER: FILTER CLOSED CLASSES
+// ==========================================
+const filterClosedClasses = (classesArray, closedClasses) => {
+    if (!closedClasses || closedClasses.length === 0) return classesArray;
+    return classesArray.filter(cls => {
+        const cohort = cls.cohort || cls.group;
+        const teacher = cls.teacher || cls.teacherName || "";
+        const pureCohort = extractPureCohort(cohort);
+        const cleanTName = normalize(teacher.replace(/លោកគ្រូ|អ្នកគ្រូ|បណ្ឌិត|សាស្ត្រាចារ្យ|Dr\./g, ""));
+        
+        const isClosed = closedClasses.some(closedKey => {
+            const normKey = normalize(closedKey);
+            return normKey.includes(normalize(pureCohort)) && 
+                   normKey.includes(normalize(cls.subject)) && 
+                   normKey.includes(cleanTName);
+        });
+        return !isClosed;
+    });
+};
+
+// ==========================================
 // HELPER: PARSE ATTENDANCE TAB ROWS
 // ==========================================
 const mapDayToEnglish = (khmerOrMixed) => {
@@ -206,32 +244,8 @@ router.get("/my-schedule", async (req, res) => {
     });
 
     // 4. Filter out closed classes
-    let closedClasses = [];
-    try {
-        const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEETS.TRACKING,
-            range: "'ClosedClasses'!A:A"
-        });
-        const rows = response.data.values || [];
-        closedClasses = rows.map(r => r[0]).filter(c => c && c !== "Class Key");
-    } catch (e) {
-        console.error("Tab ClosedClasses might not exist yet", e.message);
-    }
-
-    if (closedClasses.length > 0) {
-        myClasses = myClasses.filter(cls => {
-            const pureCohort = extractPureCohort(cls.group);
-            const cleanTName = normalize(cls.teacherName.replace(/លោកគ្រូ|អ្នកគ្រូ|បណ្ឌិត|សាស្ត្រាចារ្យ|Dr\./g, ""));
-            
-            const isClosed = closedClasses.some(closedKey => {
-                const normKey = normalize(closedKey);
-                return normKey.includes(normalize(pureCohort)) && 
-                       normKey.includes(normalize(cls.subject)) && 
-                       normKey.includes(cleanTName);
-            });
-            return !isClosed;
-        });
-    }
+    const closedClasses = await getClosedClasses(sheets);
+    myClasses = filterClosedClasses(myClasses, closedClasses);
 
     res.json({ success: true, data: myClasses });
   } catch (error) {
@@ -309,6 +323,9 @@ router.get("/department-schedule", async (req, res) => {
         myClasses = myClasses.concat(classesInTab);
     });
 
+    const closedClasses = await getClosedClasses(sheets);
+    myClasses = filterClosedClasses(myClasses, closedClasses);
+
     res.json({ success: true, data: myClasses });
   } catch (error) {
     console.error(error);
@@ -361,7 +378,10 @@ router.get("/tab-schedule", async (req, res) => {
     const rows = rangeData.data.values || [];
     const tabMeta = extractTabMeta(tabName);
     
-    const classes = parseAttendanceTab(rows, tabMeta, null, null, null, facultiesList, true);
+    let classes = parseAttendanceTab(rows, tabMeta, null, null, null, facultiesList, true);
+
+    const closedClasses = await getClosedClasses(sheets);
+    classes = filterClosedClasses(classes, closedClasses);
 
     res.json({ success: true, data: classes });
   } catch (error) {
@@ -411,17 +431,7 @@ router.get("/all-attendance-classes", async (req, res) => {
     });
 
     // 4. Map isClosed status
-    let closedClasses = [];
-    try {
-        const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEETS.TRACKING,
-            range: "'ClosedClasses'!A:A"
-        });
-        const rows = response.data.values || [];
-        closedClasses = rows.map(r => r[0]).filter(c => c && c !== "Class Key");
-    } catch (e) {
-        console.error("Tab ClosedClasses might not exist yet", e.message);
-    }
+    const closedClasses = await getClosedClasses(sheets);
 
     allClasses = allClasses.map(cls => {
         const pureCohort = extractPureCohort(cls.cohort);

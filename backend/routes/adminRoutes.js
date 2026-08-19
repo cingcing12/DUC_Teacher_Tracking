@@ -519,4 +519,67 @@ router.post('/admin/closed-classes/toggle', async (req, res) => {
     }
 });
 
+router.post('/admin/closed-classes/bulk-toggle', async (req, res) => {
+    const { keys, action } = req.body;
+    if (!keys || !Array.isArray(keys)) return res.status(400).json({ success: false, message: "Class keys required" });
+    
+    try {
+        const authClient = await auth.getClient();
+        const sheets = google.sheets({ version: "v4", auth: authClient });
+        
+        let classes = [];
+        try {
+            const response = await sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEETS.TRACKING,
+                range: "'ClosedClasses'!A:A"
+            });
+            const rows = response.data.values || [];
+            classes = rows.map(r => r[0]).filter(c => c && c !== "Class Key");
+        } catch (error) {
+            if (error.message && error.message.includes("Unable to parse range")) {
+                await sheets.spreadsheets.batchUpdate({
+                    spreadsheetId: SPREADSHEETS.TRACKING,
+                    requestBody: {
+                        requests: [{ addSheet: { properties: { title: "ClosedClasses" } } }]
+                    }
+                });
+            } else {
+                throw error;
+            }
+        }
+        
+        if (action === 'close') {
+            keys.forEach(key => {
+                if (!classes.includes(key)) {
+                    classes.push(key);
+                }
+            });
+        } else if (action === 'open') {
+            classes = classes.filter(c => !keys.includes(c));
+        }
+        
+        const updatedValues = [["Class Key"], ...classes.map(c => [c])];
+        
+        await sheets.spreadsheets.values.clear({
+            spreadsheetId: SPREADSHEETS.TRACKING,
+            range: "'ClosedClasses'!A:A"
+        });
+        
+        if (updatedValues.length > 0) {
+            await sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEETS.TRACKING,
+                range: "'ClosedClasses'!A:A",
+                valueInputOption: "USER_ENTERED",
+                insertDataOption: "OVERWRITE",
+                requestBody: { values: updatedValues }
+            });
+        }
+        
+        res.json({ success: true, message: "Bulk toggled successfully" });
+    } catch (e) {
+        console.error("Error bulk toggling closed classes:", e);
+        res.status(500).json({ success: false, message: "Error bulk toggling closed classes" });
+    }
+});
+
 module.exports = router;

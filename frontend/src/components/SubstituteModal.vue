@@ -94,7 +94,7 @@
                       <transition name="fade-scale">
                         <div v-if="activeDropdown === 'day'" class="absolute top-full right-0 mt-2 w-44 bg-white dark:bg-[#1E2235] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl py-2 z-[60]">
                           <button @click="selectedDayFilter = 'All'; activeDropdown = null" :class="['w-full text-left px-5 py-2.5 text-sm font-bold transition-colors', selectedDayFilter === 'All' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800']">All Days</button>
-                          <button v-for="day in englishDays.filter(d => d !== 'Unknown')" :key="day" @click="selectedDayFilter = day; activeDropdown = null" :class="['w-full text-left px-5 py-2.5 text-sm font-bold transition-colors', selectedDayFilter === day ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800']">
+                          <button v-for="day in availableDaysDropdown" :key="day" @click="selectedDayFilter = day; activeDropdown = null" :class="['w-full text-left px-5 py-2.5 text-sm font-bold transition-colors', selectedDayFilter === day ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800']">
                             {{ displayDay(day) }}
                           </button>
                         </div>
@@ -320,13 +320,54 @@ const cleanSubjectName = (subject) => {
 };
 
 const availableClasses = computed(() => {
-  const groups = new Set(schedule.value.map(c => c.group).filter(Boolean));
+  let filteredSchedule = schedule.value;
+  if (selectedSubjectFilter.value !== 'All') {
+    filteredSchedule = filteredSchedule.filter(c => cleanSubjectName(c.subject) === selectedSubjectFilter.value);
+  }
+  if (selectedDayFilter.value !== 'All') {
+    filteredSchedule = filteredSchedule.filter(c => {
+       const cd = c.day ? c.day.trim() : null;
+       const md = englishDays.find(d => cd && cd.toLowerCase() === d.toLowerCase());
+       return md === selectedDayFilter.value;
+    });
+  }
+  const groups = new Set(filteredSchedule.map(c => c.group).filter(Boolean));
   return Array.from(groups).sort();
 });
 
 const availableSubjects = computed(() => {
-  const subjects = new Set(schedule.value.map(c => cleanSubjectName(c.subject)).filter(Boolean));
+  let filteredSchedule = schedule.value;
+  if (selectedClassFilter.value !== 'All') {
+    filteredSchedule = filteredSchedule.filter(c => c.group === selectedClassFilter.value);
+  }
+  if (selectedDayFilter.value !== 'All') {
+    filteredSchedule = filteredSchedule.filter(c => {
+       const cd = c.day ? c.day.trim() : null;
+       const md = englishDays.find(d => cd && cd.toLowerCase() === d.toLowerCase());
+       return md === selectedDayFilter.value;
+    });
+  }
+  const subjects = new Set(filteredSchedule.map(c => cleanSubjectName(c.subject)).filter(Boolean));
   return Array.from(subjects).sort();
+});
+
+const availableDaysDropdown = computed(() => {
+  let filteredSchedule = schedule.value;
+  if (selectedClassFilter.value !== 'All') {
+    filteredSchedule = filteredSchedule.filter(c => c.group === selectedClassFilter.value);
+  }
+  if (selectedSubjectFilter.value !== 'All') {
+    filteredSchedule = filteredSchedule.filter(c => cleanSubjectName(c.subject) === selectedSubjectFilter.value);
+  }
+  
+  const daysWithClasses = new Set();
+  filteredSchedule.forEach(cls => {
+    const cleanDay = cls.day ? cls.day.trim() : null;
+    const matchDay = englishDays.find(d => cleanDay && cleanDay.toLowerCase() === d.toLowerCase());
+    if (matchDay && matchDay !== 'Unknown') daysWithClasses.add(matchDay);
+  });
+  
+  return englishDays.filter(d => daysWithClasses.has(d));
 });
 
 const filteredDays = computed(() => {

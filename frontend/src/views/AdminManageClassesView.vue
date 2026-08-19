@@ -35,6 +35,30 @@
         </div>
       </div>
 
+      <!-- Bulk Actions -->
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl p-6 rounded-3xl shadow-sm border border-white/60 dark:border-slate-700/60">
+        <div class="flex items-center gap-3">
+          <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          <h2 class="text-xl font-bold text-slate-800 dark:text-white">Bulk Actions</h2>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <select v-model="bulkGeneration" class="px-4 py-2 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Generation</option>
+            <option v-for="g in uniqueGenerations" :key="g" :value="g">Gen {{ g }}</option>
+          </select>
+          <select v-model="bulkYear" class="px-4 py-2 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Year</option>
+            <option v-for="y in uniqueYears" :key="y" :value="y">Year {{ y }}</option>
+          </select>
+          <select v-model="bulkSemester" class="px-4 py-2 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Semester</option>
+            <option v-for="s in uniqueSemesters" :key="s" :value="s">Sem {{ s }}</option>
+          </select>
+          <button @click="confirmBulkToggle('close')" :disabled="!bulkGeneration || !bulkYear || !bulkSemester || isBulkToggling" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-sm font-bold shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Close All</button>
+          <button @click="confirmBulkToggle('open')" :disabled="!bulkGeneration || !bulkYear || !bulkSemester || isBulkToggling" class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Re-open All</button>
+        </div>
+      </div>
+
       <!-- Content -->
       <div v-if="isLoading" class="flex-1 flex flex-col items-center justify-center py-32">
         <div class="relative w-16 h-16 mb-6">
@@ -169,6 +193,40 @@
       </div>
     </div>
 
+    <!-- Bulk Confirmation Modal -->
+    <div v-if="showBulkConfirmModal" class="fixed inset-0 z-[100] flex items-center justify-center px-4">
+      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="cancelBulkToggle"></div>
+      <div class="relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl w-full max-w-md rounded-3xl p-8 shadow-2xl border border-white/50 dark:border-slate-700/50 transform transition-all">
+        <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner"
+             :class="bulkAction === 'open' ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-500' : 'bg-rose-100 dark:bg-rose-500/20 text-rose-500'">
+          <svg v-if="bulkAction === 'open'" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          <svg v-else class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h3 class="text-2xl font-black text-center text-slate-800 dark:text-white mb-2">
+          {{ bulkAction === 'open' ? 'Re-open' : 'Close' }} All Classes?
+        </h3>
+        <p class="text-center text-slate-500 dark:text-slate-400 mb-8 font-medium">
+          Are you sure you want to {{ bulkAction === 'open' ? 're-open' : 'close' }} all classes for <br/>
+          <span class="font-bold text-slate-700 dark:text-slate-300">Generation {{ bulkGeneration }}, Year {{ bulkYear }}, Semester {{ bulkSemester }}</span>?
+        </p>
+        <div class="flex gap-4">
+          <button 
+            @click="cancelBulkToggle"
+            class="flex-1 py-3.5 rounded-2xl font-bold text-sm bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            @click="proceedBulkToggle"
+            class="flex-1 py-3.5 rounded-2xl font-black text-sm text-white shadow-lg transition-all hover:-translate-y-0.5"
+            :class="bulkAction === 'open' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-blue-500/30 hover:shadow-blue-500/50' : 'bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 shadow-rose-500/30 hover:shadow-rose-500/50'"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Custom Success Toast Notification -->
     <transition
       enter-active-class="transition duration-300 ease-out"
@@ -204,6 +262,87 @@ const classes = ref([]);
 const isLoading = ref(true);
 const searchQuery = ref('');
 const selectedSheetName = ref('');
+
+const bulkGeneration = ref('');
+const bulkYear = ref('');
+const bulkSemester = ref('');
+const isBulkToggling = ref(false);
+
+const uniqueGenerations = computed(() => {
+  const gens = classes.value.map(c => c.generation).filter(Boolean);
+  return [...new Set(gens)].sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric: true}));
+});
+const uniqueYears = computed(() => {
+  const yrs = classes.value.map(c => c.year).filter(Boolean);
+  return [...new Set(yrs)].sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric: true}));
+});
+const uniqueSemesters = computed(() => {
+  const sems = classes.value.map(c => c.semester).filter(Boolean);
+  return [...new Set(sems)].sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric: true}));
+});
+
+const showBulkConfirmModal = ref(false);
+const bulkAction = ref('');
+
+const confirmBulkToggle = (action) => {
+  bulkAction.value = action;
+  showBulkConfirmModal.value = true;
+};
+
+const cancelBulkToggle = () => {
+  showBulkConfirmModal.value = false;
+  bulkAction.value = '';
+};
+
+const proceedBulkToggle = async () => {
+  if (!bulkGeneration.value || !bulkYear.value || !bulkSemester.value) return;
+  
+  isBulkToggling.value = true;
+  showBulkConfirmModal.value = false;
+  
+  const targetClasses = classes.value.filter(c => 
+    c.generation == bulkGeneration.value && 
+    c.year == bulkYear.value && 
+    c.semester == bulkSemester.value
+  );
+  
+  const keys = targetClasses.map(c => c.key);
+  
+  if (keys.length === 0) {
+    alert("No classes found for this selection.");
+    isBulkToggling.value = false;
+    return;
+  }
+  
+  try {
+    const res = await fetch(import.meta.env.VITE_API_URL + '/api/admin/closed-classes/bulk-toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keys, action: bulkAction.value })
+    });
+    const data = await res.json();
+    if (data.success) {
+      targetClasses.forEach(c => {
+        c.isClosed = (bulkAction.value === 'close');
+      });
+      showToast(
+        bulkAction.value === 'close' ? 'Classes Closed' : 'Classes Re-opened', 
+        `Bulk updated ${targetClasses.length} classes.`, 
+        bulkAction.value === 'close' ? 'closed' : 'open'
+      );
+    } else {
+      alert("Failed to bulk toggle classes.");
+    }
+  } catch (error) {
+    console.error("Error bulk toggling classes:", error);
+    alert("Failed to bulk toggle classes.");
+  } finally {
+    isBulkToggling.value = false;
+    bulkGeneration.value = '';
+    bulkYear.value = '';
+    bulkSemester.value = '';
+  }
+};
 
 const availableSheetNames = ref([]);
 
