@@ -115,17 +115,31 @@
                <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-fuchsia-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                
                <div class="relative z-10">
-                 <div class="flex items-center justify-between mb-3">
-                   <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-md text-[9px] font-black uppercase tracking-widest border border-indigo-100 dark:border-indigo-500/20">
-                     {{ cls.cohort }}
-                   </div>
-                   
-                   <!-- 🔥 PRINT PDF BUTTON -->
-                   <button @click="triggerPrint(cls)" class="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-[0_4px_10px_rgba(16,185,129,0.3)] transition-all duration-300 active:scale-95 hover:-translate-y-0.5">
-                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                     {{ t.printPDF }}
-                   </button>
-                 </div>
+                  <div class="flex items-start sm:items-center justify-between mb-3 gap-2 flex-col sm:flex-row w-full">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-md text-[9px] font-black uppercase tracking-widest border border-indigo-100 dark:border-indigo-500/20">
+                        {{ cls.cohort }}
+                      </div>
+                      <div v-if="cls.isSubstitute" class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-md text-[9px] font-black tracking-widest border border-amber-200 dark:border-amber-500/30 font-khmer">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        ជំនួស{{ cls.substituteFor ? `: ${cls.substituteFor}` : '' }}
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 mt-2 sm:mt-0 w-full sm:w-auto">
+                      <!-- 🔥 VIEW HISTORY BUTTON -->
+                      <button @click="goToHistory(cls)" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm transition-all duration-300 active:scale-95 hover:-translate-y-0.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {{ t.viewHistory }}
+                      </button>
+                      
+                      <!-- 🔥 PRINT PDF BUTTON -->
+                      <button @click="triggerPrint(cls)" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-[0_4px_10px_rgba(16,185,129,0.3)] transition-all duration-300 active:scale-95 hover:-translate-y-0.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        {{ t.printPDF }}
+                      </button>
+                    </div>
+                  </div>
                  
                  <h4 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-khmer leading-snug mb-5 line-clamp-2 pr-2">{{ cleanSubjectName(cls.subject) }}</h4>
                </div>
@@ -312,7 +326,8 @@ const t = computed(() => {
       classTotal: 'សរុបប្រចាំថ្នាក់',
       weeks: 'សប្តាហ៍',
       lessons: 'មេរៀន',
-      printPDF: 'ព្រីនឯកសារ (PDF)'
+      printPDF: 'ព្រីនឯកសារ (PDF)',
+      viewHistory: 'ប្រវត្តិ'
     };
   }
   return {
@@ -330,11 +345,23 @@ const t = computed(() => {
     classTotal: 'Class Total',
     weeks: 'Weeks',
     lessons: 'Lessons',
-    printPDF: 'Print PDF'
+    printPDF: 'Print PDF',
+    viewHistory: 'History'
   };
 });
 
 const goBack = () => router.go(-1);
+
+const goToHistory = (clsData) => {
+  router.push({
+    path: '/history',
+    query: {
+      subject: clsData.subject,
+      group: clsData.cohort,
+      teacher: teacher.value?.nameKh || ''
+    }
+  });
+};
 
 // Helper Formatting
 const formatMins = (m) => {
@@ -553,6 +580,15 @@ const computedStats = computed(() => {
     breakdown[key].count += 1;
     
     if (lesson.week) breakdown[key].weeks.add(lesson.week);
+    
+    // Check for substitute
+    if (lesson.notes && lesson.notes.includes('បង្រៀនជំនួស')) {
+       breakdown[key].isSubstitute = true;
+       const match = lesson.notes.match(/បង្រៀនជំនួស:\s*([^\]]+)/);
+       if (match) {
+           breakdown[key].substituteFor = match[1];
+       }
+    }
     
     breakdown[key].lessons.push(lesson);
   });

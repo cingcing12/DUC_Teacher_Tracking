@@ -29,6 +29,10 @@
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-mono tracking-wide">
               <p :class="[language === 'kh' ? 'font-khmer' : '']">{{ t.cohort }}: <span class="text-cyan-500 dark:text-cyan-400">{{ classData.group }}</span></p>
               <span v-if="fullMajorName" class="px-2 py-1 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-cyan-100 dark:border-cyan-500/20 shadow-sm">{{ fullMajorName }}</span>
+              <span v-if="substituteInfo" class="px-2 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer tracking-widest border border-amber-200 dark:border-amber-500/30 shadow-sm flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                ជំនួស{{ substituteInfo !== 'true' ? `: ${substituteInfo}` : '' }}
+              </span>
             </div>
           </div>
 
@@ -430,6 +434,19 @@ const displayedTotalHours = computed(() => {
   });
   
   return formatMins(totalMins);
+});
+
+const substituteInfo = computed(() => {
+  for (const lesson of historyData.value) {
+    if (lesson.notes && lesson.notes.includes('បង្រៀនជំនួស')) {
+      const match = lesson.notes.match(/បង្រៀនជំនួស:\s*([^\]]+)/);
+      if (match) {
+        return match[1].trim();
+      }
+      return 'true';
+    }
+  }
+  return null;
 });
 
 // 🔥 PAGINATION

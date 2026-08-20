@@ -34,8 +34,10 @@
               <input v-model="form.lessonNo" type="text" required class="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 sm:py-4 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
             </div>
             <div>
-              <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.date }}</label>
-              <input v-model="form.date" type="date" required class="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 sm:py-4 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+              <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">
+                {{ t.date }}
+              </label>
+              <input v-model="form.date" type="date" required :class="['w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all']">
             </div>
           </div>
 
@@ -56,8 +58,11 @@
           </div>
 
           <div>
-            <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.notes }}</label>
-            <input v-model="form.notes" type="text" :class="['w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer']">
+            <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2 flex items-center justify-between', language === 'kh' ? 'font-khmer' : '']">
+              {{ t.notes }}
+              <span v-if="isSubstitute" class="text-amber-500 text-[8px]">{{ language === 'kh' ? '(មិនអាចកែប្រែបានទេសម្រាប់ម៉ោងជំនួស)' : '(Cannot change for substitute)' }}</span>
+            </label>
+            <input v-model="form.notes" type="text" :disabled="isSubstitute" :class="['w-full border rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer', isSubstitute ? 'bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed' : 'bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white']">
           </div>
 
           <button type="submit" :disabled="isSaving" class="w-full mt-2 sm:mt-4 py-4 sm:py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-50 hover:-translate-y-1">
@@ -221,6 +226,10 @@ const form = ref({
   endTime: initialEndTime,    
   content: route.query.content || '',
   notes: route.query.notes || ''
+});
+
+const isSubstitute = computed(() => {
+  return form.value.notes.includes('បង្រៀនជំនួស');
 });
 
 const customAlert = ref({ show: false, type: 'success', message: '' });

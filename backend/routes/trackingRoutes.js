@@ -247,11 +247,13 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
             }
         };
 
-        if (substituteFor) {
+        if (substituteFor && status !== "" && status !== "A") {
             cellData.note = `បង្រៀនជំនួសដោយ: ${teacher}`;
+        } else if (status === "" || status === "A") {
+            cellData.note = "";
         }
 
-        const fieldsToUpdate = substituteFor 
+        const fieldsToUpdate = (substituteFor || status === "" || status === "A")
             ? "userEnteredValue,userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment),note"
             : "userEnteredValue,userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)";
 
@@ -328,8 +330,16 @@ router.post("/track-lesson", async (req, res) => {
     const safeStartTime = startTime ? `'${startTime}` : "";
     const safeEndTime = endTime ? `'${endTime}` : "";
 
+    let finalNotes = String(notes || "").trim();
+    if (substituteFor) {
+        const subNote = `[បង្រៀនជំនួស: ${substituteFor}]`;
+        if (!finalNotes.includes(subNote)) {
+            finalNotes = finalNotes ? `${subNote} ${finalNotes}` : subNote;
+        }
+    }
+
     const rowData = [[
-      fullFacultyName, fullMajorName, generation, formattedYear, semester || "?", subject, pureCohort, teacherNameKh, week, safeDate, safeStartTime, safeEndTime, lessonNo, content, hours, notes || "", room               
+      fullFacultyName, fullMajorName, generation, formattedYear, semester || "?", subject, pureCohort, teacherNameKh, week, safeDate, safeStartTime, safeEndTime, lessonNo, content, hours, finalNotes, room               
     ]];
 
     await sheets.spreadsheets.values.append({
@@ -475,6 +485,7 @@ router.put("/class-history", noCache, async (req, res) => {
     const rows = await getMasterRows(sheets);
     let rowIndex = -1;
     let existingData = [];
+    let substituteFor = null;
 
     for (let i = 0; i < rows.length; i++) {
       const dbCohort = extractPureCohort(rows[i][6]).trim().toLowerCase();
@@ -485,6 +496,11 @@ router.put("/class-history", noCache, async (req, res) => {
           if (!targetTeacher || dbTeacher.includes(targetTeacher)) {
               rowIndex = i + 2; 
               existingData = rows[i];
+              const noteStr = String(rows[i][15] || "");
+              if (noteStr.includes('បង្រៀនជំនួស')) {
+                  const match = noteStr.match(/បង្រៀនជំនួស:\s*([^\]]+)/);
+                  if (match) substituteFor = match[1].trim();
+              }
               break;
           }
       }
@@ -499,15 +515,16 @@ router.put("/class-history", noCache, async (req, res) => {
     const safeEndTime = endTime ? `'${endTime}` : existingData[11] || "";
 
     const newDate = date ? String(date).trim() : oldDate;
+    const targetStatus = substituteFor ? "P" : "✓";
     
     if (oldDate && newDate && oldDate !== newDate) {
-        const visualRes = await markVisualAttendance(sheets, cohort, subject, teacher, newDate, "✓");
+        const visualRes = await markVisualAttendance(sheets, cohort, subject, teacher, newDate, targetStatus, substituteFor);
         if (!visualRes.success) {
             return res.status(400).json({ success: false, message: visualRes.message });
         }
-        await markVisualAttendance(sheets, cohort, subject, teacher, oldDate, ""); 
+        await markVisualAttendance(sheets, cohort, subject, teacher, oldDate, "A", substituteFor); 
     } else {
-        await markVisualAttendance(sheets, cohort, subject, teacher, newDate, "✓");
+        await markVisualAttendance(sheets, cohort, subject, teacher, newDate, targetStatus, substituteFor);
     }
 
     const updatedRow = [
@@ -550,6 +567,7 @@ router.delete("/class-history", noCache, async (req, res) => {
     const rows = await getMasterRows(sheets);
     let rowIndex = -1;
     let deletedDate = "";
+    let substituteFor = null;
 
     for (let i = 0; i < rows.length; i++) {
       const dbCohort = extractPureCohort(rows[i][6]).trim().toLowerCase();
@@ -565,6 +583,11 @@ router.delete("/class-history", noCache, async (req, res) => {
           if (isMatch) {
               rowIndex = i + 2; 
               deletedDate = dbDate;
+              const noteStr = String(rows[i][15] || "");
+              if (noteStr.includes('បង្រៀនជំនួស')) {
+                  const match = noteStr.match(/បង្រៀនជំនួស:\s*([^\]]+)/);
+                  if (match) substituteFor = match[1].trim();
+              }
               break;
           }
       }
@@ -592,7 +615,7 @@ router.delete("/class-history", noCache, async (req, res) => {
     masterSheetCache.lastFetch = 0;
 
     if (deletedDate) {
-        await markVisualAttendance(sheets, cohort, subject, teacher, deletedDate, ""); 
+        await markVisualAttendance(sheets, cohort, subject, teacher, deletedDate, "", substituteFor); 
     }
     
     res.json({ success: true, message: "Deleted successfully" });
@@ -719,6 +742,7 @@ router.get("/my-full-history", noCache, async (req, res) => {
           lessonNo: String(row[12] || ""),
           content: String(row[13] || ""),
           hours: String(row[14] || ""),
+          notes: String(row[15] || ""),
           room: String(row[16] || "")
         });
       }

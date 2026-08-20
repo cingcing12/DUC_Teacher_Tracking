@@ -113,8 +113,11 @@
               </div>
 
               <div>
-                <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.notes }}</label>
-                <input v-model="form.notes" type="text" :class="['w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer']" :placeholder="t.phNotes">
+                <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2 flex items-center justify-between', language === 'kh' ? 'font-khmer' : '']">
+                  {{ t.notes }}
+                  <span v-if="substituteFor" class="text-amber-500 text-[8px]">{{ language === 'kh' ? '(កំណត់ដោយស្វ័យប្រវត្តិ)' : '(Auto-set)' }}</span>
+                </label>
+                <input v-model="form.notes" type="text" :disabled="substituteFor !== null" :class="['w-full border rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer', substituteFor ? 'bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed' : 'bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white']" :placeholder="t.phNotes">
               </div>
             </div>
 
@@ -318,6 +321,10 @@ onMounted(async () => {
 
     form.value.startTime = formatTime(parts[0]);
     form.value.endTime = formatTime(parts[1]);
+  }
+  
+  if (substituteFor.value) {
+    form.value.notes = `[បង្រៀនជំនួស: ${substituteFor.value}]`;
   }
 });
 
