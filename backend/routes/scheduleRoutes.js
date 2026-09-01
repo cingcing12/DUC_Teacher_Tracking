@@ -198,6 +198,8 @@ const parseAttendanceTab = (rows, tabMeta, filterTeacherObj, filterTeachersArray
     return classes;
 };
 
+const scheduleCache = require('../utils/scheduleCache');
+
 // ==========================================
 // GET: TEACHER SCHEDULE
 // ==========================================
@@ -209,42 +211,20 @@ router.get("/my-schedule", async (req, res) => {
     const cleanSearchName = normalize(teacherName.replace(/លោកគ្រូ|អ្នកគ្រូ|បណ្ឌិត|សាស្ត្រាចារ្យ|Dr\./g, ""));
     const filterTeacherObj = { cleanName: cleanSearchName };
 
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
-    let facultiesList = [];
-    try {
-        const facRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A2:B" });
-        facultiesList = facRes.data.values || [];
-    } catch (e) {
-        console.error("Could not fetch Faculties:", e.message);
-    }
-
-    // 1. Fetch tabs from ATTENDANCE spreadsheet
-    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
-    const tabs = sheetMeta.data.sheets.map(s => s.properties.title);
-    
-    // 2. Fetch all tab data
-    const ranges = tabs.map(t => `'${t}'!A1:G200`);
-    const attendanceDataRes = await sheets.spreadsheets.values.batchGet({
-      spreadsheetId: SPREADSHEETS.ATTENDANCE,
-      ranges: ranges
-    });
+    const cacheData = await scheduleCache.getCache();
+    const { facultiesList, tabs, attendanceData, closedClasses } = cacheData;
 
     let myClasses = [];
 
-    // 3. Process each tab
-    attendanceDataRes.data.valueRanges.forEach((rangeData, index) => {
-        const tabName = tabs[index];
-        const rows = rangeData.values || [];
+    attendanceData.forEach((rangeData) => {
+        const tabName = rangeData.tabName;
+        const rows = rangeData.rows;
         const tabMeta = extractTabMeta(tabName);
         
         const classesInTab = parseAttendanceTab(rows, tabMeta, filterTeacherObj, null, null, facultiesList);
         myClasses = myClasses.concat(classesInTab);
     });
 
-    // 4. Filter out closed classes
-    const closedClasses = await getClosedClasses(sheets);
     myClasses = filterClosedClasses(myClasses, closedClasses);
 
     res.json({ success: true, data: myClasses });
@@ -300,30 +280,20 @@ router.get("/department-schedule", async (req, res) => {
        return res.json({ success: true, data: [] });
     }
 
-    // 2. Fetch tabs from ATTENDANCE spreadsheet
-    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
-    const tabs = sheetMeta.data.sheets.map(s => s.properties.title);
-    
-    // 3. Fetch all tab data
-    const ranges = tabs.map(t => `'${t}'!A1:G200`);
-    const attendanceDataRes = await sheets.spreadsheets.values.batchGet({
-      spreadsheetId: SPREADSHEETS.ATTENDANCE,
-      ranges: ranges
-    });
+    const cacheData = await scheduleCache.getCache();
+    const { facultiesList, tabs, attendanceData, closedClasses } = cacheData;
 
     let myClasses = [];
 
-    // 4. Process each tab
-    attendanceDataRes.data.valueRanges.forEach((rangeData, index) => {
-        const tabName = tabs[index];
-        const rows = rangeData.values || [];
+    attendanceData.forEach((rangeData) => {
+        const tabName = rangeData.tabName;
+        const rows = rangeData.rows;
         const tabMeta = extractTabMeta(tabName);
         
-        const classesInTab = parseAttendanceTab(rows, tabMeta, null, teacherNames, departmentName);
+        const classesInTab = parseAttendanceTab(rows, tabMeta, null, teacherNames, departmentName, facultiesList);
         myClasses = myClasses.concat(classesInTab);
     });
 
-    const closedClasses = await getClosedClasses(sheets);
     myClasses = filterClosedClasses(myClasses, closedClasses);
 
     res.json({ success: true, data: myClasses });
@@ -338,12 +308,8 @@ router.get("/department-schedule", async (req, res) => {
 // ==========================================
 router.get("/attendance-tabs", async (req, res) => {
   try {
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
-    const tabs = sheetMeta.data.sheets
-      .map(s => s.properties.title)
-      .filter(title => title.includes('ជំនាន់ទី') || title.includes('ឆ្នាំទី') || title.includes('ឆមាសទី'));
+    const cacheData = await scheduleCache.getCache();
+    const tabs = cacheData.tabs.filter(title => title.includes('ជំនាន់ទី') || title.includes('ឆ្នាំទី') || title.includes('ឆមាសទី'));
     res.json({ success: true, data: tabs });
   } catch (error) {
     console.error(error);
@@ -359,28 +325,15 @@ router.get("/tab-schedule", async (req, res) => {
     const tabName = req.query.tabName;
     if (!tabName) return res.status(400).json({ success: false, message: "Tab name required" });
 
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
+    const cacheData = await scheduleCache.getCache();
+    const { facultiesList, attendanceData, closedClasses } = cacheData;
 
-    let facultiesList = [];
-    try {
-        const facRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A2:B" });
-        facultiesList = facRes.data.values || [];
-    } catch (e) {
-        console.error("Could not fetch Faculties:", e.message);
-    }
+    const rangeData = attendanceData.find(d => d.tabName === tabName);
+    const rows = rangeData ? rangeData.rows : [];
 
-    const rangeData = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEETS.ATTENDANCE,
-      range: `'${tabName}'!A1:G200`
-    });
-
-    const rows = rangeData.data.values || [];
     const tabMeta = extractTabMeta(tabName);
     
     let classes = parseAttendanceTab(rows, tabMeta, null, null, null, facultiesList, true);
-
-    const closedClasses = await getClosedClasses(sheets);
     classes = filterClosedClasses(classes, closedClasses);
 
     res.json({ success: true, data: classes });
@@ -395,26 +348,14 @@ router.get("/tab-schedule", async (req, res) => {
 // ==========================================
 router.get("/all-attendance-classes", async (req, res) => {
   try {
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
-    // 1. Fetch tabs from ATTENDANCE spreadsheet
-    const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.ATTENDANCE });
-    const tabs = sheetMeta.data.sheets.map(s => s.properties.title);
-    
-    // 2. Fetch all tab data
-    const ranges = tabs.map(t => `'${t}'!A1:G200`);
-    const attendanceDataRes = await sheets.spreadsheets.values.batchGet({
-      spreadsheetId: SPREADSHEETS.ATTENDANCE,
-      ranges: ranges
-    });
+    const cacheData = await scheduleCache.getCache();
+    const { attendanceData, closedClasses } = cacheData;
 
     let allClasses = [];
 
-    // 3. Process each tab
-    attendanceDataRes.data.valueRanges.forEach((rangeData, index) => {
-        const tabName = tabs[index];
-        const rows = rangeData.values || [];
+    attendanceData.forEach((rangeData) => {
+        const tabName = rangeData.tabName;
+        const rows = rangeData.rows;
         const tabMeta = extractTabMeta(tabName);
         
         const classesInTab = parseAttendanceTab(rows, tabMeta, null, null, null, null, true);
@@ -429,9 +370,6 @@ router.get("/all-attendance-classes", async (req, res) => {
 
         allClasses = allClasses.concat(mappedClasses);
     });
-
-    // 4. Map isClosed status
-    const closedClasses = await getClosedClasses(sheets);
 
     allClasses = allClasses.map(cls => {
         const pureCohort = extractPureCohort(cls.cohort);

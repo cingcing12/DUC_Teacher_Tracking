@@ -37,13 +37,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref, onErrorCaptured } from 'vue';
+import { computed, onMounted, onUnmounted, ref, onErrorCaptured, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import MainLayout from './components/MainLayout.vue';
-
 const route = useRoute();
 const router = useRouter();
-let statusInterval = null;
 
 const isBlockedGlobal = ref(false);
 const globalError = ref(null);
@@ -60,13 +58,12 @@ const layoutComponent = computed(() => {
     return 'div';
   }
 
-  // 2. Hide for admin section or admin-view queries
-  if (route.path.includes('/admin') || route.query.admin === 'true') {
+  // 2. Hide for admin dashboard pages
+  if (route.path.includes('/admin')) {
     return 'div';
   }
 
   // 🔥 3. FIX: Hide for 404 pages 
-  // We check if the route name is 'NotFound' or if the path is invalid
   if (route.name === 'NotFound' || route.matched.length === 0) {
     return 'div';
   }
@@ -78,11 +75,19 @@ const layoutComponent = computed(() => {
 const handleLogoutRedirect = () => {
   isBlockedGlobal.value = false;
   localStorage.removeItem('duc_teacher_token');
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
   if (router) router.push('/login');
   else window.location.href = '/login';
 };
 
-const checkUserStatus = async () => {
+let eventSource = null;
+
+const setupSSE = () => {
+  if (eventSource) return; // Already connected
+  
   const token = localStorage.getItem('duc_teacher_token');
   if (!token) return;
 
@@ -90,16 +95,46 @@ const checkUserStatus = async () => {
     const teacher = JSON.parse(token);
     if (!teacher || !teacher.nameKh) return;
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/check-status?name=${encodeURIComponent(teacher.nameKh)}`);
-    const data = await res.json();
+    eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/api/stream-status?name=${encodeURIComponent(teacher.nameKh)}`);
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'BLOCKED') {
+          isBlockedGlobal.value = true;
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+        } else if (data.type === 'CLASS_TOGGLED') {
+          // Dispatch a global event so that schedule views can refresh their data
+          window.dispatchEvent(new CustomEvent('class-toggled', { detail: data }));
+        } else if (data.type === 'TRACKING_UPDATED') {
+          window.dispatchEvent(new CustomEvent('tracking-updated', { detail: data }));
+        }
+      } catch (err) {
+        console.error("Failed to parse SSE message", err);
+      }
+    };
 
-    if (data.success && data.isBlocked) {
-      isBlockedGlobal.value = true;
-    }
+    eventSource.onerror = (error) => {
+      console.error("SSE Error:", error);
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+    };
   } catch (error) {
-    console.error("Failed to check status", error);
+    console.error("Failed to setup SSE", error);
   }
 };
+
+// Watch route changes to establish SSE if the user logs in without a page refresh
+watch(() => route.path, (newPath) => {
+  if (!newPath.includes('/login')) {
+    setupSSE();
+  }
+});
 
 onMounted(() => {
   // Global App Theme Hydration
@@ -117,12 +152,15 @@ onMounted(() => {
     document.documentElement.classList.add('disable-animations');
   }
 
-  // Poll for user status every 15 seconds
-  statusInterval = setInterval(checkUserStatus, 15000);
+  // Use SSE for real-time blocking
+  setupSSE();
 });
 
 onUnmounted(() => {
-  if (statusInterval) clearInterval(statusInterval);
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
 });
 </script>
 <style>

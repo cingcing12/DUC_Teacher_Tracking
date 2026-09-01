@@ -3,12 +3,17 @@ const router = express.Router();
 const { google, auth, SPREADSHEETS } = require("../config/googleClient");
 
 const MASTER_TAB = "MasterTracking";
+const sseEmitter = require('../utils/sseEmitter');
 
 // ==========================================
 // 🔥 THE "FORCE FRESH" CACHE SYSTEM
 // ==========================================
 let masterSheetCache = {
     rows: null,
+    lastFetch: 0
+};
+let avatarCache = {
+    map: null,
     lastFetch: 0
 };
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -29,6 +34,26 @@ const getMasterRows = async (sheets, forceFresh = false) => {
     masterSheetCache.lastFetch = Date.now();
     return masterSheetCache.rows;
 };
+
+// ==========================================
+// SSE STREAM: TRACKING DATA REALTIME UPDATES
+// ==========================================
+router.get("/tracking-stream", (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+  
+    const listener = () => {
+        res.write(`data: ${JSON.stringify({ type: 'update' })}\n\n`);
+    };
+  
+    sseEmitter.on('tracking_updated', listener);
+  
+    req.on('close', () => {
+        sseEmitter.off('tracking_updated', listener);
+    });
+});
 
 // 🔥 UPGRADED: Smart Section Preserver! (Keeps -A or -B, drops teacher names)
 const extractPureCohort = (str) => {
@@ -350,8 +375,11 @@ router.post("/track-lesson", async (req, res) => {
       requestBody: { values: rowData },
     });
 
-    masterSheetCache.rows = null;
-    masterSheetCache.lastFetch = 0;
+    // UPDATE CACHE DIRECTLY INSTEAD OF CLEARING
+    if (masterSheetCache.rows) {
+        masterSheetCache.rows.push(rowData[0]);
+    }
+    sseEmitter.emit('tracking_updated');
 
     res.json({ success: true, message: "Data saved successfully to Master Sheet" });
   } catch (error) {
@@ -395,7 +423,7 @@ router.get("/class-history", noCache, async (req, res) => {
         if (!targetTeacher || dbTeacher.includes(targetTeacher)) {
             history.push({
               week: parseInt(row[8] || "0", 10),
-              date: String(row[9] || ""),
+              date: String(row[9] || "").replace(/'/g, "").trim(),
               time: `${row[10] || ""} - ${row[11] || ""}`,
               lessonNo: String(row[12] || ""),
               content: String(row[13] || ""),
@@ -452,7 +480,7 @@ router.get("/teacher-history", noCache, async (req, res) => {
             generation: String(row[2] || "").trim(),
             subject: String(row[5] || "").trim(),
             cohort: String(row[6] || "").trim(),
-            date: String(row[9] || "").trim(),
+            date: String(row[9] || "").replace(/'/g, "").trim(),
             startTime: String(row[10] || "").trim(),
             endTime: String(row[11] || "").trim(),
             hours: String(row[14] || "").trim()
@@ -540,8 +568,11 @@ router.put("/class-history", noCache, async (req, res) => {
       requestBody: { values: [updatedRow] },
     });
 
-    masterSheetCache.rows = null;
-    masterSheetCache.lastFetch = 0;
+    // UPDATE CACHE DIRECTLY
+    if (masterSheetCache.rows && rowIndex - 2 >= 0 && rowIndex - 2 < masterSheetCache.rows.length) {
+        masterSheetCache.rows[rowIndex - 2] = updatedRow;
+    }
+    sseEmitter.emit('tracking_updated');
 
     res.json({ success: true, message: "Updated successfully" });
   } catch (error) { 
@@ -578,7 +609,9 @@ router.delete("/class-history", noCache, async (req, res) => {
       if (dbCohort === pureCohort && dbSubject === querySubject && String(rows[i][8]) == String(week)) {
           let isMatch = true;
           if (targetTeacher && !dbTeacher.includes(targetTeacher)) isMatch = false;
-          if (date && dbDate !== String(date).trim()) isMatch = false; 
+          
+          const cleanDate = date ? String(date).replace(/'/g, "").trim() : "";
+          if (cleanDate && dbDate !== cleanDate) isMatch = false; 
 
           if (isMatch) {
               rowIndex = i + 2; 
@@ -611,8 +644,11 @@ router.delete("/class-history", noCache, async (req, res) => {
         }
     });
 
-    masterSheetCache.rows = null;
-    masterSheetCache.lastFetch = 0;
+    // UPDATE CACHE DIRECTLY
+    if (masterSheetCache.rows && rowIndex - 2 >= 0 && rowIndex - 2 < masterSheetCache.rows.length) {
+        masterSheetCache.rows.splice(rowIndex - 2, 1);
+    }
+    sseEmitter.emit('tracking_updated');
 
     if (deletedDate) {
         await markVisualAttendance(sheets, cohort, subject, teacher, deletedDate, "", substituteFor); 
@@ -637,21 +673,28 @@ router.get('/tracking-directory', noCache, async (req, res) => {
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
     let avatarMap = {};
+    const forceFresh = req.query.fresh === 'true';
+
     try {
-      const avatarRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Avatars'!A2:C" });
-      const avatarRows = avatarRes.data.values || [];
-      avatarRows.forEach(row => {
-        const name = String(row[0] || '').trim();
-        const imgUrl = String(row[2] || '').trim(); 
-        if (name && imgUrl) {
-          const cleanName = normalizeText(name.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
-          avatarMap[cleanName] = imgUrl;
-          avatarMap[normalizeText(name)] = imgUrl;
-        }
-      });
+      if (!forceFresh && avatarCache.map && (Date.now() - avatarCache.lastFetch < CACHE_TTL)) {
+        avatarMap = avatarCache.map;
+      } else {
+        const avatarRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Avatars'!A2:C" });
+        const avatarRows = avatarRes.data.values || [];
+        avatarRows.forEach(row => {
+          const name = String(row[0] || '').trim();
+          const imgUrl = String(row[2] || '').trim(); 
+          if (name && imgUrl) {
+            const cleanName = normalizeText(name.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
+            avatarMap[cleanName] = imgUrl;
+            avatarMap[normalizeText(name)] = imgUrl;
+          }
+        });
+        avatarCache.map = avatarMap;
+        avatarCache.lastFetch = Date.now();
+      }
     } catch (e) {}
 
-    const forceFresh = req.query.fresh === 'true';
     const rows = await getMasterRows(sheets, forceFresh);
     
     let closedClasses = [];

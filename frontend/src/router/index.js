@@ -150,7 +150,7 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.requiresAdmin && !isAdminAuth) {
     next("/admin/login"); // Kick admins to admin login
-  } else if (to.meta.requiresAuth && !isTeacherAuth) {
+  } else if (to.meta.requiresAuth && !isTeacherAuth && !isAdminAuth) {
     next("/login"); // Kick teachers to teacher login
   } else if (to.path === "/login" && isTeacherAuth) {
     next("/schedule"); // Teacher already logged in

@@ -532,6 +532,8 @@ onActivated(() => {
   refreshTeacherData(false); 
 });
 
+const handleClassToggled = () => refreshTeacherData(false);
+
 onMounted(() => {
   const token = localStorage.getItem('duc_teacher_token');
   if (!token) {
@@ -539,6 +541,12 @@ onMounted(() => {
     return;
   }
   refreshTeacherData(true);
+  window.addEventListener('class-toggled', handleClassToggled);
+});
+
+import { onUnmounted } from 'vue';
+onUnmounted(() => {
+  window.removeEventListener('class-toggled', handleClassToggled);
 });
 
 const displayedSchedule = computed(() => {

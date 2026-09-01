@@ -301,7 +301,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
@@ -622,6 +622,20 @@ onMounted(async () => {
   }
   
   fetchHistory();
+  
+  // Real-time updates for history
+  const eventSource = new EventSource(import.meta.env.VITE_API_URL + '/api/tracking-stream');
+  eventSource.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'update') {
+      console.log('Real-time history update received!');
+      // Force fresh cache bypass on auto-update
+      localStorage.setItem('force_fresh', 'true');
+      fetchHistory();
+    }
+  };
+  
+  window._historyEventSource = eventSource;
 
   try {
     const res = await fetch(import.meta.env.VITE_API_URL + '/api/majors');
@@ -657,6 +671,14 @@ onMounted(async () => {
     }
   } catch (err) { 
     console.error("Could not fetch majors", err); 
+  }
+});
+
+
+onUnmounted(() => {
+  if (window._historyEventSource) {
+    window._historyEventSource.close();
+    window._historyEventSource = null;
   }
 });
 

@@ -218,6 +218,9 @@ router.get('/admin/teachers', async (req, res) => {
   }
 });
 
+const sseEmitter = require('../utils/sseEmitter');
+const scheduleCache = require('../utils/scheduleCache');
+
 router.post('/admin/teachers/update', async (req, res) => {
   try {
     const { 
@@ -258,6 +261,10 @@ router.post('/admin/teachers/update', async (req, res) => {
       valueInputOption: "USER_ENTERED",
       requestBody: { values: values }
     });
+
+    if (isBlocked && nameKh) {
+      sseEmitter.emit('teacher_blocked', { teacherName: nameKh, isBlocked: true });
+    }
 
     res.json({ success: true, message: "Teacher updated successfully!" });
   } catch (error) {
@@ -512,6 +519,9 @@ router.post('/admin/closed-classes/toggle', async (req, res) => {
             requestBody: { values: updatedValues }
         });
         
+        scheduleCache.updateClosedClasses(classes);
+        sseEmitter.emit('class_toggled', { action: 'toggle', key: key });
+
         res.json({ success: true, message: "Toggled successfully", isClosed: index === -1 });
     } catch (e) {
         console.error("Error toggling closed class:", e);
@@ -575,6 +585,9 @@ router.post('/admin/closed-classes/bulk-toggle', async (req, res) => {
             });
         }
         
+        scheduleCache.updateClosedClasses(classes);
+        sseEmitter.emit('class_toggled', { action: 'bulk', keys: keys });
+
         res.json({ success: true, message: "Bulk toggled successfully" });
     } catch (e) {
         console.error("Error bulk toggling closed classes:", e);

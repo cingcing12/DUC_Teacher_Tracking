@@ -42,7 +42,13 @@
 
           <transition name="tab-fade" mode="out-in">
             
-            <div v-if="trackingLevel === 0 && !isFetchingDirectory" key="lvl0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-if="trackingLevel === 0 && !isFetchingDirectory" key="lvl0" class="w-full">
+              <div v-if="availableGenerations.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-400 w-full col-span-full">
+                <svg class="w-20 h-20 mb-6 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                <p class="text-xl font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">No Data Available</p>
+                <p class="text-sm font-bold text-slate-400 dark:text-slate-500 mt-2">There are currently no tracking records.</p>
+              </div>
+              <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <button v-for="gen in availableGenerations" :key="gen" @click="selectGen(gen)" class="group text-left bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700/80 p-8 rounded-[2rem] border border-slate-200/60 dark:border-slate-700/60 hover:border-emerald-300 dark:hover:border-emerald-500/50 shadow-sm hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden backdrop-blur-xl isolate">
                 
                 <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 group-hover:to-emerald-500/10 dark:from-emerald-400/0 dark:via-emerald-400/0 dark:to-emerald-400/10 transition-colors duration-500 -z-10"></div>
@@ -59,9 +65,16 @@
                   </span>
                 </p>
               </button>
+              </div>
             </div>
 
-            <div v-else-if="trackingLevel === 1 && !isFetchingDirectory" key="lvl1" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-else-if="trackingLevel === 1 && !isFetchingDirectory" key="lvl1" class="w-full">
+              <div v-if="availableYears.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-400 w-full col-span-full">
+                <svg class="w-20 h-20 mb-6 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                <p class="text-xl font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">No Years Available</p>
+                <p class="text-sm font-bold text-slate-400 dark:text-slate-500 mt-2">No records found for this generation.</p>
+              </div>
+              <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <button v-for="year in availableYears" :key="year" @click="selectYear(year)" class="group text-left bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700/80 p-8 rounded-[2rem] border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-300 dark:hover:border-blue-500/50 shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden backdrop-blur-xl isolate">
                 
                 <div class="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-blue-500/0 to-blue-500/5 group-hover:to-blue-500/10 dark:from-blue-400/0 dark:via-blue-400/0 dark:to-blue-400/10 transition-colors duration-500 -z-10"></div>
@@ -78,9 +91,16 @@
                   </span>
                 </p>
               </button>
+              </div>
             </div>
 
-            <div v-else-if="trackingLevel === 2 && !isFetchingDirectory" key="lvl2" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-else-if="trackingLevel === 2 && !isFetchingDirectory" key="lvl2" class="w-full">
+              <div v-if="availableSemesters.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-400 w-full col-span-full">
+                <svg class="w-20 h-20 mb-6 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                <p class="text-xl font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">No Semesters Available</p>
+                <p class="text-sm font-bold text-slate-400 dark:text-slate-500 mt-2">No records found for this year.</p>
+              </div>
+              <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <button v-for="sem in availableSemesters" :key="sem" @click="selectSem(sem)" class="group text-left bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700/80 p-8 rounded-[2rem] border border-slate-200/60 dark:border-slate-700/60 hover:border-amber-300 dark:hover:border-amber-500/50 shadow-sm hover:shadow-2xl hover:shadow-amber-500/10 hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden backdrop-blur-xl isolate">
                 
                 <div class="absolute inset-0 bg-gradient-to-br from-amber-500/0 via-amber-500/0 to-amber-500/5 group-hover:to-amber-500/10 dark:from-amber-400/0 dark:via-amber-400/0 dark:to-amber-400/10 transition-colors duration-500 -z-10"></div>
@@ -97,6 +117,7 @@
                   </span>
                 </p>
               </button>
+              </div>
             </div>
 
             <div v-else-if="trackingLevel === 3 && !isFetchingDirectory" key="lvl3" class="flex flex-col">
@@ -478,7 +499,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -1062,14 +1083,7 @@ const selectTeacherFromDropdown = (name) => {
   currentPage.value = 1;
 };
 
-onMounted(async () => {
-  const savedTheme = localStorage.getItem('theme') || 'system';
-  if (savedTheme === 'dark' || (savedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    document.documentElement.classList.add('dark');
-  } else { document.documentElement.classList.remove('dark'); }
-
-  if (localStorage.getItem('animations') === 'false') { document.documentElement.classList.add('disable-animations'); }
-
+const fetchTrackingDirectory = async () => {
   isFetchingDirectory.value = true;
   try {
     const res = await fetch(import.meta.env.VITE_API_URL + '/api/tracking-directory');
@@ -1091,11 +1105,42 @@ onMounted(async () => {
     } catch (e) {
       console.error('Failed to load teachers map for genders.');
     }
-    
   } catch (err) {
     console.error('Failed to load tracking directory from server.');
   } finally {
     isFetchingDirectory.value = false;
+  }
+};
+
+onMounted(async () => {
+  const savedTheme = localStorage.getItem('theme') || 'system';
+  if (savedTheme === 'dark' || (savedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+  } else { document.documentElement.classList.remove('dark'); }
+
+  if (localStorage.getItem('animations') === 'false') { document.documentElement.classList.add('disable-animations'); }
+
+  await fetchTrackingDirectory();
+  
+  // Connect to SSE for real-time tracking directory updates
+  const eventSource = new EventSource(import.meta.env.VITE_API_URL + '/api/tracking-stream');
+  eventSource.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'update') {
+      console.log('Real-time tracking directory update received!');
+      fetchTrackingDirectory();
+    }
+  };
+
+  // Keep reference to close on unmount
+  window._trackingEventSource = eventSource;
+});
+
+
+onUnmounted(() => {
+  if (window._trackingEventSource) {
+    window._trackingEventSource.close();
+    window._trackingEventSource = null;
   }
 });
 

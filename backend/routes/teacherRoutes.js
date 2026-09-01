@@ -620,36 +620,48 @@ router.post("/login", async (req, res) => {
 });
 
 // ==========================================
-// CHECK STATUS (POLLING FOR BLOCKED USER)
+// CHECK STATUS (SSE FOR BLOCKED USER)
 // ==========================================
-router.get("/check-status", async (req, res) => {
-  try {
-    const teacherName = req.query.name;
-    if (!teacherName) return res.status(400).json({ success: false, message: "Missing name" });
+const sseEmitter = require('../utils/sseEmitter');
 
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-    
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: TEACHER_DATA_SHEET_ID, 
-      range: `'${TEACHER_DATA_TAB}'!A2:Q`
-    });
+router.get("/stream-status", (req, res) => {
+  const teacherName = req.query.name;
+  if (!teacherName) return res.status(400).json({ success: false, message: "Missing name" });
 
-    const rows = response.data.values || [];
-    let isBlocked = false;
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders(); 
 
-    for (const row of rows) {
-      if (String(row[1] || "").trim() === teacherName) {
-        isBlocked = String(row[15] || "").trim().toUpperCase() === "TRUE";
-        break;
-      }
+  // Send an initial connected event
+  res.write(`data: ${JSON.stringify({ type: 'CONNECTED' })}\n\n`);
+
+  const listener = (data) => {
+    // If the blocked teacher matches this connected user
+    if (data.teacherName === teacherName && data.isBlocked) {
+      res.write(`data: ${JSON.stringify({ type: 'BLOCKED' })}\n\n`);
     }
+  };
 
-    res.json({ success: true, isBlocked });
-  } catch (error) {
-    console.error("Check Status Error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+  const classToggledListener = (data) => {
+    // Broadcast class toggle to all connected clients so they can refresh UI
+    res.write(`data: ${JSON.stringify({ type: 'CLASS_TOGGLED', ...data })}\n\n`);
+  };
+
+  const trackingUpdatedListener = () => {
+    // Broadcast tracking updated to all clients
+    res.write(`data: ${JSON.stringify({ type: 'TRACKING_UPDATED' })}\n\n`);
+  };
+
+  sseEmitter.on('teacher_blocked', listener);
+  sseEmitter.on('class_toggled', classToggledListener);
+  sseEmitter.on('tracking_updated', trackingUpdatedListener);
+
+  req.on('close', () => {
+    sseEmitter.off('teacher_blocked', listener);
+    sseEmitter.off('class_toggled', classToggledListener);
+    sseEmitter.off('tracking_updated', trackingUpdatedListener);
+  });
 });
 
 // ==========================================

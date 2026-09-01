@@ -265,7 +265,10 @@ const submitEdit = async () => {
   isSaving.value = true;
   try {
     const token = localStorage.getItem('duc_teacher_token');
-    const teacherName = token ? JSON.parse(token).nameKh || '' : '';
+    let teacherName = token ? JSON.parse(token).nameKh || '' : '';
+    if (route.query.admin === 'true' && route.query.teacher) {
+      teacherName = route.query.teacher;
+    }
 
     const payload = {
       cohort: classData.value.group,
