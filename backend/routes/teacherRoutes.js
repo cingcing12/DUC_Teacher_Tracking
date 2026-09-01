@@ -653,14 +653,20 @@ router.get("/stream-status", (req, res) => {
     res.write(`data: ${JSON.stringify({ type: 'TRACKING_UPDATED' })}\n\n`);
   };
 
+  const mappingUpdatedListener = () => {
+    res.write(`data: ${JSON.stringify({ type: 'MAPPING_UPDATED' })}\n\n`);
+  };
+
   sseEmitter.on('teacher_blocked', listener);
   sseEmitter.on('class_toggled', classToggledListener);
   sseEmitter.on('tracking_updated', trackingUpdatedListener);
+  sseEmitter.on('mapping_updated', mappingUpdatedListener);
 
   req.on('close', () => {
     sseEmitter.off('teacher_blocked', listener);
     sseEmitter.off('class_toggled', classToggledListener);
     sseEmitter.off('tracking_updated', trackingUpdatedListener);
+    sseEmitter.off('mapping_updated', mappingUpdatedListener);
   });
 });
 

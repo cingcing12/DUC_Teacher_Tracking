@@ -190,6 +190,9 @@
                           <div v-if="cls.department && cls.department !== '?'" class="flex items-center px-2.5 py-1 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-purple-100 dark:border-purple-500/20">
                             {{ cls.department }}
                           </div>
+                          <div v-if="cls.majorName && cls.majorName !== '?'" class="flex items-center px-2.5 py-1 bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-pink-100 dark:border-pink-500/20">
+                            {{ cls.majorName }}
+                          </div>
                           <div v-if="cls.generation && cls.generation !== '?'" class="flex items-center px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20">
                             ជំនាន់ទី {{ cls.generation }}
                           </div>
@@ -274,7 +277,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const props = defineProps({ isOpen: Boolean });
@@ -443,7 +446,7 @@ const proceedToTrack = () => {
   if (!selectedClass.value) return;
   const cls = selectedClass.value;
   
-  if (!cls.department || cls.department === '?' || !cls.year || cls.year === '?' || !cls.semester || cls.semester === '?' || !cls.room || cls.room === '?') {
+  if (!cls.department || cls.department === '?' || !cls.majorName || cls.majorName === '?' || !cls.year || cls.year === '?' || !cls.semester || cls.semester === '?' || !cls.room || cls.room === '?') {
     showDataError();
     return;
   }
@@ -452,13 +455,29 @@ const proceedToTrack = () => {
     path: '/tracking',
     query: {
       subject: cls.subject, group: cls.group, room: cls.room, time: cls.time, day: cls.day,
-      year: cls.year, semester: cls.semester, department: cls.department, substituteFor: cls.teacherName
+      year: cls.year, semester: cls.semester, department: cls.department, majorName: cls.majorName, substituteFor: cls.teacherName
     }
   });
   close();
 };
 
 watch(() => props.isOpen, (newVal) => { if (newVal) fetchTabs(); });
+
+const handleSSEUpdate = () => {
+  if (props.isOpen && selectedTab.value) {
+    fetchTabSchedule();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('class-toggled', handleSSEUpdate);
+  window.addEventListener('mapping-updated', handleSSEUpdate);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('class-toggled', handleSSEUpdate);
+  window.removeEventListener('mapping-updated', handleSSEUpdate);
+});
 </script>
 
 <style scoped>

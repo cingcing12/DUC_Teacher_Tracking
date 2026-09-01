@@ -120,9 +120,18 @@ const mapDayToEnglish = (khmerOrMixed) => {
     return khmerOrMixed.split("-")[0].trim();
 };
 
-const parseAttendanceTab = (rows, tabMeta, filterTeacherObj, filterTeachersArray, fallbackDepartment, facultiesList, fetchAll = false) => {
+const parseAttendanceTab = (rows, tabMeta, filterTeacherObj, filterTeachersArray, fallbackDepartment, facultiesList, majorsList, fetchAll = false) => {
     const classes = [];
     if (!rows || rows.length < 7) return classes;
+
+    // Pre-sort lists by key length descending so longer exact matches win (e.g. DES over DE)
+    const sortedFaculties = facultiesList && facultiesList.length > 0 
+        ? [...facultiesList].sort((a, b) => (String(b[0] || '').length) - (String(a[0] || '').length)) 
+        : [];
+        
+    const sortedMajors = majorsList && majorsList.length > 0 
+        ? [...majorsList].sort((a, b) => (String(b[0] || '').length) - (String(a[0] || '').length)) 
+        : [];
 
     let currentDay = "Unknown";
     
@@ -183,12 +192,28 @@ const parseAttendanceTab = (rows, tabMeta, filterTeacherObj, filterTeachersArray
                     semester: tabMeta.semester,
                     department: (() => {
                         if (fallbackDepartment) return fallbackDepartment;
-                        if (facultiesList && facultiesList.length > 0) {
-                            const normalizedGroup = String(group || '').replace(/-/g, '').toLowerCase();
-                            const match = facultiesList.find(r => r[0] && normalizedGroup.includes(String(r[0]).toLowerCase()));
+                        if (sortedFaculties.length > 0) {
+                            const normalizedGroup = String(group || '').replace(/[\s-]/g, '').toLowerCase();
+                            const match = sortedFaculties.find(r => {
+                                if (!r[0]) return false;
+                                const normalizedKey = String(r[0]).replace(/[\s-]/g, '').toLowerCase();
+                                return normalizedGroup.includes(normalizedKey);
+                            });
                             if (match && match[1]) return String(match[1]).trim();
                         }
                         return "?"; // Force it to missing so teacher cannot track it!
+                    })(),
+                    majorName: (() => {
+                        if (sortedMajors.length > 0) {
+                            const normalizedGroup = String(group || '').replace(/[\s-]/g, '').toLowerCase();
+                            const match = sortedMajors.find(r => {
+                                if (!r[0]) return false;
+                                const normalizedKey = String(r[0]).replace(/[\s-]/g, '').toLowerCase();
+                                return normalizedGroup.includes(normalizedKey);
+                            });
+                            if (match && match[1]) return String(match[1]).trim();
+                        }
+                        return "?";
                     })(),
                     teacherName: matchedTeacherName
                 });
@@ -212,7 +237,7 @@ router.get("/my-schedule", async (req, res) => {
     const filterTeacherObj = { cleanName: cleanSearchName };
 
     const cacheData = await scheduleCache.getCache();
-    const { facultiesList, tabs, attendanceData, closedClasses } = cacheData;
+    const { facultiesList, majorsList, tabs, attendanceData, closedClasses } = cacheData;
 
     let myClasses = [];
 
@@ -221,7 +246,7 @@ router.get("/my-schedule", async (req, res) => {
         const rows = rangeData.rows;
         const tabMeta = extractTabMeta(tabName);
         
-        const classesInTab = parseAttendanceTab(rows, tabMeta, filterTeacherObj, null, null, facultiesList);
+        const classesInTab = parseAttendanceTab(rows, tabMeta, filterTeacherObj, null, null, facultiesList, majorsList);
         myClasses = myClasses.concat(classesInTab);
     });
 
@@ -281,7 +306,7 @@ router.get("/department-schedule", async (req, res) => {
     }
 
     const cacheData = await scheduleCache.getCache();
-    const { facultiesList, tabs, attendanceData, closedClasses } = cacheData;
+    const { facultiesList, majorsList, tabs, attendanceData, closedClasses } = cacheData;
 
     let myClasses = [];
 
@@ -290,7 +315,7 @@ router.get("/department-schedule", async (req, res) => {
         const rows = rangeData.rows;
         const tabMeta = extractTabMeta(tabName);
         
-        const classesInTab = parseAttendanceTab(rows, tabMeta, null, teacherNames, departmentName, facultiesList);
+        const classesInTab = parseAttendanceTab(rows, tabMeta, null, teacherNames, departmentName, facultiesList, majorsList);
         myClasses = myClasses.concat(classesInTab);
     });
 
@@ -326,14 +351,14 @@ router.get("/tab-schedule", async (req, res) => {
     if (!tabName) return res.status(400).json({ success: false, message: "Tab name required" });
 
     const cacheData = await scheduleCache.getCache();
-    const { facultiesList, attendanceData, closedClasses } = cacheData;
+    const { facultiesList, majorsList, attendanceData, closedClasses } = cacheData;
 
     const rangeData = attendanceData.find(d => d.tabName === tabName);
     const rows = rangeData ? rangeData.rows : [];
 
     const tabMeta = extractTabMeta(tabName);
     
-    let classes = parseAttendanceTab(rows, tabMeta, null, null, null, facultiesList, true);
+    let classes = parseAttendanceTab(rows, tabMeta, null, null, null, facultiesList, majorsList, true);
     classes = filterClosedClasses(classes, closedClasses);
 
     res.json({ success: true, data: classes });
@@ -349,7 +374,7 @@ router.get("/tab-schedule", async (req, res) => {
 router.get("/all-attendance-classes", async (req, res) => {
   try {
     const cacheData = await scheduleCache.getCache();
-    const { attendanceData, closedClasses } = cacheData;
+    const { attendanceData, closedClasses, majorsList } = cacheData;
 
     let allClasses = [];
 
@@ -358,7 +383,7 @@ router.get("/all-attendance-classes", async (req, res) => {
         const rows = rangeData.rows;
         const tabMeta = extractTabMeta(tabName);
         
-        const classesInTab = parseAttendanceTab(rows, tabMeta, null, null, null, null, true);
+        const classesInTab = parseAttendanceTab(rows, tabMeta, null, null, null, null, majorsList, true);
         
         const mappedClasses = classesInTab.map(c => ({
             ...c,

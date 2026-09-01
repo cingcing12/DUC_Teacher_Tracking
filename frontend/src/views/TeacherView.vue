@@ -190,6 +190,10 @@
                         {{ cls.department }}
                       </div>
 
+                      <div v-if="cls.majorName && cls.majorName !== '?'" class="flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 rounded-md text-[9px] sm:text-xs font-black font-khmer uppercase tracking-widest border border-pink-100 dark:border-pink-500/20 truncate max-w-[120px] sm:max-w-xs" :title="cls.majorName">
+                        {{ cls.majorName }}
+                      </div>
+
                       <div v-if="extractGen(cls.group)" class="flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md text-[9px] sm:text-xs font-black font-khmer uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20">
                         ជំនាន់ទី {{ extractGen(cls.group) }}
                       </div>
@@ -202,10 +206,13 @@
                         ឆមាសទី {{ cls.semester }}
                       </div>
 
-                      <div v-if="cls.department === '?' || cls.year === '?' || cls.semester === '?' || !cls.room || cls.room.trim() === ''" :class="['flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-md text-[9px] sm:text-xs font-black uppercase tracking-widest border border-red-200 dark:border-red-500/30 shadow-sm animate-pulse', language === 'kh' ? 'font-khmer' : '']">
+                      <button 
+                      v-if="cls.department === '?' || !cls.majorName || cls.majorName === '?' || cls.year === '?' || cls.semester === '?' || !cls.room || cls.room.trim() === ''"
+                      @click="showDataError(cls)" 
+                      :class="['flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-md text-[9px] sm:text-xs font-black uppercase tracking-widest border border-red-200 dark:border-red-500/30 shadow-sm animate-pulse', language === 'kh' ? 'font-khmer' : '']">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                         {{ t.incompleteData }}
-                      </div>
+                      </button>
                     </div>
 
                     <!-- 🔥 THE FIX IS HERE -->
@@ -223,7 +230,7 @@
                   <div class="flex flex-row items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-100 dark:border-slate-700/50">
                     
                     <button 
-                      v-if="cls.department !== '?' && cls.year !== '?' && cls.semester !== '?' && cls.room && cls.room.trim() !== ''"
+                      v-if="cls.department !== '?' && cls.majorName && cls.majorName !== '?' && cls.year !== '?' && cls.semester !== '?' && cls.room && cls.room.trim() !== ''"
                       @click="openTrackingForm(cls)" 
                       :class="['flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 bg-indigo-50 dark:bg-indigo-500/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all duration-300', language === 'kh' ? 'font-khmer' : '']"
                     >
@@ -448,7 +455,8 @@ const openTrackingForm = (cls) => {
       day: cls.day,
       year: cls.year,
       semester: cls.semester,
-      department: cls.department
+      department: cls.department,
+      majorName: cls.majorName
     }
   });
 };
@@ -533,6 +541,7 @@ onActivated(() => {
 });
 
 const handleClassToggled = () => refreshTeacherData(false);
+const handleMappingUpdated = () => refreshTeacherData(false);
 
 onMounted(() => {
   const token = localStorage.getItem('duc_teacher_token');
@@ -542,11 +551,13 @@ onMounted(() => {
   }
   refreshTeacherData(true);
   window.addEventListener('class-toggled', handleClassToggled);
+  window.addEventListener('mapping-updated', handleMappingUpdated);
 });
 
 import { onUnmounted } from 'vue';
 onUnmounted(() => {
   window.removeEventListener('class-toggled', handleClassToggled);
+  window.removeEventListener('mapping-updated', handleMappingUpdated);
 });
 
 const displayedSchedule = computed(() => {

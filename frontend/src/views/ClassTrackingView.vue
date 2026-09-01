@@ -34,6 +34,7 @@
               <p :class="[language === 'kh' ? 'font-khmer' : '']">{{ t.cohort }}: <span class="text-indigo-500 dark:text-indigo-400">{{ classData.group }}</span></p>
               
               <span v-if="classData.department && classData.department !== 'Unknown Department'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-fuchsia-100 dark:border-fuchsia-500/20 shadow-sm">{{ classData.department }}</span>
+              <span v-if="classData.majorName && classData.majorName !== '?' && classData.majorName !== 'Unknown Major'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-pink-100 dark:border-pink-500/20 shadow-sm">{{ classData.majorName }}</span>
               <span v-if="extractGen(classData.group)" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20 shadow-sm">ជំនាន់ទី {{ extractGen(classData.group) }}</span>
               <span v-if="classData.year && classData.year !== '?'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-blue-100 dark:border-blue-500/20 shadow-sm">ឆ្នាំទី {{ classData.year }}</span>
               <span v-if="classData.semester && classData.semester !== '?'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-amber-100 dark:border-amber-500/20 shadow-sm">ឆមាសទី {{ classData.semester }}</span>
@@ -255,7 +256,8 @@ const classData = ref({
   day: route.query.day || 'N/A',
   year: route.query.year || '?',
   semester: route.query.semester || '?',
-  department: route.query.department || 'Unknown Department'
+  department: route.query.department || 'Unknown Department',
+  majorName: route.query.majorName || 'Unknown Major'
 });
 
 const substituteFor = ref(route.query.substituteFor || null);
@@ -369,7 +371,9 @@ const submitTrackingData = async () => {
   
   const payload = {
     teacherNameKh: teacher.value.nameKh,
+    semester: classData.value.semester,
     department: classData.value.department,
+    majorName: classData.value.majorName,
     subject: classData.value.subject, // Sends the full string with (G2-Y2) to backend safely!
     cohort: classData.value.group,
     room: classData.value.room,

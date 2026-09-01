@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const { google, auth, SPREADSHEETS } = require("../config/googleClient");
 require("dotenv").config();
-
+const scheduleCache = require('../utils/scheduleCache');
+const sseEmitter = require('../utils/sseEmitter');
 // GET & POST MAJORS
 router.get('/majors', async (req, res) => {
   try {
@@ -24,6 +25,9 @@ router.post('/majors', async (req, res) => {
       await sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEETS.TRACKING, range: "'Majors'!A:B", valueInputOption: "USER_ENTERED", insertDataOption: "INSERT_ROWS", requestBody: { values: [[code, fullName]] }
       });
+      const sseEmitter = require('../utils/sseEmitter');
+      scheduleCache.invalidateCache();
+      sseEmitter.emit('mapping_updated');
       res.json({ success: true, message: "Major added successfully!" });
   } catch (error) { res.status(500).json({ success: false, message: "Error adding major" }); }
 });
@@ -49,8 +53,47 @@ router.post('/faculties', async (req, res) => {
       await sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A:B", valueInputOption: "USER_ENTERED", insertDataOption: "INSERT_ROWS", requestBody: { values: [[code, fullName]] }
       });
+      const sseEmitter = require('../utils/sseEmitter');
+      scheduleCache.invalidateCache();
+      sseEmitter.emit('mapping_updated');
       res.json({ success: true, message: "Faculty added successfully!" });
   } catch (error) { res.status(500).json({ success: false, message: "Error adding faculty" }); }
+});
+
+// EDIT MAJOR
+router.put('/majors/:code', async (req, res) => {
+  try {
+      const { code } = req.params;
+      const { newCode, fullName } = req.body;
+      const authClient = await auth.getClient();
+      const sheets = google.sheets({ version: "v4", auth: authClient });
+
+      const response = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Majors'!A:A" });
+      const rows = response.data.values || [];
+      
+      let rowIndex = -1;
+      for (let i = 0; i < rows.length; i++) {
+          if (rows[i][0] && rows[i][0].trim() === code.trim()) {
+              rowIndex = i + 1; // Google Sheets is 1-indexed
+              break;
+          }
+      }
+
+      if (rowIndex === -1) return res.status(404).json({ success: false, message: "Major not found" });
+
+      await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEETS.TRACKING,
+          range: `'Majors'!A${rowIndex}:B${rowIndex}`,
+          valueInputOption: "USER_ENTERED",
+          requestBody: { values: [[newCode, fullName]] }
+      });
+      
+      const sseEmitter = require('../utils/sseEmitter');
+      const scheduleCache = require('../utils/scheduleCache');
+      scheduleCache.invalidateCache();
+      sseEmitter.emit('mapping_updated');
+      res.json({ success: true, message: "Major updated successfully!", newCode });
+  } catch (error) { res.status(500).json({ success: false, message: "Error updating major" }); }
 });
 
 // DELETE MAJOR
@@ -88,8 +131,47 @@ router.delete('/majors/:code', async (req, res) => {
               }]
           }
       });
+      const sseEmitter = require('../utils/sseEmitter');
+      scheduleCache.invalidateCache();
+      sseEmitter.emit('mapping_updated');
       res.json({ success: true, message: "Major deleted successfully!" });
   } catch (error) { res.status(500).json({ success: false, message: "Error deleting major" }); }
+});
+
+// EDIT FACULTY
+router.put('/faculties/:code', async (req, res) => {
+  try {
+      const { code } = req.params;
+      const { newCode, fullName } = req.body;
+      const authClient = await auth.getClient();
+      const sheets = google.sheets({ version: "v4", auth: authClient });
+
+      const response = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A:A" });
+      const rows = response.data.values || [];
+      
+      let rowIndex = -1;
+      for (let i = 0; i < rows.length; i++) {
+          if (rows[i][0] && rows[i][0].trim() === code.trim()) {
+              rowIndex = i + 1; // Google Sheets is 1-indexed
+              break;
+          }
+      }
+
+      if (rowIndex === -1) return res.status(404).json({ success: false, message: "Faculty not found" });
+
+      await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEETS.TRACKING,
+          range: `'Faculties'!A${rowIndex}:B${rowIndex}`,
+          valueInputOption: "USER_ENTERED",
+          requestBody: { values: [[newCode, fullName]] }
+      });
+      
+      const sseEmitter = require('../utils/sseEmitter');
+      const scheduleCache = require('../utils/scheduleCache');
+      scheduleCache.invalidateCache();
+      sseEmitter.emit('mapping_updated');
+      res.json({ success: true, message: "Faculty updated successfully!", newCode });
+  } catch (error) { res.status(500).json({ success: false, message: "Error updating faculty" }); }
 });
 
 // DELETE FACULTY
@@ -127,6 +209,9 @@ router.delete('/faculties/:code', async (req, res) => {
               }]
           }
       });
+      const sseEmitter = require('../utils/sseEmitter');
+      scheduleCache.invalidateCache();
+      sseEmitter.emit('mapping_updated');
       res.json({ success: true, message: "Faculty deleted successfully!" });
   } catch (error) { res.status(500).json({ success: false, message: "Error deleting faculty" }); }
 });
@@ -218,8 +303,6 @@ router.get('/admin/teachers', async (req, res) => {
   }
 });
 
-const sseEmitter = require('../utils/sseEmitter');
-const scheduleCache = require('../utils/scheduleCache');
 
 router.post('/admin/teachers/update', async (req, res) => {
   try {

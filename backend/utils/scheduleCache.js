@@ -3,6 +3,7 @@ const { google, auth, SPREADSHEETS } = require("../config/googleClient");
 class ScheduleCache {
   constructor() {
     this.facultiesList = [];
+    this.majorsList = [];
     this.tabs = [];
     this.attendanceData = []; // [{ tabName: '...', rows: [...] }]
     this.closedClasses = [];
@@ -21,14 +22,18 @@ class ScheduleCache {
         const authClient = await auth.getClient();
         const sheets = google.sheets({ version: "v4", auth: authClient });
 
-        // 1. Fetch Faculties
+        // 1. Fetch Faculties & Majors
         let facultiesList = [];
+        let majorsList = [];
         try {
             const facRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A2:B" });
             facultiesList = facRes.data.values || [];
-        } catch (e) {
-            console.error("Could not fetch Faculties:", e.message);
-        }
+        } catch (e) { console.error("Could not fetch Faculties:", e.message); }
+        
+        try {
+            const majRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Majors'!A2:B" });
+            majorsList = majRes.data.values || [];
+        } catch (e) { console.error("Could not fetch Majors:", e.message); }
 
         // 2. Fetch Closed Classes
         let closedClasses = [];
@@ -63,6 +68,7 @@ class ScheduleCache {
 
         // Assign to cache
         this.facultiesList = facultiesList;
+        this.majorsList = majorsList;
         this.closedClasses = closedClasses;
         this.tabs = tabs;
         this.attendanceData = attendanceData;
@@ -87,6 +93,7 @@ class ScheduleCache {
     }
     return {
       facultiesList: this.facultiesList,
+      majorsList: this.majorsList,
       closedClasses: this.closedClasses,
       tabs: this.tabs,
       attendanceData: this.attendanceData
@@ -96,6 +103,11 @@ class ScheduleCache {
   // Manually update closed classes to avoid full re-fetch on simple toggle
   updateClosedClasses(newClosedClasses) {
     this.closedClasses = newClosedClasses;
+  }
+
+  // Invalidate cache manually (e.g. when mapping variables are updated)
+  invalidateCache() {
+    this.lastFetchTime = 0;
   }
 }
 

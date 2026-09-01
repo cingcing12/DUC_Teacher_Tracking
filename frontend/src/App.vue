@@ -109,6 +109,8 @@ const setupSSE = () => {
         } else if (data.type === 'CLASS_TOGGLED') {
           // Dispatch a global event so that schedule views can refresh their data
           window.dispatchEvent(new CustomEvent('class-toggled', { detail: data }));
+        } else if (data.type === 'MAPPING_UPDATED') {
+          window.dispatchEvent(new CustomEvent('mapping-updated', { detail: data }));
         } else if (data.type === 'TRACKING_UPDATED') {
           window.dispatchEvent(new CustomEvent('tracking-updated', { detail: data }));
         }
