@@ -540,8 +540,14 @@ onActivated(() => {
   refreshTeacherData(false); 
 });
 
-const handleClassToggled = () => refreshTeacherData(false);
-const handleMappingUpdated = () => refreshTeacherData(false);
+const clearCacheAndRefresh = () => {
+  if (window.clearFetchCache) window.clearFetchCache();
+  refreshTeacherData(false);
+};
+
+const handleClassToggled = clearCacheAndRefresh;
+const handleMappingUpdated = clearCacheAndRefresh;
+const handleTrackingUpdated = clearCacheAndRefresh;
 
 onMounted(() => {
   const token = localStorage.getItem('duc_teacher_token');
@@ -552,12 +558,14 @@ onMounted(() => {
   refreshTeacherData(true);
   window.addEventListener('class-toggled', handleClassToggled);
   window.addEventListener('mapping-updated', handleMappingUpdated);
+  window.addEventListener('tracking-updated', handleTrackingUpdated);
 });
 
 import { onUnmounted } from 'vue';
 onUnmounted(() => {
   window.removeEventListener('class-toggled', handleClassToggled);
   window.removeEventListener('mapping-updated', handleMappingUpdated);
+  window.removeEventListener('tracking-updated', handleTrackingUpdated);
 });
 
 const displayedSchedule = computed(() => {

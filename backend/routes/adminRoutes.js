@@ -4,6 +4,7 @@ const { google, auth, SPREADSHEETS } = require("../config/googleClient");
 require("dotenv").config();
 const scheduleCache = require('../utils/scheduleCache');
 const sseEmitter = require('../utils/sseEmitter');
+const memCache = require('../utils/memCache');
 // GET & POST MAJORS
 router.get('/majors', async (req, res) => {
   try {
@@ -345,9 +346,21 @@ router.post('/admin/teachers/update', async (req, res) => {
       requestBody: { values: values }
     });
 
+    const sseEmitter = require('../utils/sseEmitter');
     if (isBlocked && nameKh) {
       sseEmitter.emit('teacher_blocked', { teacherName: nameKh, isBlocked: true });
     }
+    
+    if (nameKh) {
+      sseEmitter.emit('profile_updated', {
+        teacherName: nameKh,
+        profile: {
+          nameKh, nameEn, dob, gender, role, classGrade, degree, major, phone, email, avatarUrl, joinDate, cerNumber
+        }
+      });
+    }
+
+    memCache.clear(); // Invalidate cache so that login checks fresh data immediately
 
     res.json({ success: true, message: "Teacher updated successfully!" });
   } catch (error) {

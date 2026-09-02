@@ -520,15 +520,23 @@ onMounted(() => {
   const sessionUpdatedHandler = (event) => {
     const newSession = event.detail;
     if (newSession) {
-      // Add the new session directly to the list, instantly!
       sessions.value.unshift(newSession);
     }
   };
 
+  const sessionTerminatedHandler = (event) => {
+    const terminatedSessionId = event.detail;
+    if (terminatedSessionId) {
+      sessions.value = sessions.value.filter(s => s.sessionId !== terminatedSessionId);
+    }
+  };
+
   window.addEventListener('session-updated', sessionUpdatedHandler);
+  window.addEventListener('session-terminated', sessionTerminatedHandler);
   
   onUnmounted(() => {
     window.removeEventListener('session-updated', sessionUpdatedHandler);
+    window.removeEventListener('session-terminated', sessionTerminatedHandler);
   });
 });
 

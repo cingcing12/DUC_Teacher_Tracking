@@ -1128,6 +1128,7 @@ onMounted(async () => {
     const data = JSON.parse(e.data);
     if (data.type === 'update') {
       console.log('Real-time tracking directory update received!');
+      if (window.clearFetchCache) window.clearFetchCache();
       fetchTrackingDirectory();
     }
   };

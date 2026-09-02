@@ -199,6 +199,12 @@ window.addEventListener('local-teacher-change', (e) => {
   }
 });
 
+window.addEventListener('profile-updated', (e) => {
+  if (e.detail) {
+    teacher.value = e.detail;
+  }
+});
+
 const t = computed(() => {
   if (language.value === 'kh') {
     return {

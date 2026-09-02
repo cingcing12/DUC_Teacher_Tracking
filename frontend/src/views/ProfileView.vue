@@ -502,7 +502,17 @@ const executeConfirm = () => {
 };
 
 const promptLogout = () => triggerAlert('confirm', t.value.alertLogoutMsg, t.value.logOutBtn, logout);
-const logout = () => { localStorage.removeItem('duc_teacher_token'); router.push('/login'); };
+const logout = async () => { 
+  if (teacher.value?.sessionId) {
+    try {
+      await fetch(import.meta.env.VITE_API_URL + '/api/security/sessions/' + teacher.value.sessionId, { method: 'DELETE' });
+    } catch(e) {}
+  }
+  localStorage.removeItem('duc_teacher_token'); 
+  router.push('/login'); 
+};
+
+import { onUnmounted } from 'vue';
 
 onMounted(() => {
   const theme = localStorage.getItem('theme') || 'system';
@@ -514,6 +524,16 @@ onMounted(() => {
   const token = localStorage.getItem('duc_teacher_token');
   if (!token) { router.push('/login'); return; }
   teacher.value = JSON.parse(token);
+
+  window.addEventListener('profile-updated', handleProfileUpdate);
+});
+
+const handleProfileUpdate = (event) => {
+  teacher.value = event.detail;
+};
+
+onUnmounted(() => {
+  window.removeEventListener('profile-updated', handleProfileUpdate);
 });
 </script>
 

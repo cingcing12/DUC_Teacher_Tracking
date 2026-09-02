@@ -170,11 +170,20 @@ const classData = ref({
 
 const formatTime = (t) => {
   if (!t) return '';
-  let trimmed = t.trim();
-  if (trimmed.length === 4 && trimmed.indexOf(':') === 1) {
-    trimmed = '0' + trimmed; 
+  let val = t.trim();
+  const match = val.match(/(\d{1,2})[.:](\d{2})\s*(AM|PM|am|pm)?/);
+  
+  if (match) {
+    let hours = parseInt(match[1], 10);
+    const mins = match[2];
+    const ampm = match[3] ? match[3].toUpperCase() : null;
+    
+    if (ampm === 'PM' && hours < 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
+    
+    return `${hours.toString().padStart(2, '0')}:${mins}`;
   }
-  return trimmed.substring(0, 5);
+  return '';
 };
 
 let initialStartTime = '';

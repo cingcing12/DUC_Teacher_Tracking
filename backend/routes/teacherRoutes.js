@@ -17,24 +17,7 @@ cloudinary.config({
 
 const upload = multer({ dest: 'uploads/' });
 
-// ==========================================
-// IN-MEMORY CACHE TO SPEED UP GOOGLE SHEETS
-// ==========================================
-const memCache = {
-  data: {},
-  get: function(key, ttl = 30000) {
-    if (this.data[key] && (Date.now() - this.data[key].timestamp < ttl)) {
-      return this.data[key].value;
-    }
-    return null;
-  },
-  set: function(key, value) {
-    this.data[key] = { value, timestamp: Date.now() };
-  },
-  clear: function() {
-    this.data = {};
-  }
-};
+const memCache = require("../utils/memCache");
 
 // ==========================================
 // SMART PHONE NORMALIZERS
@@ -719,7 +702,11 @@ router.post("/login", async (req, res) => {
     const browser = parser.getBrowser();
     
     let deviceStr = '';
-    if (dev.vendor && dev.model) {
+    const userAgentModel = req.body.deviceModel;
+
+    if (userAgentModel) {
+       deviceStr = `${userAgentModel} (${browser.name || 'Unknown'})`;
+    } else if (dev.vendor && dev.model) {
        deviceStr = `${dev.vendor} ${dev.model} (${browser.name || 'Unknown'})`;
     } else if (dev.vendor) {
        deviceStr = `${dev.vendor} Device (${browser.name || 'Unknown'})`;
@@ -727,7 +714,8 @@ router.post("/login", async (req, res) => {
        deviceStr = `${browser.name || 'Unknown'} on ${os.name || 'Unknown'}`;
     }
     const device = deviceStr;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    let ip = req.body.publicIp || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    if (ip.includes(',')) ip = ip.split(',')[0].trim();
     const geo = geoip.lookup(ip);
     const location = geo ? `${geo.city}, ${geo.country}` : 'Local Network';
     const lastActive = new Date().toISOString();
@@ -818,11 +806,23 @@ router.get("/stream-status", (req, res) => {
     }
   };
 
+  const sessionTerminatedListener = (sessionId) => {
+    res.write(`data: ${JSON.stringify({ type: 'SESSION_TERMINATED', sessionId })}\n\n`);
+  };
+
+  const profileUpdatedListener = (data) => {
+    if (data.teacherName === teacherName) {
+      res.write(`data: ${JSON.stringify({ type: 'PROFILE_UPDATED', profile: data.profile })}\n\n`);
+    }
+  };
+
   sseEmitter.on('teacher_blocked', listener);
   sseEmitter.on('class_toggled', classToggledListener);
   sseEmitter.on('tracking_updated', trackingUpdatedListener);
   sseEmitter.on('mapping_updated', mappingUpdatedListener);
   sseEmitter.on('session_updated', sessionUpdatedListener);
+  sseEmitter.on('terminate_session', sessionTerminatedListener);
+  sseEmitter.on('profile_updated', profileUpdatedListener);
 
   req.on('close', () => {
     sseEmitter.off('teacher_blocked', listener);
@@ -830,6 +830,8 @@ router.get("/stream-status", (req, res) => {
     sseEmitter.off('tracking_updated', trackingUpdatedListener);
     sseEmitter.off('mapping_updated', mappingUpdatedListener);
     sseEmitter.off('session_updated', sessionUpdatedListener);
+    sseEmitter.off('terminate_session', sessionTerminatedListener);
+    sseEmitter.off('profile_updated', profileUpdatedListener);
   });
 });
 
@@ -980,6 +982,11 @@ router.post("/update-avatar-url", async (req, res) => {
         requestBody: { values: [[cleanInputName, phone, avatarUrl]] },
       });
     }
+
+    sseEmitter.emit('profile_updated', {
+      teacherName: cleanInputName,
+      profile: { avatarUrl }
+    });
 
     res.json({ success: true, message: "App Avatar updated successfully!" });
   } catch (error) {

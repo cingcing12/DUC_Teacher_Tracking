@@ -482,14 +482,19 @@ const fetchAllData = async () => {
   }
 };
 
+const handleTrackingUpdated = () => {
+  if (window.clearFetchCache) window.clearFetchCache();
+  fetchAllData();
+};
+
 onMounted(() => {
   fetchAllData();
-  window.addEventListener('tracking-updated', fetchAllData);
+  window.addEventListener('tracking-updated', handleTrackingUpdated);
 });
 
 import { onUnmounted } from 'vue';
 onUnmounted(() => {
-  window.removeEventListener('tracking-updated', fetchAllData);
+  window.removeEventListener('tracking-updated', handleTrackingUpdated);
 });
 
 const uniqueSubjects = computed(() => {

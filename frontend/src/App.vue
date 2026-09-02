@@ -140,6 +140,16 @@ const setupSSE = () => {
           window.dispatchEvent(new CustomEvent('tracking-updated', { detail: data }));
         } else if (data.type === 'SESSION_UPDATED') {
           window.dispatchEvent(new CustomEvent('session-updated', { detail: data.newSession }));
+        } else if (data.type === 'SESSION_TERMINATED') {
+          window.dispatchEvent(new CustomEvent('session-terminated', { detail: data.sessionId }));
+        } else if (data.type === 'PROFILE_UPDATED') {
+          const currentToken = localStorage.getItem('duc_teacher_token');
+          if (currentToken) {
+            const currentTeacher = JSON.parse(currentToken);
+            const updatedTeacher = { ...currentTeacher, ...data.profile };
+            localStorage.setItem('duc_teacher_token', JSON.stringify(updatedTeacher));
+            window.dispatchEvent(new CustomEvent('profile-updated', { detail: updatedTeacher }));
+          }
         }
       } catch (err) {
         console.error("Failed to parse SSE message", err);
@@ -185,8 +195,17 @@ const setupSSE = () => {
 
 // Watch route changes to establish SSE if the user logs in without a page refresh
 watch(() => route.path, (newPath) => {
-  if (!newPath.includes('/login')) {
+  if (!newPath.includes('/login') && newPath !== '/') {
     setupSSE();
+  } else {
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+    if (sessionEventSource) {
+      sessionEventSource.close();
+      sessionEventSource = null;
+    }
   }
 });
 

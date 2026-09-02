@@ -240,13 +240,30 @@ const handleTeacherLogin = async () => {
   isLoading.value = true;
   errorMsg.value = '';
 
+  let clientIp = null;
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipRes.json();
+    if (ipData.ip) clientIp = ipData.ip;
+  } catch (e) {}
+
+  let clientDeviceModel = null;
+  try {
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+      const hints = await navigator.userAgentData.getHighEntropyValues(['model']);
+      if (hints.model) clientDeviceModel = hints.model;
+    }
+  } catch (e) {}
+
   try {
     const response = await fetch(import.meta.env.VITE_API_URL + '/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: teacherForm.value.email.trim(),
-        password: teacherForm.value.password
+        password: teacherForm.value.password,
+        publicIp: clientIp,
+        deviceModel: clientDeviceModel
       })
     });
 

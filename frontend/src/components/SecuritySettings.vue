@@ -287,8 +287,9 @@
                       </div>
                     </div>
                     
-                    <button v-if="selectedSession.sessionId !== currentSessionId" @click="handleTerminateSession(selectedSession.sessionId)" class="mt-6 w-full py-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all hover:shadow-lg hover:shadow-rose-500/20">
-                      Terminate Session
+                    <button v-if="selectedSession.sessionId !== currentSessionId" @click="handleTerminateSession(selectedSession.sessionId)" :disabled="isTerminating" class="mt-6 w-full py-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all hover:shadow-lg hover:shadow-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                      <svg v-if="isTerminating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      {{ isTerminating ? 'Terminating...' : 'Terminate Session' }}
                     </button>
                   </div>
                 </div>
@@ -298,19 +299,21 @@
       </template>
     </div>
     
-    <transition name="fade-scale">
-      <div v-if="customAlert.show" class="fixed inset-0 z-[130] flex items-center justify-center p-4">
+    <Teleport to="body">
+      <transition name="fade-scale">
+        <div v-if="customAlert.show" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-xl transition-opacity" @click="closeAlert"></div>
         <div class="relative w-full max-w-sm bg-white dark:bg-[#0A0A0A] rounded-[2rem] sm:rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-200 dark:border-white/10 flex flex-col z-10 p-6 sm:p-8 text-center ring-1 ring-slate-200 dark:ring-white/5">
-          <div :class="['absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none', customAlert.type === 'success' ? 'bg-emerald-500/20' : 'bg-rose-500/20']"></div>
-          <div :class="['w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full flex items-center justify-center mb-5 sm:mb-6 shadow-2xl relative transition-transform animate-bounce-short', customAlert.type === 'success' ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/40' : 'bg-gradient-to-br from-rose-400 to-red-500 shadow-rose-500/40']">
+          <div :class="['absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none', customAlert.type === 'success' ? 'bg-emerald-500/20' : customAlert.type === 'confirm' ? 'bg-orange-500/20' : 'bg-rose-500/20']"></div>
+          <div :class="['w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full flex items-center justify-center mb-5 sm:mb-6 shadow-2xl relative transition-transform animate-bounce-short', customAlert.type === 'success' ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/40' : customAlert.type === 'confirm' ? 'bg-gradient-to-br from-orange-400 to-amber-500 shadow-orange-500/40' : 'bg-gradient-to-br from-rose-400 to-red-500 shadow-rose-500/40']">
             <div class="absolute inset-0 rounded-full border-2 border-white/30 mix-blend-overlay"></div>
             <svg v-if="customAlert.type === 'success'" class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            <svg v-else-if="customAlert.type === 'confirm'" class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             <svg v-else class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
           </div>
           
           <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 font-sans tracking-tight">
-            {{ customAlert.type === 'success' ? 'Success!' : 'Error' }}
+            {{ customAlert.type === 'success' ? 'Success!' : customAlert.type === 'confirm' ? 'Confirm' : 'Error' }}
           </h3>
           <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-6 sm:mb-8">{{ customAlert.message }}</p>
           
@@ -328,6 +331,7 @@
         </div>
       </div>
     </transition>
+  </Teleport>
 
   </div>
 </template>
@@ -614,21 +618,43 @@ const disable2FA = async (completedToken = null) => {
   }
 };
 
+const isTerminating = ref(false);
+
 const terminateSession = async (id) => {
   try {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/api/security/sessions/${id}`, { method: 'DELETE' });
     const data = await res.json();
     if (data.success) {
       emit('update:sessions', props.sessions.filter(s => s.sessionId !== id));
+      return { success: true };
     }
-  } catch (e) {}
+    return { success: false, message: data.message };
+  } catch (e) {
+    return { success: false, message: 'Network error' };
+  }
 };
 
-const handleTerminateSession = async (id) => {
-  await terminateSession(id);
-  sessionBack();
+const handleTerminateSession = (id) => {
+  showAlert('confirm', 'Are you sure you want to terminate this session?', 'Terminate', async () => {
+    isTerminating.value = true;
+    const result = await terminateSession(id);
+    isTerminating.value = false;
+    if (result && result.success) {
+      sessionBack();
+    } else {
+      setTimeout(() => showAlert('error', result.message || 'Failed to terminate session'), 350);
+    }
+  });
 };
 </script>
+
+<style>
+.fade-scale-enter-active, .fade-scale-leave-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-scale-enter-from, .fade-scale-leave-to { opacity: 0; transform: scale(0.9) translateY(15px); }
+
+@keyframes bounce-short { 0% { transform: scale(0.8); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+.animate-bounce-short { animation: bounce-short 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+</style>
 
 <style scoped>
 .shake-fade-enter-active { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
@@ -642,10 +668,5 @@ const handleTerminateSession = async (id) => {
   40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
-.fade-scale-enter-active, .fade-scale-leave-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-.fade-scale-enter-from, .fade-scale-leave-to { opacity: 0; transform: scale(0.9) translateY(15px); }
-
-@keyframes bounce-short { 0% { transform: scale(0.8); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-.animate-bounce-short { animation: bounce-short 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
 </style>

@@ -629,8 +629,7 @@ onMounted(async () => {
     const data = JSON.parse(e.data);
     if (data.type === 'update') {
       console.log('Real-time history update received!');
-      // Force fresh cache bypass on auto-update
-      localStorage.setItem('force_fresh', 'true');
+      if (window.clearFetchCache) window.clearFetchCache();
       fetchHistory();
     }
   };
