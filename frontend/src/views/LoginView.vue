@@ -53,38 +53,57 @@
             <!-- TEACHER FORM -->
             <form v-if="isTeacherMode" @submit.prevent="handleTeacherLogin" class="space-y-6 relative z-10">
               
-              <!-- Email Field -->
-              <div class="space-y-2.5 animate-slide-up-stagger-2">
-                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 pl-2">Email Address</label>
-                <div class="relative group/input">
-                  <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-indigo-400 transition-colors duration-500 z-20">
-                    <svg class="h-[1.15rem] w-[1.15rem] drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+              <!-- Normal Login Form -->
+              <template v-if="!requires2FA">
+                <!-- Email Field -->
+                <div class="space-y-2.5 animate-slide-up-stagger-2">
+                  <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 pl-2">Email Address</label>
+                  <div class="relative group/input">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-indigo-400 transition-colors duration-500 z-20">
+                      <svg class="h-[1.15rem] w-[1.15rem] drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <input v-model="teacherForm.email" type="email" required class="w-full pl-12 pr-5 py-4.5 bg-[#020408]/60 border border-white/5 rounded-2xl focus:border-indigo-500/50 transition-all duration-300 outline-none text-sm font-bold text-white placeholder-slate-600 shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)] hover:bg-[#020408]/80 focus:bg-[#020408] focus:shadow-[inset_0_2px_15px_rgba(0,0,0,0.8),0_0_25px_rgba(99,102,241,0.15)] relative z-10" placeholder="teacher@duc.edu.kh">
+                    
+                    <div class="absolute bottom-0 left-1/2 right-1/2 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-focus-within/input:opacity-100 group-focus-within/input:left-4 group-focus-within/input:right-4 transition-all duration-500 ease-out z-20"></div>
                   </div>
-                  <input v-model="teacherForm.email" type="email" required class="w-full pl-12 pr-5 py-4.5 bg-[#020408]/60 border border-white/5 rounded-2xl focus:border-indigo-500/50 transition-all duration-300 outline-none text-sm font-bold text-white placeholder-slate-600 shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)] hover:bg-[#020408]/80 focus:bg-[#020408] focus:shadow-[inset_0_2px_15px_rgba(0,0,0,0.8),0_0_25px_rgba(99,102,241,0.15)] relative z-10" placeholder="teacher@duc.edu.kh">
-                  
-                  <!-- Dynamic Bottom Line -->
-                  <div class="absolute bottom-0 left-1/2 right-1/2 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-focus-within/input:opacity-100 group-focus-within/input:left-4 group-focus-within/input:right-4 transition-all duration-500 ease-out z-20"></div>
                 </div>
-              </div>
 
-              <!-- Password Field -->
-              <div class="space-y-2.5 animate-slide-up-stagger-3">
-                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 pl-2">Password</label>
-                <div class="relative group/input">
-                  <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-indigo-400 transition-colors duration-500 z-20">
-                    <svg class="h-[1.15rem] w-[1.15rem] drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <!-- Password Field -->
+                <div class="space-y-2.5 animate-slide-up-stagger-3">
+                  <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 pl-2">Password</label>
+                  <div class="relative group/input">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-indigo-400 transition-colors duration-500 z-20">
+                      <svg class="h-[1.15rem] w-[1.15rem] drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    
+                    <input v-model="teacherForm.password" :type="showTeacherPassword ? 'text' : 'password'" required class="w-full pl-12 pr-12 py-4.5 bg-[#020408]/60 border border-white/5 rounded-2xl focus:border-indigo-500/50 transition-all duration-300 outline-none text-sm font-bold text-white placeholder-slate-600 shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)] hover:bg-[#020408]/80 focus:bg-[#020408] focus:shadow-[inset_0_2px_15px_rgba(0,0,0,0.8),0_0_25px_rgba(99,102,241,0.15)] tracking-widest relative z-10" placeholder="••••••••">
+                    
+                    <button type="button" @click="showTeacherPassword = !showTeacherPassword" class="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-500 hover:text-indigo-400 transition-colors focus:outline-none z-20">
+                      <svg v-if="!showTeacherPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                    </button>
+                    
+                    <div class="absolute bottom-0 left-1/2 right-1/2 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-focus-within/input:opacity-100 group-focus-within/input:left-4 group-focus-within/input:right-4 transition-all duration-500 ease-out z-20"></div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- 2FA Verification Form -->
+              <template v-else>
+                <div class="space-y-6 animate-slide-up-stagger-2 pt-2">
+                  <div class="text-center">
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-2">Two-Factor Authentication</label>
+                    <p class="text-xs text-slate-400 font-medium">Enter the 6-digit code from your authenticator app.</p>
                   </div>
                   
-                  <input v-model="teacherForm.password" :type="showTeacherPassword ? 'text' : 'password'" required class="w-full pl-12 pr-12 py-4.5 bg-[#020408]/60 border border-white/5 rounded-2xl focus:border-indigo-500/50 transition-all duration-300 outline-none text-sm font-bold text-white placeholder-slate-600 shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)] hover:bg-[#020408]/80 focus:bg-[#020408] focus:shadow-[inset_0_2px_15px_rgba(0,0,0,0.8),0_0_25px_rgba(99,102,241,0.15)] tracking-widest relative z-10" placeholder="••••••••">
-                  
-                  <button type="button" @click="showTeacherPassword = !showTeacherPassword" class="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-500 hover:text-indigo-400 transition-colors focus:outline-none z-20">
-                    <svg v-if="!showTeacherPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                    <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                  </button>
-                  
-                  <div class="absolute bottom-0 left-1/2 right-1/2 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-focus-within/input:opacity-100 group-focus-within/input:left-4 group-focus-within/input:right-4 transition-all duration-500 ease-out z-20"></div>
+                  <div class="flex justify-center" :class="{ 'opacity-50 pointer-events-none': isLoading }">
+                    <!-- Apply a dark mode theme wrapper since LoginView forces dark mode -->
+                    <div class="dark">
+                      <OTPInput v-model="code2FA" @complete="verify2FA" />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </template>
 
               <!-- Haptic Error Banner -->
               <transition name="shake-fade">
@@ -105,9 +124,10 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span class="relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{{ isLoading ? 'Authenticating...' : 'Access Portal' }}</span>
+                  <span class="relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{{ isLoading ? 'Authenticating...' : (requires2FA ? 'Verify Code' : 'Access Portal') }}</span>
                   <svg v-if="!isLoading" class="w-4 h-4 group-hover:translate-x-1.5 transition-transform duration-300 relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
+                <button v-if="requires2FA" type="button" @click="requires2FA = false; code2FA = ''" class="w-full text-center mt-4 text-xs font-bold text-slate-500 hover:text-white transition-colors">Cancel</button>
               </div>
             </form>
 
@@ -174,6 +194,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import OTPInput from '../components/OTPInput.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -199,7 +220,18 @@ watch(isTeacherMode, () => {
   showAdminPassword.value = false;
 });
 
+// 2FA States
+const requires2FA = ref(false);
+const code2FA = ref('');
+const pendingTeacherData = ref(null);
+const pendingSessionInfo = ref(null);
+
 const handleTeacherLogin = async () => {
+  if (requires2FA.value) {
+    await verify2FA();
+    return;
+  }
+
   if (!teacherForm.value.email || !teacherForm.value.password) {
     errorMsg.value = "Please fill in all fields.";
     return;
@@ -221,10 +253,52 @@ const handleTeacherLogin = async () => {
     const result = await response.json();
 
     if (result.success) {
+      if (result.requires2FA) {
+        requires2FA.value = true;
+        pendingTeacherData.value = result.teacherTemp;
+        pendingSessionInfo.value = result.sessionInfo;
+      } else {
+        localStorage.setItem('duc_teacher_token', JSON.stringify(result.teacher));
+        router.push('/schedule'); 
+      }
+    } else {
+      errorMsg.value = result.message || "Invalid Email or Password. Please try again.";
+    }
+  } catch (error) {
+    errorMsg.value = "Unable to connect to the server.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const verify2FA = async () => {
+  if (!code2FA.value || code2FA.value.length !== 6) {
+    errorMsg.value = "Please enter a valid 6-digit code.";
+    return;
+  }
+
+  isLoading.value = true;
+  errorMsg.value = '';
+
+  try {
+    const response = await fetch(import.meta.env.VITE_API_URL + '/api/security/2fa/verify-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: teacherForm.value.email.trim(),
+        token: code2FA.value,
+        teacherTemp: pendingTeacherData.value,
+        sessionInfo: pendingSessionInfo.value
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
       localStorage.setItem('duc_teacher_token', JSON.stringify(result.teacher));
       router.push('/schedule'); 
     } else {
-      errorMsg.value = result.message || "Invalid Email or Password. Please try again.";
+      errorMsg.value = result.message || "Invalid 2FA code.";
     }
   } catch (error) {
     errorMsg.value = "Unable to connect to the server.";

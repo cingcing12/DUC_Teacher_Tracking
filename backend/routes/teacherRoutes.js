@@ -5,6 +5,9 @@ require("dotenv").config();
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
+const { v4: uuidv4 } = require('uuid');
+const UAParser = require('ua-parser-js');
+const geoip = require('geoip-lite');
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -13,6 +16,25 @@ cloudinary.config({
 });
 
 const upload = multer({ dest: 'uploads/' });
+
+// ==========================================
+// IN-MEMORY CACHE TO SPEED UP GOOGLE SHEETS
+// ==========================================
+const memCache = {
+  data: {},
+  get: function(key, ttl = 30000) {
+    if (this.data[key] && (Date.now() - this.data[key].timestamp < ttl)) {
+      return this.data[key].value;
+    }
+    return null;
+  },
+  set: function(key, value) {
+    this.data[key] = { value, timestamp: Date.now() };
+  },
+  clear: function() {
+    this.data = {};
+  }
+};
 
 // ==========================================
 // SMART PHONE NORMALIZERS
@@ -44,11 +66,15 @@ const normalizeText = (str) => {
 // ==========================================
 async function getAvatarUrl(sheets, nameKh, phone) {
   try {
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEETS.TRACKING,
-      range: "'Avatars'!A2:C500", 
-    });
-    const rows = res.data.values;
+    let rows = memCache.get('avatars_data', 60000);
+    if (!rows) {
+      const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEETS.TRACKING,
+        range: "'Avatars'!A2:C500", 
+      });
+      rows = res.data.values || [];
+      memCache.set('avatars_data', rows);
+    }
     if (!rows) return null;
 
     const cleanInputName = normalizeText(nameKh ? String(nameKh).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '') : "");
@@ -84,6 +110,9 @@ const parseYearSem = (text) => {
 // ==========================================
 router.get("/departments", async (req, res) => {
   try {
+    const cached = memCache.get('departments');
+    if (cached) return res.json({ success: true, data: cached });
+
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
@@ -94,6 +123,7 @@ router.get("/departments", async (req, res) => {
       .map((sheet) => sheet.properties.title)
       .filter((name) => !name.toLowerCase().includes("schedule") && !name.toLowerCase().includes("year"));
 
+    memCache.set('departments', sheetNames);
     res.json({ success: true, data: sheetNames });
   } catch (error) {
     res.status(500).json({ success: false, message: "Could not load tabs" });
@@ -108,6 +138,10 @@ router.get("/teachers", async (req, res) => {
     const tabName = req.query.tab;
     if (!tabName) return res.status(400).json({ success: false, message: "No tab provided" });
 
+    const cacheKey = `teachers_${tabName}`;
+    const cached = memCache.get(cacheKey);
+    if (cached) return res.json({ success: true, data: cached });
+
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
@@ -120,11 +154,16 @@ router.get("/teachers", async (req, res) => {
 
     let allAvatars = [];
     try {
-      const avatarRes = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        range: "'Avatars'!A2:C500",
-      });
-      allAvatars = avatarRes.data.values || [];
+      let rows = memCache.get('avatars_data', 60000);
+      if (!rows) {
+        const avatarRes = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEETS.TRACKING,
+          range: "'Avatars'!A2:C500",
+        });
+        rows = avatarRes.data.values || [];
+        memCache.set('avatars_data', rows);
+      }
+      allAvatars = rows;
     } catch(e) {}
 
     const dynamicSubjectColumns = [];
@@ -267,6 +306,7 @@ router.get("/teachers", async (req, res) => {
       }
     }
     
+    memCache.set(cacheKey, teachers);
     res.json({ success: true, data: teachers });
   } catch (error) {
     console.error(error);
@@ -488,6 +528,7 @@ router.post("/update-teacher", async (req, res) => {
       }).catch(e => console.log("Merge completed or skipped if identical."));
     }
 
+    memCache.clear(); // Clear cache when any update happens!
     res.json({ success: true, message: "Teacher updated perfectly in Google Sheets!" });
   } catch(error) {
     console.error("Update error:", error);
@@ -524,12 +565,15 @@ router.post("/login", async (req, res) => {
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: TEACHER_DATA_SHEET_ID, 
-      range: `'${TEACHER_DATA_TAB}'!A2:Q`
-    });
-
-    const rows = response.data.values || [];
+    let rows = memCache.get('login_teacher_data', 600000); // 10 minutes TTL for login data
+    if (!rows) {
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: TEACHER_DATA_SHEET_ID, 
+        range: `'${TEACHER_DATA_TAB}'!A2:Q`
+      });
+      rows = response.data.values || [];
+      memCache.set('login_teacher_data', rows);
+    }
     let loggedInTeacher = null;
 
     for (const row of rows) {
@@ -574,44 +618,155 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ success: false, message: "Incorrect Email or Password!" });
     }
 
-    // 2. FETCH THE AVATAR 
-    loggedInTeacher.avatarUrl = await getAvatarUrl(sheets, loggedInTeacher.nameKh, loggedInTeacher.phone);
-
-    // 3. SCAN DEPARTMENT TABS
-    const allSheetsRes = await sheets.spreadsheets.get({
-      spreadsheetId: SPREADSHEETS.TEACHER,
-    });
-    const sheetNames = allSheetsRes.data.sheets.map((sheet) => sheet.properties.title);
+    // 2. FETCH AVATAR, 2FA, AND TABS CONCURRENTLY WITH CACHING
+    const cacheKeySheets = 'all_teacher_sheets';
+    let allSheetsRes = memCache.get(cacheKeySheets, 600000); // 10 minutes TTL
+    
+    const promiseList = [
+      getAvatarUrl(sheets, loggedInTeacher.nameKh, loggedInTeacher.phone)
+    ];
+    
+    const cacheKey2FA = '2fa_data';
+    let resGet2FA = memCache.get(cacheKey2FA, 30000); // 30s TTL
+    
+    if (!resGet2FA) {
+      promiseList.push(
+        sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.SECURITY, range: "'2FA'!A:B" })
+          .catch(() => ({ data: { values: [] } }))
+          .then(res => {
+            memCache.set(cacheKey2FA, res);
+            return res;
+          })
+      );
+    } else {
+      promiseList.push(Promise.resolve(resGet2FA));
+    }
+    
+    if (!allSheetsRes) {
+      promiseList.push(sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TEACHER }).then(res => {
+        memCache.set(cacheKeySheets, res);
+        return res;
+      }));
+    } else {
+      promiseList.push(Promise.resolve(allSheetsRes));
+    }
+    
+    const [avatarUrl, fetched2FA, fetchedSheetsRes] = await Promise.all(promiseList);
+    resGet2FA = fetched2FA;
+    allSheetsRes = fetchedSheetsRes;
+    
+    loggedInTeacher.avatarUrl = avatarUrl;
+    
+    // 3. SCAN DEPARTMENT TABS EFFICIENTLY USING batchGet
+    const sheetNames = allSheetsRes.data.sheets
+      .map((sheet) => sheet.properties.title)
+      .filter((tab) => !tab.toLowerCase().includes("schedule") && !tab.toLowerCase().includes("year"));
     
     let foundDepartments = []; 
     const cleanInputNameKh = cleanTeacherName(loggedInTeacher.nameKh).toLowerCase();
     const cleanInputNameEn = cleanTeacherName(loggedInTeacher.nameEn).toLowerCase();
-
-    for (const tab of sheetNames) {
-      if (tab.toLowerCase().includes("schedule") || tab.toLowerCase().includes("year")) continue;
-
-      const sheetData = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEETS.TEACHER, 
-        range: `'${tab}'!A5:C500`, 
-      });
-      const deptRows = sheetData.data.values;
-      if (!deptRows) continue;
-
-      for (const r of deptRows) {
-        const dbNameKh = cleanTeacherName(r[1] ? r[1].trim() : "").toLowerCase();
-        const dbNameEn = cleanTeacherName(r[2] ? r[2].trim() : "").toLowerCase();
+    
+    if (sheetNames.length > 0) {
+      const batchCacheKey = 'departments_batch_data';
+      let valueRanges = memCache.get(batchCacheKey, 600000); // 10 minutes TTL
+      
+      if (!valueRanges) {
+        const ranges = sheetNames.map(tab => `'${tab}'!A5:C500`);
+        const batchRes = await sheets.spreadsheets.values.batchGet({
+          spreadsheetId: SPREADSHEETS.TEACHER,
+          ranges: ranges
+        });
+        valueRanges = batchRes.data.valueRanges || [];
+        memCache.set(batchCacheKey, valueRanges);
+      }
+      
+      for (let i = 0; i < valueRanges.length; i++) {
+        const deptRows = valueRanges[i].values || [];
+        const tabName = sheetNames[i];
         
-        if ((dbNameKh !== "" && dbNameKh === cleanInputNameKh) || (dbNameEn !== "" && dbNameEn === cleanInputNameEn)) {
-          if (!foundDepartments.includes(tab)) {
-              foundDepartments.push(tab);
+        for (const r of deptRows) {
+          const dbNameKh = cleanTeacherName(r[1] ? r[1].trim() : "").toLowerCase();
+          const dbNameEn = cleanTeacherName(r[2] ? r[2].trim() : "").toLowerCase();
+          
+          if ((dbNameKh !== "" && dbNameKh === cleanInputNameKh) || (dbNameEn !== "" && dbNameEn === cleanInputNameEn)) {
+            if (!foundDepartments.includes(tabName)) {
+                foundDepartments.push(tabName);
+            }
+            break; 
           }
-          break; 
         }
       }
     }
 
     loggedInTeacher.department = foundDepartments.join(", ");
-    res.json({ success: true, message: "Login successful!", teacher: loggedInTeacher });
+    
+    // Check 2FA Status
+    const rows2FA = resGet2FA.data.values || [];
+    let has2FA = false;
+    let secret2FA = null;
+    for (const r of rows2FA) {
+      if (r[0] === loggedInTeacher.email && r[1]) {
+        has2FA = true;
+        secret2FA = r[1];
+        break;
+      }
+    }
+
+    const sessionId = uuidv4();
+    const parser = new UAParser(req.headers['user-agent']);
+    const dev = parser.getDevice();
+    const os = parser.getOS();
+    const browser = parser.getBrowser();
+    
+    let deviceStr = '';
+    if (dev.vendor && dev.model) {
+       deviceStr = `${dev.vendor} ${dev.model} (${browser.name || 'Unknown'})`;
+    } else if (dev.vendor) {
+       deviceStr = `${dev.vendor} Device (${browser.name || 'Unknown'})`;
+    } else {
+       deviceStr = `${browser.name || 'Unknown'} on ${os.name || 'Unknown'}`;
+    }
+    const device = deviceStr;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const geo = geoip.lookup(ip);
+    const location = geo ? `${geo.city}, ${geo.country}` : 'Local Network';
+    const lastActive = new Date().toISOString();
+
+    if (has2FA) {
+      res.json({ 
+        success: true, 
+        requires2FA: true, 
+        message: "2FA Required", 
+        teacherTemp: loggedInTeacher,
+        sessionInfo: { sessionId, device, ip, location, lastActive }
+      });
+    } else {
+      // Save Session Asynchronously (Do NOT block the user from logging in!)
+      sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEETS.SECURITY,
+        range: "'Sessions'!A:G",
+        valueInputOption: "USER_ENTERED",
+        insertDataOption: "INSERT_ROWS",
+        requestBody: { values: [[sessionId, loggedInTeacher.email, device, ip, location, lastActive, 'ACTIVE']] }
+      }).then(() => {
+        // Notify other devices of the new session INSTANTLY with payload
+        sseEmitter.emit('session_updated', { 
+          teacherName: loggedInTeacher.nameKh,
+          newSession: {
+            sessionId,
+            email: loggedInTeacher.email,
+            device,
+            ip,
+            location,
+            lastActive,
+            status: 'ACTIVE'
+          }
+        });
+      }).catch(e => console.error("Could not save session", e));
+      
+      loggedInTeacher.sessionId = sessionId;
+      res.json({ success: true, message: "Login successful!", teacher: loggedInTeacher });
+    }
     
   } catch (error) {
     console.error("Login Error:", error);
@@ -657,16 +812,24 @@ router.get("/stream-status", (req, res) => {
     res.write(`data: ${JSON.stringify({ type: 'MAPPING_UPDATED' })}\n\n`);
   };
 
+  const sessionUpdatedListener = (data) => {
+    if (data.teacherName === teacherName) {
+      res.write(`data: ${JSON.stringify({ type: 'SESSION_UPDATED', newSession: data.newSession })}\n\n`);
+    }
+  };
+
   sseEmitter.on('teacher_blocked', listener);
   sseEmitter.on('class_toggled', classToggledListener);
   sseEmitter.on('tracking_updated', trackingUpdatedListener);
   sseEmitter.on('mapping_updated', mappingUpdatedListener);
+  sseEmitter.on('session_updated', sessionUpdatedListener);
 
   req.on('close', () => {
     sseEmitter.off('teacher_blocked', listener);
     sseEmitter.off('class_toggled', classToggledListener);
     sseEmitter.off('tracking_updated', trackingUpdatedListener);
     sseEmitter.off('mapping_updated', mappingUpdatedListener);
+    sseEmitter.off('session_updated', sessionUpdatedListener);
   });
 });
 

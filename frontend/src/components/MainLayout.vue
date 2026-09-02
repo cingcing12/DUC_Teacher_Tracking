@@ -211,7 +211,7 @@ const t = computed(() => {
     };
   }
   return {
-    universityName: 'Digital University Of Cambodia',
+    universityName: 'Digital University of Cambodia',
     schedule: 'Schedule',
     stats: 'Stats',
     support: 'Support',

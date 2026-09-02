@@ -34,6 +34,24 @@
       </div>
     </div>
   </transition>
+
+  <!-- Session Terminated Modal -->
+  <transition name="fade-scale">
+    <div v-if="isSessionTerminated" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md px-4">
+      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center border border-amber-500/30 transform transition-all animate-bounce-short">
+        <div class="w-20 h-20 mx-auto bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-6 shadow-inner">
+          <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Session Terminated</h2>
+        <p class="text-slate-500 dark:text-slate-400 mb-8 text-sm leading-relaxed">
+          Your session was terminated from another device. Please log in again to continue.
+        </p>
+        <button @click="handleLogoutRedirect" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-6 rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-500/30">
+          Return to Login
+        </button>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <script setup>
@@ -44,6 +62,7 @@ const route = useRoute();
 const router = useRouter();
 
 const isBlockedGlobal = ref(false);
+const isSessionTerminated = ref(false);
 const globalError = ref(null);
 
 onErrorCaptured((err, instance, info) => {
@@ -74,16 +93,22 @@ const layoutComponent = computed(() => {
 
 const handleLogoutRedirect = () => {
   isBlockedGlobal.value = false;
+  isSessionTerminated.value = false;
   localStorage.removeItem('duc_teacher_token');
   if (eventSource) {
     eventSource.close();
     eventSource = null;
+  }
+  if (sessionEventSource) {
+    sessionEventSource.close();
+    sessionEventSource = null;
   }
   if (router) router.push('/login');
   else window.location.href = '/login';
 };
 
 let eventSource = null;
+let sessionEventSource = null;
 
 const setupSSE = () => {
   if (eventSource) return; // Already connected
@@ -113,6 +138,8 @@ const setupSSE = () => {
           window.dispatchEvent(new CustomEvent('mapping-updated', { detail: data }));
         } else if (data.type === 'TRACKING_UPDATED') {
           window.dispatchEvent(new CustomEvent('tracking-updated', { detail: data }));
+        } else if (data.type === 'SESSION_UPDATED') {
+          window.dispatchEvent(new CustomEvent('session-updated', { detail: data.newSession }));
         }
       } catch (err) {
         console.error("Failed to parse SSE message", err);
@@ -126,6 +153,31 @@ const setupSSE = () => {
         eventSource = null;
       }
     };
+
+    // Setup Session Terminated SSE
+    if (teacher.sessionId) {
+      sessionEventSource = new EventSource(`${import.meta.env.VITE_API_URL}/api/security/stream-session?sessionId=${encodeURIComponent(teacher.sessionId)}`);
+      
+      sessionEventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'TERMINATED') {
+            isSessionTerminated.value = true;
+            if (sessionEventSource) {
+              sessionEventSource.close();
+              sessionEventSource = null;
+            }
+          }
+        } catch (err) {}
+      };
+
+      sessionEventSource.onerror = () => {
+        if (sessionEventSource) {
+          sessionEventSource.close();
+          sessionEventSource = null;
+        }
+      };
+    }
   } catch (error) {
     console.error("Failed to setup SSE", error);
   }
@@ -162,6 +214,10 @@ onUnmounted(() => {
   if (eventSource) {
     eventSource.close();
     eventSource = null;
+  }
+  if (sessionEventSource) {
+    sessionEventSource.close();
+    sessionEventSource = null;
   }
 });
 </script>

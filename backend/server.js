@@ -7,6 +7,7 @@ const teacherRoutes = require("./routes/teacherRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const trackingRoutes = require("./routes/trackingRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const securityRoutes = require("./routes/securityRoutes");
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use("/api", teacherRoutes);
 app.use("/api", scheduleRoutes);
 app.use("/api", trackingRoutes);
 app.use("/api", adminRoutes);
+app.use("/api", securityRoutes);
 
 app.get("/", (req, res) => {
     res.status(200).json({ 
