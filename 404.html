@@ -9,8 +9,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Moul&family=Moulpali&family=Kantumruy+Pro:wght@400;500;600;700;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/DUC_Teacher_Tracking/assets/index-FOOLt5cX.js"></script>
-    <link rel="stylesheet" crossorigin href="/DUC_Teacher_Tracking/assets/index-B8SBKR59.css">
+    
+    <!-- Prevent Theme Flash -->
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('theme');
+          if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="/DUC_Teacher_Tracking/assets/index-fWSPB7Dt.js"></script>
+    <link rel="stylesheet" crossorigin href="/DUC_Teacher_Tracking/assets/index-CmVCuOm5.css">
   </head>
   <body>
     <div id="app"></div>
