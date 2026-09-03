@@ -18,7 +18,7 @@
       <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-cyan-500/20 dark:bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none z-0 animate-pulse-slow" style="animation-delay: 2s;"></div>
 
       <!-- Main Content Area with Sliding Transition -->
-      <div class="relative w-full overflow-hidden">
+      <div class="relative w-full overflow-hidden pt-4 -mt-4">
         <div class="grid min-h-[700px]">
           <transition :name="transitionName">
             
@@ -518,8 +518,9 @@ onMounted(() => {
   }
   
   const sessionUpdatedHandler = (event) => {
-    const newSession = event.detail;
-    if (newSession) {
+    const payload = event.detail;
+    const newSession = payload.newSession || payload;
+    if (newSession && newSession.sessionId) {
       sessions.value.unshift(newSession);
     }
   };
@@ -531,12 +532,18 @@ onMounted(() => {
     }
   };
 
+  const tfaUpdatedHandler = (event) => {
+    has2FA.value = event.detail;
+  };
+
   window.addEventListener('session-updated', sessionUpdatedHandler);
   window.addEventListener('session-terminated', sessionTerminatedHandler);
+  window.addEventListener('2fa-updated', tfaUpdatedHandler);
   
   onUnmounted(() => {
     window.removeEventListener('session-updated', sessionUpdatedHandler);
     window.removeEventListener('session-terminated', sessionTerminatedHandler);
+    window.removeEventListener('2fa-updated', tfaUpdatedHandler);
   });
 });
 

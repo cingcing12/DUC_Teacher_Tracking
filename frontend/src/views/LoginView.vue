@@ -302,7 +302,7 @@ const verify2FA = async () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: teacherForm.value.email.trim(),
+        email: pendingTeacherData.value.email,
         token: code2FA.value,
         teacherTemp: pendingTeacherData.value,
         sessionInfo: pendingSessionInfo.value

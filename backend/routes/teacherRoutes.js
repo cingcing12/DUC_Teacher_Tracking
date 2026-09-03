@@ -721,6 +721,40 @@ router.post("/login", async (req, res) => {
     const lastActive = new Date().toISOString();
 
     if (has2FA) {
+      // Fire-and-forget notification for the 2FA attempt
+      const notifId = uuidv4();
+      const timestamp = new Date().toISOString();
+      const title = '2FA Login Attempt';
+      const message = `A login attempt with your password was made on ${device} from ${location || 'Local Network'}. Waiting for 2FA verification.`;
+      
+      sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEETS.SECURITY,
+        range: "'Notifications'!A:H",
+        valueInputOption: "USER_ENTERED",
+        insertDataOption: "INSERT_ROWS",
+        requestBody: { values: [[notifId, loggedInTeacher.email, sessionId, title, message, 'TRUE', timestamp, 'FALSE']] }
+      }).then(() => {
+        sseEmitter.emit('session_updated', { 
+          teacherName: loggedInTeacher.nameKh,
+          newSession: {
+            sessionId,
+            email: loggedInTeacher.email,
+            device,
+            ip,
+            location,
+            lastActive,
+            status: 'PENDING_2FA'
+          },
+          notification: {
+            id: notifId,
+            title,
+            message,
+            isUnread: true,
+            timestamp
+          }
+        });
+      }).catch(e => console.error("Could not save 2FA attempt notification", e));
+
       res.json({ 
         success: true, 
         requires2FA: true, 
@@ -729,15 +763,29 @@ router.post("/login", async (req, res) => {
         sessionInfo: { sessionId, device, ip, location, lastActive }
       });
     } else {
-      // Save Session Asynchronously (Do NOT block the user from logging in!)
-      sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEETS.SECURITY,
-        range: "'Sessions'!A:G",
-        valueInputOption: "USER_ENTERED",
-        insertDataOption: "INSERT_ROWS",
-        requestBody: { values: [[sessionId, loggedInTeacher.email, device, ip, location, lastActive, 'ACTIVE']] }
-      }).then(() => {
-        // Notify other devices of the new session INSTANTLY with payload
+      // Save Session and Notification Asynchronously (fire-and-forget) to keep login fast
+      const notifId = uuidv4();
+      const timestamp = new Date().toISOString();
+      const title = 'New Device Login';
+      const message = `Login detected on ${device} from ${location || 'Local Network'}`;
+
+      Promise.all([
+        sheets.spreadsheets.values.append({
+          spreadsheetId: SPREADSHEETS.SECURITY,
+          range: "'Sessions'!A:G",
+          valueInputOption: "USER_ENTERED",
+          insertDataOption: "INSERT_ROWS",
+          requestBody: { values: [[sessionId, loggedInTeacher.email, device, ip, location, lastActive, 'ACTIVE']] }
+        }),
+        sheets.spreadsheets.values.append({
+          spreadsheetId: SPREADSHEETS.SECURITY,
+          range: "'Notifications'!A:H",
+          valueInputOption: "USER_ENTERED",
+          insertDataOption: "INSERT_ROWS",
+          requestBody: { values: [[notifId, loggedInTeacher.email, sessionId, title, message, 'TRUE', timestamp, 'FALSE']] }
+        })
+      ]).then(() => {
+        // Notify other devices (and this device, if listening) that the session is in the DB
         sseEmitter.emit('session_updated', { 
           teacherName: loggedInTeacher.nameKh,
           newSession: {
@@ -748,9 +796,16 @@ router.post("/login", async (req, res) => {
             location,
             lastActive,
             status: 'ACTIVE'
+          },
+          notification: {
+            id: notifId,
+            title,
+            message,
+            isUnread: true,
+            timestamp
           }
         });
-      }).catch(e => console.error("Could not save session", e));
+      }).catch(e => console.error("Background save failed:", e));
       
       loggedInTeacher.sessionId = sessionId;
       res.json({ success: true, message: "Login successful!", teacher: loggedInTeacher });
@@ -769,6 +824,7 @@ const sseEmitter = require('../utils/sseEmitter');
 
 router.get("/stream-status", (req, res) => {
   const teacherName = req.query.name;
+  const teacherEmail = req.query.email;
   if (!teacherName) return res.status(400).json({ success: false, message: "Missing name" });
 
   res.setHeader('Content-Type', 'text/event-stream');
@@ -802,7 +858,7 @@ router.get("/stream-status", (req, res) => {
 
   const sessionUpdatedListener = (data) => {
     if (data.teacherName === teacherName) {
-      res.write(`data: ${JSON.stringify({ type: 'SESSION_UPDATED', newSession: data.newSession })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: 'SESSION_UPDATED', newSession: data.newSession, notification: data.notification })}\n\n`);
     }
   };
 
@@ -816,6 +872,24 @@ router.get("/stream-status", (req, res) => {
     }
   };
 
+  const notificationDeletedListener = (data) => {
+    if (data.email === teacherEmail) {
+      res.write(`data: ${JSON.stringify({ type: 'NOTIFICATION_DELETED', id: data.id })}\n\n`);
+    }
+  };
+
+  const notificationsReadListener = (data) => {
+    if (data.email === teacherEmail) {
+      res.write(`data: ${JSON.stringify({ type: 'NOTIFICATIONS_READ' })}\n\n`);
+    }
+  };
+
+  const tfaUpdatedListener = (data) => {
+    if (data.email === teacherEmail) {
+      res.write(`data: ${JSON.stringify({ type: '2FA_UPDATED', enabled: data.enabled })}\n\n`);
+    }
+  };
+
   sseEmitter.on('teacher_blocked', listener);
   sseEmitter.on('class_toggled', classToggledListener);
   sseEmitter.on('tracking_updated', trackingUpdatedListener);
@@ -823,6 +897,9 @@ router.get("/stream-status", (req, res) => {
   sseEmitter.on('session_updated', sessionUpdatedListener);
   sseEmitter.on('terminate_session', sessionTerminatedListener);
   sseEmitter.on('profile_updated', profileUpdatedListener);
+  sseEmitter.on('notification_deleted', notificationDeletedListener);
+  sseEmitter.on('notifications_read', notificationsReadListener);
+  sseEmitter.on('2fa_updated', tfaUpdatedListener);
 
   req.on('close', () => {
     sseEmitter.off('teacher_blocked', listener);
@@ -832,6 +909,9 @@ router.get("/stream-status", (req, res) => {
     sseEmitter.off('session_updated', sessionUpdatedListener);
     sseEmitter.off('terminate_session', sessionTerminatedListener);
     sseEmitter.off('profile_updated', profileUpdatedListener);
+    sseEmitter.off('notification_deleted', notificationDeletedListener);
+    sseEmitter.off('notifications_read', notificationsReadListener);
+    sseEmitter.off('2fa_updated', tfaUpdatedListener);
   });
 });
 

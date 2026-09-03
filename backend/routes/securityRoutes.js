@@ -23,6 +23,9 @@ async function ensureSecurityTabs(sheets) {
     if (!existingTitles.includes('Sessions')) {
       requests.push({ addSheet: { properties: { title: 'Sessions' } } });
     }
+    if (!existingTitles.includes('Notifications')) {
+      requests.push({ addSheet: { properties: { title: 'Notifications' } } });
+    }
     
     if (requests.length > 0) {
       await sheets.spreadsheets.batchUpdate({
@@ -45,6 +48,14 @@ async function ensureSecurityTabs(sheets) {
           range: "'Sessions'!A1:G1",
           valueInputOption: "USER_ENTERED",
           requestBody: { values: [['SessionId', 'Email', 'Device', 'IP', 'Location', 'LastActive', 'Status']] }
+        });
+      }
+      if (!existingTitles.includes('Notifications')) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEETS.SECURITY,
+          range: "'Notifications'!A1:H1",
+          valueInputOption: "USER_ENTERED",
+          requestBody: { values: [['Id', 'Email', 'SessionId', 'Title', 'Message', 'IsUnread', 'Timestamp', 'IsDeleted']] }
         });
       }
     }
@@ -193,6 +204,8 @@ router.post('/security/2fa/enable', async (req, res) => {
       });
     }
 
+    sseEmitter.emit('2fa_updated', { email, enabled: true });
+
     res.json({ success: true, message: '2FA enabled successfully' });
   } catch (error) {
     console.error(error);
@@ -227,15 +240,29 @@ router.post('/security/2fa/verify-login', async (req, res) => {
     const isValid = authenticator.verify({ token, secret });
     if (!isValid) return res.status(400).json({ success: false, message: 'Invalid 2FA code' });
 
-    // Save Session Asynchronously
-    sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEETS.SECURITY,
-      range: "'Sessions'!A:G",
-      valueInputOption: "USER_ENTERED",
-      insertDataOption: "INSERT_ROWS",
-      requestBody: { values: [[sessionInfo.sessionId, email, sessionInfo.device, sessionInfo.ip, sessionInfo.location, sessionInfo.lastActive, 'ACTIVE']] }
-    }).then(() => {
-      // Notify other devices of the new session instantly with payload
+    // Save Session and Notification Asynchronously (fire-and-forget)
+    const notifId = uuidv4();
+    const timestamp = new Date().toISOString();
+    const title = 'New Device Login';
+    const message = `Login detected on ${sessionInfo.device} from ${sessionInfo.location || 'Local Network'}`;
+
+    Promise.all([
+      sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEETS.SECURITY,
+        range: "'Sessions'!A:G",
+        valueInputOption: "USER_ENTERED",
+        insertDataOption: "INSERT_ROWS",
+        requestBody: { values: [[sessionInfo.sessionId, email, sessionInfo.device, sessionInfo.ip, sessionInfo.location, sessionInfo.lastActive, 'ACTIVE']] }
+      }),
+      sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEETS.SECURITY,
+        range: "'Notifications'!A:H",
+        valueInputOption: "USER_ENTERED",
+        insertDataOption: "INSERT_ROWS",
+        requestBody: { values: [[notifId, email, sessionInfo.sessionId, title, message, 'TRUE', timestamp, 'FALSE']] }
+      })
+    ]).then(() => {
+      // Notify other devices (and this device, if listening) that the session is in the DB
       sseEmitter.emit('session_updated', { 
         teacherName: teacherTemp.nameKh,
         newSession: {
@@ -246,9 +273,16 @@ router.post('/security/2fa/verify-login', async (req, res) => {
           location: sessionInfo.location,
           lastActive: sessionInfo.lastActive,
           status: 'ACTIVE'
+        },
+        notification: {
+          id: notifId,
+          title,
+          message,
+          isUnread: true,
+          timestamp
         }
       });
-    }).catch(e => console.error("Could not save session", e));
+    }).catch(e => console.error("Background save failed:", e));
 
     teacherTemp.sessionId = sessionInfo.sessionId;
     res.json({ success: true, message: "Login successful!", teacher: teacherTemp });
@@ -300,6 +334,8 @@ router.post('/security/2fa/disable', async (req, res) => {
         }]
       }
     });
+
+    sseEmitter.emit('2fa_updated', { email, enabled: false });
 
     res.json({ success: true, message: '2FA disabled successfully' });
   } catch (error) {
@@ -438,6 +474,134 @@ router.get("/security/stream-session", async (req, res) => {
     }
   } catch (error) {
     console.error("Failed to verify initial session status", error);
+  }
+});
+
+// --- NOTIFICATIONS API ---
+
+// 7. Get Notifications
+router.get('/security/notifications', async (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+
+  try {
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+    await ensureSecurityTabs(sheets);
+    
+    const resGet = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEETS.SECURITY,
+      range: "'Notifications'!A2:H"
+    });
+    
+    const rows = resGet.data.values || [];
+    const notifications = rows
+      .filter(r => r[1] === email && r[7] !== 'TRUE') // Not deleted
+      .map(r => ({
+        id: r[0],
+        email: r[1],
+        sessionId: r[2],
+        title: r[3],
+        message: r[4],
+        isUnread: r[5] === 'TRUE',
+        timestamp: r[6]
+      }))
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Newest first
+      
+    res.json({ success: true, notifications });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// 8. Mark all Notifications as Read
+router.put('/security/notifications/read', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+
+  try {
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+    
+    const resGet = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEETS.SECURITY,
+      range: "'Notifications'!A:H"
+    });
+    
+    const rows = resGet.data.values || [];
+    const updates = [];
+    
+    // Find rows that belong to email and are unread (Column F is index 5)
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i][1] === email && rows[i][5] === 'TRUE' && rows[i][7] !== 'TRUE') {
+        updates.push({
+          range: `'Notifications'!F${i + 1}`,
+          values: [['FALSE']]
+        });
+      }
+    }
+    
+    if (updates.length > 0) {
+      await sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId: SPREADSHEETS.SECURITY,
+        requestBody: {
+          valueInputOption: "USER_ENTERED",
+          data: updates
+        }
+      });
+      // Notify other tabs/devices
+      sseEmitter.emit('notifications_read', { email });
+    }
+
+    res.json({ success: true, message: 'Notifications marked as read' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// 9. Soft-delete a Notification
+router.delete('/security/notifications/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+    
+    const resGet = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEETS.SECURITY,
+      range: "'Notifications'!A:H"
+    });
+    
+    const rows = resGet.data.values || [];
+    let rowIndex = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][0] === id) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+    
+    if (rowIndex > -1) {
+      // Mark as deleted in Column H (Index 7)
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEETS.SECURITY,
+        range: `'Notifications'!H${rowIndex}`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [['TRUE']] }
+      });
+      
+      const emailOfDeleted = rows[rowIndex - 1][1];
+      sseEmitter.emit('notification_deleted', { email: emailOfDeleted, id });
+      
+      res.json({ success: true, message: 'Notification deleted' });
+    } else {
+      res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 

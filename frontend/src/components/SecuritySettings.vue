@@ -576,13 +576,17 @@ const enable2FA = async (completedToken = null) => {
     });
     const data = await res.json();
     if (data.success) {
-      tfMsg.value = '2FA Enabled!';
+      tfMsg.value = '';
+      token2FA.value = '';
+      showAlert('success', 'Two-Factor Authentication has been successfully enabled.');
       emit('update:has2FA', true);
     } else {
-      tfMsg.value = data.message;
+      token2FA.value = '';
+      showAlert('error', data.message || 'Invalid 2FA code');
     }
   } catch (e) {
-    tfMsg.value = 'Network error';
+    token2FA.value = '';
+    showAlert('error', 'Network error');
   } finally {
     tfLoading.value = false;
   }
@@ -606,13 +610,17 @@ const disable2FA = async (completedToken = null) => {
     });
     const data = await res.json();
     if (data.success) {
-      emit('update:has2FA', false);
+      tfMsg.value = '';
       token2FA.value = '';
+      showAlert('success', 'Two-Factor Authentication has been successfully disabled.');
+      emit('update:has2FA', false);
     } else {
-      tfMsg.value = data.message;
+      token2FA.value = '';
+      showAlert('error', data.message || 'Invalid 2FA code');
     }
   } catch (e) {
-    tfMsg.value = 'Network error';
+    token2FA.value = '';
+    showAlert('error', 'Network error');
   } finally {
     tfLoading.value = false;
   }

@@ -71,6 +71,48 @@
               </button>
             </div>
 
+            <!-- Notifications Bell -->
+            <div class="relative mr-2" ref="notifContainer">
+              <button @click="toggleNotifications" :class="['relative w-11 h-11 flex items-center justify-center rounded-full transition-all duration-500 border group outline-none overflow-hidden', showNotifications ? 'bg-indigo-50 dark:bg-slate-800 border-indigo-400 dark:border-indigo-500 text-indigo-500 dark:text-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.3)] scale-110' : 'bg-white/80 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-50/50 dark:hover:bg-slate-800 hover:shadow-[0_10px_20px_rgba(99,102,241,0.15)]']">
+                <svg class="w-[18px] h-[18px] relative z-10 transform transition-transform duration-500 ease-out group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                <!-- Badge -->
+                <span v-if="unreadCount > 0" class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-slate-800 rounded-full animate-pulse z-20"></span>
+              </button>
+              
+              <!-- Dropdown Panel -->
+              <transition name="fade-scale">
+                <div v-if="showNotifications" class="absolute top-[3.5rem] right-0 w-[320px] bg-white/95 dark:bg-[#060B14]/95 backdrop-blur-[40px] rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_60px_-15px_rgba(99,102,241,0.3)] border border-slate-200 dark:border-slate-700/50 p-4 z-[100] transform origin-top-right">
+                  <div class="flex justify-between items-center mb-4 px-1">
+                    <h3 :class="['font-black text-slate-800 dark:text-white text-[15px]', language === 'kh' ? 'font-khmer' : '']">{{ t.notificationsTitle }}</h3>
+                    <button v-if="unreadCount > 0" @click="markAllAsRead" class="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">{{ t.markAllRead }}</button>
+                  </div>
+                  
+                  <div v-if="notifications.length === 0" class="text-center py-8 text-slate-500 text-sm font-medium flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+                      <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    </div>
+                    <span :class="language === 'kh' ? 'font-khmer' : ''">{{ t.noNotifications }}</span>
+                  </div>
+                  
+                  <div v-else class="space-y-2 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+                    <div v-for="notif in notifications" :key="notif.id" :class="['p-3 rounded-2xl border transition-all duration-300 cursor-pointer relative overflow-hidden group', notif.isUnread ? 'bg-indigo-50/80 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/40' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-800']" @click="handleNotificationClick(notif)">
+                      <div v-if="notif.isUnread" class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500"></div>
+                      <div class="flex justify-between items-start mb-1.5 pl-2">
+                        <span class="font-black text-xs pr-6" :class="notif.isUnread ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'">{{ notif.title }}</span>
+                        <div class="flex items-center gap-2">
+                          <span class="text-[9px] font-bold text-slate-400 whitespace-nowrap">{{ formatTime(notif.timestamp) }}</span>
+                          <button @click.stop="deleteNotification(notif.id, $event)" class="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 -mr-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                          </button>
+                        </div>
+                      </div>
+                      <p class="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium pl-2 pr-4">{{ notif.message }}</p>
+                    </div>
+                  </div>
+                </div>
+              </transition>
+            </div>
+
             <!-- Settings Gear (Liquid Rotate) -->
             <button @click="router.push('/settings')" :class="['relative w-11 h-11 flex items-center justify-center rounded-full transition-all duration-500 border group outline-none overflow-hidden', route.path === '/settings' ? 'bg-white dark:bg-slate-800 border-amber-400 dark:border-amber-500 text-amber-500 dark:text-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.4)] scale-110' : 'bg-white/80 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:border-amber-300 dark:hover:border-amber-500/50 hover:bg-amber-50/50 dark:hover:bg-slate-800 hover:shadow-[0_10px_20px_rgba(245,158,11,0.15)]']">
               <div v-if="route.path === '/settings'" class="absolute inset-0 bg-gradient-to-br from-amber-300/20 to-orange-500/20 z-0 animate-spin-slow"></div>
@@ -100,6 +142,47 @@
         </div>
       </div>
     </nav>
+
+    <!-- MOBILE ONLY: FLOATING NOTIFICATION BELL -->
+    <div v-if="!hideMobileBell" class="sm:hidden fixed top-4 right-4 z-[60]" ref="mobileNotifContainer">
+      <button @click="toggleMobileNotifications" :class="['relative w-11 h-11 flex items-center justify-center rounded-full transition-all duration-500 border group outline-none overflow-hidden shadow-lg backdrop-blur-md', showMobileNotifications ? 'bg-indigo-50 dark:bg-slate-800 border-indigo-400 dark:border-indigo-500 text-indigo-500 dark:text-indigo-400' : 'bg-white/80 dark:bg-[#060B14]/80 border-slate-200/80 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:border-indigo-300']">
+        <svg class="w-[18px] h-[18px] relative z-10 transform transition-transform duration-500 ease-out group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+        <span v-if="unreadCount > 0" class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-slate-800 rounded-full animate-pulse z-20"></span>
+      </button>
+
+      <!-- Dropdown Panel (Mobile) -->
+      <transition name="fade-scale">
+        <div v-if="showMobileNotifications" class="absolute top-14 right-0 w-[85vw] max-w-[320px] bg-white/95 dark:bg-[#060B14]/95 backdrop-blur-[40px] rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_60px_-15px_rgba(99,102,241,0.3)] border border-slate-200 dark:border-slate-700/50 p-4 z-[100] transform origin-top-right">
+          <div class="flex justify-between items-center mb-4 px-1">
+            <h3 :class="['font-black text-slate-800 dark:text-white text-[15px]', language === 'kh' ? 'font-khmer' : '']">{{ t.notificationsTitle }}</h3>
+            <button v-if="unreadCount > 0" @click="markAllAsRead" class="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">{{ t.markAllRead }}</button>
+          </div>
+          
+          <div v-if="notifications.length === 0" class="text-center py-8 text-slate-500 text-sm font-medium flex flex-col items-center justify-center">
+            <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+              <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+            </div>
+            <span :class="language === 'kh' ? 'font-khmer' : ''">{{ t.noNotifications }}</span>
+          </div>
+          
+          <div v-else class="space-y-2 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+            <div v-for="notif in notifications" :key="notif.id" :class="['p-3 rounded-2xl border transition-all duration-300 cursor-pointer relative overflow-hidden', notif.isUnread ? 'bg-indigo-50/80 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/40' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-800']" @click="handleNotificationClick(notif)">
+              <div v-if="notif.isUnread" class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500"></div>
+              <div class="flex justify-between items-start mb-1.5 pl-2">
+                <span class="font-black text-xs pr-6" :class="notif.isUnread ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'">{{ notif.title }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-[9px] font-bold text-slate-400 whitespace-nowrap">{{ formatTime(notif.timestamp) }}</span>
+                  <button @click.stop="deleteNotification(notif.id, $event)" class="text-slate-400 hover:text-red-500 p-1 -mr-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  </button>
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium pl-2 pr-4">{{ notif.message }}</p>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </div>
 
     <!-- 🏝️ DYNAMIC FLOATING ISLAND (MOBILE NAV) -->
     <div class="sm:hidden fixed bottom-6 left-4 right-4 z-50">
@@ -162,12 +245,89 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
 const route = useRoute();
 const teacher = ref(null);
+
+const showNotifications = ref(false);
+const showMobileNotifications = ref(false);
+const notifications = ref([]);
+const notifContainer = ref(null);
+const mobileNotifContainer = ref(null);
+
+const unreadCount = computed(() => notifications.value.filter(n => n.isUnread).length);
+
+const hideMobileBell = computed(() => {
+  const hiddenRoutes = ['/tracking', '/edit-lesson', '/history'];
+  return hiddenRoutes.includes(route.path);
+});
+
+const toggleNotifications = () => {
+  showNotifications.value = !showNotifications.value;
+};
+
+const toggleMobileNotifications = () => {
+  showMobileNotifications.value = !showMobileNotifications.value;
+};
+
+const closeNotifications = (e) => {
+  if (showNotifications.value && notifContainer.value && !notifContainer.value.contains(e.target)) {
+    showNotifications.value = false;
+  }
+  if (showMobileNotifications.value && mobileNotifContainer.value && !mobileNotifContainer.value.contains(e.target)) {
+    showMobileNotifications.value = false;
+  }
+};
+
+const markAllAsRead = async () => {
+  if (notifications.value.length === 0) return;
+  notifications.value.forEach(n => n.isUnread = false);
+  try {
+    if (teacher.value && teacher.value.email) {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/security/notifications/read`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: teacher.value.email })
+      });
+    }
+  } catch(e) {
+    console.error("Failed to mark notifications as read", e);
+  }
+};
+
+const deleteNotification = async (id, e) => {
+  if (e) e.stopPropagation();
+  notifications.value = notifications.value.filter(n => n.id !== id);
+  try {
+    await fetch(`${import.meta.env.VITE_API_URL}/api/security/notifications/${id}`, {
+      method: 'DELETE'
+    });
+  } catch(e) {
+    console.error("Failed to delete notification", e);
+  }
+};
+
+const handleNotificationClick = (notif) => {
+  notif.isUnread = false;
+  showNotifications.value = false;
+  showMobileNotifications.value = false;
+  router.push('/settings');
+};
+
+const formatTime = (date) => {
+  if (!date) return '';
+  const now = new Date();
+  const diffMs = now - new Date(date);
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHrs = Math.floor(diffMins / 60);
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  return new Date(date).toLocaleDateString();
+};
 
 // --- LANGUAGE STATE & DICTIONARY ---
 const language = ref(localStorage.getItem('app_lang') || 'en');
@@ -213,7 +373,10 @@ const t = computed(() => {
       stats: 'ស្ថិតិ',
       support: 'ជំនួយ',
       settings: 'ការកំណត់',
-      profile: 'ប្រវត្តិរូប'
+      profile: 'ប្រវត្តិរូប',
+      notificationsTitle: 'ការជូនដំណឹង',
+      markAllRead: 'សម្គាល់ថាបានអានទាំងអស់',
+      noNotifications: 'គ្មានការជូនដំណឹងថ្មីទេ'
     };
   }
   return {
@@ -222,15 +385,78 @@ const t = computed(() => {
     stats: 'Stats',
     support: 'Support',
     settings: 'Settings',
-    profile: 'Profile'
+    profile: 'Profile',
+    notificationsTitle: 'Notifications',
+    markAllRead: 'Mark all read',
+    noNotifications: 'No new notifications'
   };
 });
 
 onMounted(() => {
-  const token = localStorage.getItem('duc_teacher_token');
+    const token = localStorage.getItem('duc_teacher_token');
   if (token) {
     teacher.value = JSON.parse(token);
+    
+    // Fetch notifications from server
+    if (teacher.value.email) {
+      fetch(`${import.meta.env.VITE_API_URL}/api/security/notifications?email=${encodeURIComponent(teacher.value.email)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.notifications) {
+            // Filter out notifications that were triggered by THIS current session
+            notifications.value = data.notifications.filter(n => n.sessionId !== teacher.value.sessionId);
+          }
+        })
+        .catch(e => console.error("Failed to load notifications", e));
+    }
   }
+
+  // Handle new login session notifications
+  const sessionUpdatedGlobalHandler = (event) => {
+    const payload = event.detail;
+    if (token && payload) {
+      try {
+        const currentTeacher = JSON.parse(token);
+        // The payload might contain newSession and notification
+        const newSession = payload.newSession || payload; // Fallback for backward compatibility
+        
+        if (newSession.sessionId !== currentTeacher.sessionId) {
+          if (payload.notification) {
+            notifications.value.unshift(payload.notification);
+          } else {
+            notifications.value.unshift({
+              id: Date.now(),
+              title: language.value === 'kh' ? 'បានរកឃើញការចូលប្រើថ្មី!' : 'New Login Detected!',
+              message: language.value === 'kh' ? `មានការចូលប្រើពី ${newSession.device} នៅ ${newSession.location}។` : `A login was detected from ${newSession.device} in ${newSession.location}.`,
+              isUnread: true,
+              timestamp: new Date()
+            });
+          }
+        }
+      } catch (e) {}
+    }
+  };
+  window.addEventListener('session-updated', sessionUpdatedGlobalHandler);
+  
+  const notificationDeletedHandler = (event) => {
+    const id = event.detail;
+    notifications.value = notifications.value.filter(n => n.id !== id);
+  };
+  window.addEventListener('notification-deleted', notificationDeletedHandler);
+
+  const notificationsReadHandler = () => {
+    notifications.value.forEach(n => n.isUnread = false);
+  };
+  window.addEventListener('notifications-read', notificationsReadHandler);
+
+  document.addEventListener('click', closeNotifications);
+  
+  onUnmounted(() => {
+    window.removeEventListener('session-updated', sessionUpdatedGlobalHandler);
+    window.removeEventListener('notification-deleted', notificationDeletedHandler);
+    window.removeEventListener('notifications-read', notificationsReadHandler);
+    document.removeEventListener('click', closeNotifications);
+  });
 });
 </script>
 
@@ -266,4 +492,19 @@ onMounted(() => {
   50% { opacity: 1; transform: scale(1.05); }
 }
 .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
+
+.fade-scale-enter-active, .fade-scale-leave-active { transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-scale-enter-from, .fade-scale-leave-to { opacity: 0; transform: scale(0.9) translateY(-10px); }
+
+/* Custom Scrollbar for Notifications Dropdown */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+}
 </style>

@@ -120,7 +120,7 @@ const setupSSE = () => {
     const teacher = JSON.parse(token);
     if (!teacher || !teacher.nameKh) return;
 
-    eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/api/stream-status?name=${encodeURIComponent(teacher.nameKh)}`);
+    eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/api/stream-status?name=${encodeURIComponent(teacher.nameKh)}&email=${encodeURIComponent(teacher.email)}`);
     
     eventSource.onmessage = (event) => {
       try {
@@ -139,9 +139,15 @@ const setupSSE = () => {
         } else if (data.type === 'TRACKING_UPDATED') {
           window.dispatchEvent(new CustomEvent('tracking-updated', { detail: data }));
         } else if (data.type === 'SESSION_UPDATED') {
-          window.dispatchEvent(new CustomEvent('session-updated', { detail: data.newSession }));
+          window.dispatchEvent(new CustomEvent('session-updated', { detail: data }));
         } else if (data.type === 'SESSION_TERMINATED') {
           window.dispatchEvent(new CustomEvent('session-terminated', { detail: data.sessionId }));
+        } else if (data.type === 'NOTIFICATION_DELETED') {
+          window.dispatchEvent(new CustomEvent('notification-deleted', { detail: data.id }));
+        } else if (data.type === 'NOTIFICATIONS_READ') {
+          window.dispatchEvent(new CustomEvent('notifications-read'));
+        } else if (data.type === '2FA_UPDATED') {
+          window.dispatchEvent(new CustomEvent('2fa-updated', { detail: data.enabled }));
         } else if (data.type === 'PROFILE_UPDATED') {
           const currentToken = localStorage.getItem('duc_teacher_token');
           if (currentToken) {
