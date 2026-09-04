@@ -356,8 +356,8 @@ const goToHistory = (clsData) => {
   router.push({
     path: '/history',
     query: {
-      subject: clsData.subject,
-      group: clsData.cohort,
+      subject: clsData.originalSubject,
+      group: clsData.originalCohort,
       teacher: teacher.value?.nameKh || ''
     }
   });
@@ -501,9 +501,18 @@ const uniqueSubjects = computed(() => {
   const subs = new Map();
   allHistory.value.forEach(h => {
     if (h.subject) {
-      const lower = h.subject.trim().toLowerCase();
+      let lower = h.subject.trim().toLowerCase();
+      let displaySubject = h.subject.trim();
+      
+      if (h.notes && h.notes.includes('[ថែមម៉ោង]')) {
+          if (lower === 'unknown subject' || !lower) {
+              displaySubject = 'ថ្នាក់ថែមម៉ោង (Extra Class)';
+              lower = 'extra_class';
+          }
+      }
+      
       if (!subs.has(lower)) {
-        subs.set(lower, h.subject.trim());
+        subs.set(lower, displaySubject);
       }
     }
   });
@@ -535,7 +544,15 @@ const computedStats = computed(() => {
       if (lessonMonth !== monthFilter.value) return; 
     }
 
-    if (classFilter.value && (lesson.subject || '').trim().toLowerCase() !== classFilter.value.trim().toLowerCase()) return;
+    if (classFilter.value) {
+      let filterCheckSubject = (lesson.subject || '').trim().toLowerCase();
+      if (lesson.notes && lesson.notes.includes('[ថែមម៉ោង]')) {
+          if (filterCheckSubject === 'unknown subject' || !filterCheckSubject) {
+              filterCheckSubject = 'ថ្នាក់ថែមម៉ោង (Extra Class)'.toLowerCase();
+          }
+      }
+      if (filterCheckSubject !== classFilter.value.trim().toLowerCase()) return;
+    }
 
     let mins = 0;
     if (lesson.hours) {
@@ -562,14 +579,26 @@ const computedStats = computed(() => {
     totalLessons++;
 
     // Normalize key to group "Strength of material II" and "Strength of Material II" together
-    const normSubject = (lesson.subject || '').trim().toLowerCase();
-    const key = `${normSubject}|${lesson.cohort}`;
+    let normSubject = (lesson.subject || '').trim().toLowerCase();
+    let displaySubject = lesson.subject ? lesson.subject.trim() : '';
+    let displayCohort = lesson.cohort || 'Unknown';
+    
+    if (lesson.notes && lesson.notes.includes('[ថែមម៉ោង]')) {
+        if (normSubject === 'unknown subject' || !normSubject) {
+            displaySubject = 'ថ្នាក់ថែមម៉ោង (Extra Class)';
+            displayCohort = 'Extra Hours';
+            normSubject = 'extra_class';
+        }
+    }
+    
+    const key = `${normSubject}|${displayCohort}`;
     
     if (!breakdown[key]) {
       breakdown[key] = { 
-        subject: lesson.subject.trim(), // Use the first encountered case formatting as the display name
-
-        cohort: lesson.cohort, 
+        originalSubject: lesson.subject.trim(),
+        originalCohort: lesson.cohort || 'Unknown',
+        subject: displaySubject, // Use the first encountered case formatting as the display name
+        cohort: displayCohort, 
         room: lesson.room || '',
         daysSet: new Set(),
         daysStr: '',
@@ -701,13 +730,14 @@ const getFacultyName = (cohortCode) => {
 
 // 🔥 NATIVE PDF PRINT GENERATOR
 const triggerPrint = (clsData) => {
-  const maj = getMajorName(clsData.cohort);
-  const dept = getFacultyName(clsData.cohort);
+  const maj = getMajorName(clsData.originalCohort);
+  const dept = getFacultyName(clsData.originalCohort);
 
   printData.value = {
     ...clsData,
-    major: maj,
-    department: dept
+    cohort: clsData.cohort, // Print the 'Extra Hours' label if it's extra class
+    major: clsData.originalCohort === 'Unknown' ? '' : maj,
+    department: clsData.originalCohort === 'Unknown' ? '' : dept
   };
   
   // Wait for Vue to render the HTML, then trigger native browser print

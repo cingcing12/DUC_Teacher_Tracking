@@ -24,9 +24,9 @@
           
           <div class="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 font-khmer mt-2">
             <button @click="navigateLevel(0)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 0 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">All Generations</button>
-            <template v-if="trackingLevel >= 1"><span class="opacity-50">/</span><button @click="navigateLevel(1)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 1 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">{{ selectedGen }}</button></template>
-            <template v-if="trackingLevel >= 2"><span class="opacity-50">/</span><button @click="navigateLevel(2)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 2 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">ឆ្នាំទី {{ selectedYear }}</button></template>
-            <template v-if="trackingLevel >= 3"><span class="opacity-50">/</span><button @click="navigateLevel(3)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 3 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">ឆមាសទី {{ selectedSem }}</button></template>
+            <template v-if="trackingLevel >= 1"><span class="opacity-50">/</span><button @click="navigateLevel(1)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 1 || (selectedGen === 'Unknown' && trackingLevel === 3) ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">{{ selectedGen === 'Unknown' ? 'ថ្នាក់ថែមម៉ោង (Extra Classes)' : selectedGen }}</button></template>
+            <template v-if="trackingLevel >= 2 && selectedGen !== 'Unknown'"><span class="opacity-50">/</span><button @click="navigateLevel(2)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 2 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">ឆ្នាំទី {{ selectedYear }}</button></template>
+            <template v-if="trackingLevel >= 3 && selectedGen !== 'Unknown'"><span class="opacity-50">/</span><button @click="navigateLevel(3)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 3 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">ឆមាសទី {{ selectedSem }}</button></template>
           </div>
         </div>
 
@@ -57,7 +57,7 @@
                 <div class="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-emerald-100 dark:ring-emerald-500/20 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </div>
-                <h3 class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white font-khmer tracking-tight">{{ gen }}</h3>
+                <h3 class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white font-khmer tracking-tight">{{ gen === 'Unknown' ? 'ថ្នាក់ថែមម៉ោង (Extra Classes)' : gen }}</h3>
                 <p class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-3 flex items-center justify-between group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
                   Explore Years
                   <span class="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
@@ -211,8 +211,8 @@
                           class="text-left flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300 font-khmer hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                         >
                           <svg class="w-4 h-4 opacity-50 group-hover/subject:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                          <span class="underline decoration-dashed decoration-slate-300 dark:decoration-slate-600 group-hover/subject:decoration-emerald-500 transition-colors">{{ cls.subject }}</span>
-                          <span class="text-[9px] font-mono font-normal bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 group-hover/subject:text-emerald-500 group-hover/subject:bg-emerald-50 dark:group-hover/subject:bg-emerald-500/10 transition-colors">{{ getCohortName(cls) }}</span>
+                          <span class="underline decoration-dashed decoration-slate-300 dark:decoration-slate-600 group-hover/subject:decoration-emerald-500 transition-colors">{{ cls.subject === 'Unknown Subject' ? 'ថ្នាក់ថែមម៉ោង (Extra Class)' : cls.subject }}</span>
+                          <span class="text-[9px] font-mono font-normal bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 group-hover/subject:text-emerald-500 group-hover/subject:bg-emerald-50 dark:group-hover/subject:bg-emerald-500/10 transition-colors">{{ cls.cohort === 'Unknown' ? 'Extra Hours' : getCohortName(cls) }}</span>
                           <span v-if="cls.isClosed" class="text-[9px] font-black uppercase text-rose-500 bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 rounded ml-1 tracking-widest border border-rose-100 dark:border-rose-500/20">Closed</span>
                         </button>
                         <button 
@@ -232,12 +232,12 @@
                         {{ dept }}
                       </div>
 
-                      <div v-if="teacherItem.year && teacherItem.year !== '?'" class="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-blue-100 dark:border-blue-500/20 shadow-sm shrink-0">
+                      <div v-if="teacherItem.year && teacherItem.year !== '?' && teacherItem.year !== 'Unknown'" class="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-blue-100 dark:border-blue-500/20 shadow-sm shrink-0">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         ឆ្នាំទី {{ teacherItem.year }}
                       </div>
 
-                      <div v-if="teacherItem.semester && teacherItem.semester !== '?'" class="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-amber-100 dark:border-amber-500/20 shadow-sm shrink-0">
+                      <div v-if="teacherItem.semester && teacherItem.semester !== '?' && teacherItem.semester !== 'Unknown'" class="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-black font-khmer uppercase tracking-widest border border-amber-100 dark:border-amber-500/20 shadow-sm shrink-0">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         ឆមាសទី {{ teacherItem.semester }}
                       </div>
@@ -987,7 +987,7 @@ const availableGenerations = computed(() => {
 const availableYears = computed(() => {
   const items = trackingDirectory.value.filter(i => i.generation === selectedGen.value);
   const years = new Set(items.map(i => i.year || '?'));
-  return Array.from(years).sort();
+  return Array.from(years).sort().filter(y => y !== 'Unknown');
 });
 
 // LEVEL 2: Semesters
@@ -1145,22 +1145,39 @@ onUnmounted(() => {
   }
 });
 
-const selectGen = (gen) => { selectedGen.value = gen; trackingLevel.value = 1; };
+const selectGen = (gen) => { 
+  selectedGen.value = gen; 
+  if (gen === 'Unknown') {
+    selectedYear.value = '?';
+    selectedSem.value = '?';
+    trackingLevel.value = 3; 
+    currentPage.value = 1; 
+    searchQuery.value = '';
+  } else {
+    trackingLevel.value = 1; 
+  }
+};
 const selectYear = (year) => { selectedYear.value = year; trackingLevel.value = 2; };
 const selectSem = (sem) => { selectedSem.value = sem; trackingLevel.value = 3; currentPage.value = 1; searchQuery.value = ''; };
 
 const navigateLevel = (level) => {
-  trackingLevel.value = level;
-  if (level === 0) { selectedGen.value = ''; selectedYear.value = ''; selectedSem.value = ''; }
-  if (level === 1) { selectedYear.value = ''; selectedSem.value = ''; }
-  if (level === 2) { selectedSem.value = ''; }
+  if (selectedGen.value === 'Unknown' && level > 0) {
+    trackingLevel.value = 3;
+    selectedYear.value = '?';
+    selectedSem.value = '?';
+  } else {
+    trackingLevel.value = level;
+    if (level === 0) { selectedGen.value = ''; selectedYear.value = ''; selectedSem.value = ''; }
+    if (level === 1) { selectedYear.value = ''; selectedSem.value = ''; }
+    if (level === 2) { selectedSem.value = ''; }
+  }
   currentPage.value = 1;
   searchQuery.value = '';
 };
 
 const navigateToHistory = (teacherNode, autoPrint = false) => {
   const query = { 
-    group: teacherNode.tab, 
+    group: teacherNode.cohort, 
     subject: teacherNode.subject,
     admin: 'true',
     year: teacherNode.year,

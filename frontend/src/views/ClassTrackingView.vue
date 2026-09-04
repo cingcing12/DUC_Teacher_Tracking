@@ -22,15 +22,22 @@
               អ្នកកំពុងស្រង់វត្តមានជំនួសលោកគ្រូ/អ្នកគ្រូ {{ substituteFor }}
             </div>
 
+            <div v-if="isExtraClass && classData.subject !== 'Unknown Subject'" class="mb-3 sm:mb-4 bg-purple-100/80 dark:bg-purple-500/20 border border-purple-300 dark:border-purple-500/30 rounded-xl p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 text-purple-800 dark:text-purple-300 font-khmer font-bold shadow-sm text-xs sm:text-sm">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+              អ្នកកំពុងស្រង់វត្តមានសម្រាប់ថ្នាក់ថែមម៉ោង (Make-up Class)
+            </div>
+
             <div :class="['inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4', language === 'kh' ? 'font-khmer' : '']">
               <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-500 animate-pulse"></span>
               {{ t.activeSessionTracker }}
             </div>
             
-            <!-- 🔥 THE FIX: Added cleanSubjectName here so it hides (G2-Y2) -->
-            <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-3 sm:mb-4">{{ cleanSubjectName(classData.subject) }}</h1>
+            <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-3 sm:mb-4">
+              <template v-if="isExtraClass && classData.subject === 'Unknown Subject'">ថ្នាក់ថែមម៉ោង (Extra Class)</template>
+              <template v-else>{{ cleanSubjectName(classData.subject) }}</template>
+            </h1>
             
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-mono tracking-wide">
+            <div v-if="!(isExtraClass && classData.subject === 'Unknown Subject')" class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-mono tracking-wide">
               <p :class="[language === 'kh' ? 'font-khmer' : '']">{{ t.cohort }}: <span class="text-indigo-500 dark:text-indigo-400">{{ classData.group }}</span></p>
               
               <span v-if="classData.department && classData.department !== 'Unknown Department'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-fuchsia-100 dark:border-fuchsia-500/20 shadow-sm">{{ classData.department }}</span>
@@ -39,12 +46,19 @@
               <span v-if="classData.year && classData.year !== '?'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-blue-100 dark:border-blue-500/20 shadow-sm">ឆ្នាំទី {{ classData.year }}</span>
               <span v-if="classData.semester && classData.semester !== '?'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-amber-100 dark:border-amber-500/20 shadow-sm">ឆមាសទី {{ classData.semester }}</span>
 
+              <span v-if="classData.lastWeek > 0" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20 shadow-sm">
+                {{ language === 'kh' ? 'ដល់សប្តាហ៍ទី ' : 'Week ' }}{{ classData.lastWeek }}
+              </span>
+              <span v-if="classData.lastLessonNo" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-orange-100 dark:border-orange-500/20 shadow-sm">
+                មេរៀនទី {{ classData.lastLessonNo }}
+              </span>
+
               <span class="opacity-50 hidden sm:block">•</span> 
               <p :class="[language === 'kh' ? 'font-khmer' : '']">{{ t.room }}: <span class="text-indigo-500 dark:text-indigo-400">{{ classData.room }}</span></p>
             </div>
           </div>
 
-          <div class="bg-slate-900 dark:bg-black/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white border border-slate-700 dark:border-white/10 shadow-inner w-full md:w-auto shrink-0 text-center">
+          <div v-if="!(isExtraClass && classData.subject === 'Unknown Subject')" class="bg-slate-900 dark:bg-black/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white border border-slate-700 dark:border-white/10 shadow-inner w-full md:w-auto shrink-0 text-center">
              <p :class="['text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1', language === 'kh' ? 'font-khmer' : '']">{{ t.scheduledTimeblock }}</p>
              <p class="text-xl sm:text-2xl font-black font-mono tracking-wider">{{ classData.time }}</p>
           </div>
@@ -108,6 +122,7 @@
             </h3>
 
             <div class="flex-grow flex flex-col gap-5 sm:gap-6">
+              
               <div class="flex-grow flex flex-col">
                 <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2', language === 'kh' ? 'font-khmer' : '']">{{ t.lessonContent }}</label>
                 <textarea v-model="form.content" required :class="['flex-grow min-h-[120px] sm:min-h-[150px] w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer resize-none leading-relaxed']" :placeholder="t.phContent"></textarea>
@@ -116,9 +131,9 @@
               <div>
                 <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2 flex items-center justify-between', language === 'kh' ? 'font-khmer' : '']">
                   {{ t.notes }}
-                  <span v-if="substituteFor" class="text-amber-500 text-[8px]">{{ language === 'kh' ? '(កំណត់ដោយស្វ័យប្រវត្តិ)' : '(Auto-set)' }}</span>
+                  <span v-if="substituteFor || isExtraClass" class="text-amber-500 text-[8px]">{{ language === 'kh' ? '(កំណត់ដោយស្វ័យប្រវត្តិ)' : '(Auto-set)' }}</span>
                 </label>
-                <input v-model="form.notes" type="text" :disabled="substituteFor !== null" :class="['w-full border rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer', substituteFor ? 'bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed' : 'bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white']" :placeholder="t.phNotes">
+                <input v-model="form.notes" type="text" :disabled="substituteFor !== null || isExtraClass" :class="['w-full border rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer', (substituteFor || isExtraClass) ? 'bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed' : 'bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white']" :placeholder="t.phNotes">
               </div>
             </div>
 
@@ -257,10 +272,13 @@ const classData = ref({
   year: route.query.year || '?',
   semester: route.query.semester || '?',
   department: route.query.department || 'Unknown Department',
-  majorName: route.query.majorName || 'Unknown Major'
+  majorName: route.query.majorName || 'Unknown Major',
+  lastWeek: route.query.lastWeek || null,
+  lastLessonNo: route.query.lastLessonNo || null
 });
 
 const substituteFor = ref(route.query.substituteFor || null);
+const isExtraClass = ref(route.query.isExtraClass === 'true');
 
 // 🔥 THE FIX: Cleans out the brackets for UI display only!
 const cleanSubjectName = (name) => {
@@ -327,6 +345,11 @@ onMounted(async () => {
   
   if (substituteFor.value) {
     form.value.notes = `[បង្រៀនជំនួស: ${substituteFor.value}]`;
+  } else if (isExtraClass.value) {
+    form.value.notes = `[ថែមម៉ោង]`;
+    if (classData.value.lastWeek) {
+      form.value.week = (parseInt(classData.value.lastWeek) || 0) + 1;
+    }
   }
 });
 
@@ -374,7 +397,7 @@ const submitTrackingData = async () => {
     semester: classData.value.semester,
     department: classData.value.department,
     majorName: classData.value.majorName,
-    subject: classData.value.subject, // Sends the full string with (G2-Y2) to backend safely!
+    subject: classData.value.subject,
     cohort: classData.value.group,
     room: classData.value.room,
     day: classData.value.day,
@@ -388,7 +411,8 @@ const submitTrackingData = async () => {
     notes: form.value.notes,
     year: classData.value.year,
     semester: classData.value.semester,
-    substituteFor: substituteFor.value
+    substituteFor: substituteFor.value,
+    isExtraClass: isExtraClass.value
   };
 
   try {

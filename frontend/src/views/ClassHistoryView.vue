@@ -23,10 +23,11 @@
               <span v-if="isAdmin" class="ml-2 bg-rose-500 text-white px-2 py-0.5 rounded text-[8px] tracking-widest uppercase">{{ t.adminView }}</span>
             </div>
             
-            <!-- 🔥 THE FIX: Added cleanSubjectName here so it hides (G2-Y2) -->
-            <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-3 sm:mb-4">{{ cleanSubjectName(classData.subject) }}</h1>
+            <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-khmer leading-tight mb-3 sm:mb-4">
+              {{ isExtraClassHistory ? 'ថ្នាក់ថែមម៉ោង (Extra Class)' : cleanSubjectName(classData.subject) }}
+            </h1>
             
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-mono tracking-wide">
+            <div v-if="!isExtraClassHistory" class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-mono tracking-wide">
               <p :class="[language === 'kh' ? 'font-khmer' : '']">{{ t.cohort }}: <span class="text-cyan-500 dark:text-cyan-400">{{ classData.group }}</span></p>
               <span v-if="fullMajorName" class="px-2 py-1 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer uppercase tracking-widest border border-cyan-100 dark:border-cyan-500/20 shadow-sm">{{ fullMajorName }}</span>
               <span v-if="substituteInfo" class="px-2 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-black font-khmer tracking-widest border border-amber-200 dark:border-amber-500/30 shadow-sm flex items-center gap-1">
@@ -380,6 +381,8 @@ const classData = ref({
   teacher: route.query.teacher || ''
 });
 
+const isExtraClassHistory = computed(() => classData.value.subject === 'Unknown Subject' && classData.value.group === 'Unknown');
+
 const historyData = ref([]);
 const totalHours = ref("0 ម៉ោង 00 នាទី");
 const isLoading = ref(true);
@@ -541,10 +544,10 @@ const formatDateKhmer = (dateStr) => {
 const triggerPrint = () => {
   const sortedLessons = [...historyData.value].sort((a,b) => a.week - b.week);
   printData.value = {
-    cohort: classData.value.group,
+    cohort: isExtraClassHistory.value ? 'Extra Hours' : classData.value.group,
     department: classData.value.department,
-    major: fullMajorName.value,
-    subject: classData.value.subject,
+    major: isExtraClassHistory.value ? '' : fullMajorName.value,
+    subject: isExtraClassHistory.value ? 'ថ្នាក់ថែមម៉ោង (Extra Class)' : classData.value.subject,
     teacher: classData.value.teacher,
     lessons: sortedLessons,
     formattedHours: displayedTotalHours.value

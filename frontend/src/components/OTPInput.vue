@@ -6,7 +6,10 @@
       :ref="el => inputRefs[index] = el"
       v-model="digits[index]"
       type="text"
-      maxlength="1"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      autocomplete="one-time-code"
+      maxlength="6"
       @input="handleInput($event, index)"
       @keydown="handleKeyDown($event, index)"
       @paste="handlePaste($event)"
@@ -53,15 +56,32 @@ const emitValue = () => {
 };
 
 const handleInput = (e, index) => {
-  const value = e.target.value;
-  // Ensure only numbers
-  if (!/^\d$/.test(value)) {
+  const value = e.target.value.replace(/\D/g, '');
+  
+  if (!value) {
     digits.value[index] = '';
+    emitValue();
     return;
   }
   
-  if (index < 5 && value) {
-    inputRefs.value[index + 1].focus();
+  if (value.length > 1) {
+    // Handle multi-character paste/autofill
+    const chars = value.slice(0, 6).split('');
+    for (let i = 0; i < chars.length; i++) {
+      if (index + i < 6) {
+        digits.value[index + i] = chars[i];
+      }
+    }
+    const focusIndex = Math.min(index + chars.length, 5);
+    if (inputRefs.value[focusIndex]) {
+       inputRefs.value[focusIndex].focus();
+    }
+  } else {
+    // Single character input
+    digits.value[index] = value;
+    if (index < 5 && value) {
+      inputRefs.value[index + 1].focus();
+    }
   }
   
   emitValue();

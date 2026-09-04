@@ -316,14 +316,16 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
 // ==========================================
 router.post("/track-lesson", async (req, res) => {
   try {
-    const { teacherNameKh, department, subject, cohort, room, week, date, startTime, endTime, lessonNo, hours, content, notes, year, semester, substituteFor } = req.body;
+    const { teacherNameKh, department, subject, cohort, room, week, date, startTime, endTime, lessonNo, hours, content, notes, year, semester, substituteFor, isExtraClass } = req.body;
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: authClient });
 
-    const attendanceStatus = substituteFor ? "P" : "✓";
-    const visualRes = await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, attendanceStatus, substituteFor);
-    if (!visualRes.success) {
-        return res.status(400).json({ success: false, message: visualRes.message });
+    if (!isExtraClass) {
+        const attendanceStatus = substituteFor ? "P" : "✓";
+        const visualRes = await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, attendanceStatus, substituteFor);
+        if (!visualRes.success) {
+            return res.status(400).json({ success: false, message: visualRes.message });
+        }
     }
 
     const pureCohort = extractPureCohort(cohort);
@@ -361,6 +363,9 @@ router.post("/track-lesson", async (req, res) => {
         if (!finalNotes.includes(subNote)) {
             finalNotes = finalNotes ? `${subNote} ${finalNotes}` : subNote;
         }
+    }
+    if (isExtraClass && !finalNotes.includes('[ថែមម៉ោង]')) {
+        finalNotes = finalNotes ? `[ថែមម៉ោង] ${finalNotes}` : `[ថែមម៉ោង]`;
     }
 
     const rowData = [[
@@ -514,6 +519,7 @@ router.put("/class-history", noCache, async (req, res) => {
     let rowIndex = -1;
     let existingData = [];
     let substituteFor = null;
+    let isExtraClass = false;
 
     for (let i = 0; i < rows.length; i++) {
       const dbCohort = extractPureCohort(rows[i][6]).trim().toLowerCase();
@@ -528,6 +534,9 @@ router.put("/class-history", noCache, async (req, res) => {
               if (noteStr.includes('បង្រៀនជំនួស')) {
                   const match = noteStr.match(/បង្រៀនជំនួស:\s*([^\]]+)/);
                   if (match) substituteFor = match[1].trim();
+              }
+              if (noteStr.includes('[ថែមម៉ោង]')) {
+                  isExtraClass = true;
               }
               break;
           }
@@ -545,14 +554,16 @@ router.put("/class-history", noCache, async (req, res) => {
     const newDate = date ? String(date).trim() : oldDate;
     const targetStatus = substituteFor ? "P" : "✓";
     
-    if (oldDate && newDate && oldDate !== newDate) {
-        const visualRes = await markVisualAttendance(sheets, cohort, subject, teacher, newDate, targetStatus, substituteFor);
-        if (!visualRes.success) {
-            return res.status(400).json({ success: false, message: visualRes.message });
+    if (!isExtraClass) {
+        if (oldDate && newDate && oldDate !== newDate) {
+            const visualRes = await markVisualAttendance(sheets, cohort, subject, teacher, newDate, targetStatus, substituteFor);
+            if (!visualRes.success) {
+                return res.status(400).json({ success: false, message: visualRes.message });
+            }
+            await markVisualAttendance(sheets, cohort, subject, teacher, oldDate, "A", substituteFor); 
+        } else {
+            await markVisualAttendance(sheets, cohort, subject, teacher, newDate, targetStatus, substituteFor);
         }
-        await markVisualAttendance(sheets, cohort, subject, teacher, oldDate, "A", substituteFor); 
-    } else {
-        await markVisualAttendance(sheets, cohort, subject, teacher, newDate, targetStatus, substituteFor);
     }
 
     const updatedRow = [
@@ -599,6 +610,7 @@ router.delete("/class-history", noCache, async (req, res) => {
     let rowIndex = -1;
     let deletedDate = "";
     let substituteFor = null;
+    let isExtraClass = false;
 
     for (let i = 0; i < rows.length; i++) {
       const dbCohort = extractPureCohort(rows[i][6]).trim().toLowerCase();
@@ -620,6 +632,9 @@ router.delete("/class-history", noCache, async (req, res) => {
               if (noteStr.includes('បង្រៀនជំនួស')) {
                   const match = noteStr.match(/បង្រៀនជំនួស:\s*([^\]]+)/);
                   if (match) substituteFor = match[1].trim();
+              }
+              if (noteStr.includes('[ថែមម៉ោង]')) {
+                  isExtraClass = true;
               }
               break;
           }
@@ -650,7 +665,7 @@ router.delete("/class-history", noCache, async (req, res) => {
     }
     sseEmitter.emit('tracking_updated');
 
-    if (deletedDate) {
+    if (deletedDate && !isExtraClass) {
         await markVisualAttendance(sheets, cohort, subject, teacher, deletedDate, "", substituteFor); 
     }
     

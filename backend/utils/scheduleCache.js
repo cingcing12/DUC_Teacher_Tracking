@@ -1,16 +1,30 @@
 const { google, auth, SPREADSHEETS } = require("../config/googleClient");
+const scheduleParser = require("./scheduleParser");
 
 class ScheduleCache {
   constructor() {
     this.facultiesList = [];
     this.majorsList = [];
     this.tabs = [];
-    this.attendanceData = []; // [{ tabName: '...', rows: [...] }]
     this.closedClasses = [];
-    this.lastFetchTime = 0;
-    this.CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+    
+    // 🔥 NEW: Pre-computed Maps for O(1) instantaneous lookups
+    this.rawClasses = [];
+    this.allClasses = [];
+    this.teacherScheduleMap = {}; 
+    this.departmentScheduleMap = {};
+
     this.isFetching = false;
     this.fetchPromise = null;
+
+    // 🔥 NEW: Background Sync (Every 10 minutes)
+    this.SYNC_INTERVAL = 1000 * 60 * 10;
+    
+    // Start background sync immediately
+    this.fetchFreshData().catch(e => console.error("Initial Cache Load Failed", e));
+    setInterval(() => {
+        this.fetchFreshData().catch(e => console.error("Background Sync Failed", e));
+    }, this.SYNC_INTERVAL);
   }
 
   async fetchFreshData() {
@@ -19,6 +33,7 @@ class ScheduleCache {
 
     this.fetchPromise = (async () => {
       try {
+        console.log("🔄 Background Sync: Fetching fresh data from Google Sheets...");
         const authClient = await auth.getClient();
         const sheets = google.sheets({ version: "v4", auth: authClient });
 
@@ -59,11 +74,31 @@ class ScheduleCache {
             ranges: ranges
         });
 
-        const attendanceData = attendanceDataRes.data.valueRanges.map((rangeData, index) => {
-            return {
-                tabName: tabs[index],
-                rows: rangeData.values || []
-            };
+        // 🔥 5. PRE-COMPUTE EVERYTHING IN BACKGROUND
+        let rawClasses = [];
+        attendanceDataRes.data.valueRanges.forEach((rangeData, index) => {
+            const tabName = tabs[index];
+            const rows = rangeData.values || [];
+            const classesInTab = scheduleParser.parseAttendanceTab(tabName, rows, facultiesList, majorsList);
+            rawClasses = rawClasses.concat(classesInTab);
+        });
+
+        const activeClasses = scheduleParser.filterClosedClasses(rawClasses, closedClasses);
+        
+        // Build O(1) Maps
+        const teacherMap = {};
+        const deptMap = {};
+        
+        activeClasses.forEach(cls => {
+            // Teacher Map
+            if (!teacherMap[cls.cleanTeacherName]) teacherMap[cls.cleanTeacherName] = [];
+            teacherMap[cls.cleanTeacherName].push(cls);
+            
+            // Department Map
+            if (cls.department && cls.department !== "?") {
+                if (!deptMap[cls.department]) deptMap[cls.department] = [];
+                deptMap[cls.department].push(cls);
+            }
         });
 
         // Assign to cache
@@ -71,9 +106,12 @@ class ScheduleCache {
         this.majorsList = majorsList;
         this.closedClasses = closedClasses;
         this.tabs = tabs;
-        this.attendanceData = attendanceData;
-        this.lastFetchTime = Date.now();
+        this.rawClasses = rawClasses;
+        this.allClasses = activeClasses;
+        this.teacherScheduleMap = teacherMap;
+        this.departmentScheduleMap = deptMap;
 
+        console.log("✅ Background Sync Complete: Data mapped into RAM.");
         return true;
       } catch (err) {
         console.error("Failed to fetch schedule data for cache:", err);
@@ -88,26 +126,50 @@ class ScheduleCache {
   }
 
   async getCache() {
-    if (Date.now() - this.lastFetchTime > this.CACHE_TTL) {
-      await this.fetchFreshData();
+    // If it's the very first time (cold boot) and it's fetching, wait for it.
+    if (this.tabs.length === 0 && this.isFetching) {
+        await this.fetchPromise;
     }
+    
+    // Otherwise return instantly from RAM! No expiration checks on request!
     return {
       facultiesList: this.facultiesList,
       majorsList: this.majorsList,
       closedClasses: this.closedClasses,
       tabs: this.tabs,
-      attendanceData: this.attendanceData
+      rawClasses: this.rawClasses,
+      allClasses: this.allClasses,
+      teacherScheduleMap: this.teacherScheduleMap,
+      departmentScheduleMap: this.departmentScheduleMap
     };
   }
 
   // Manually update closed classes to avoid full re-fetch on simple toggle
   updateClosedClasses(newClosedClasses) {
     this.closedClasses = newClosedClasses;
+    // Re-filter memory directly without calling Google Sheets
+    this.allClasses = scheduleParser.filterClosedClasses(this.rawClasses, newClosedClasses);
+    
+    const teacherMap = {};
+    const deptMap = {};
+    
+    this.allClasses.forEach(cls => {
+        if (!teacherMap[cls.cleanTeacherName]) teacherMap[cls.cleanTeacherName] = [];
+        teacherMap[cls.cleanTeacherName].push(cls);
+        
+        if (cls.department && cls.department !== "?") {
+            if (!deptMap[cls.department]) deptMap[cls.department] = [];
+            deptMap[cls.department].push(cls);
+        }
+    });
+    
+    this.teacherScheduleMap = teacherMap;
+    this.departmentScheduleMap = deptMap;
   }
 
-  // Invalidate cache manually (e.g. when mapping variables are updated)
+  // Allow forceful refresh
   invalidateCache() {
-    this.lastFetchTime = 0;
+    this.fetchFreshData().catch(e => console.error("Manual refresh failed", e));
   }
 }
 

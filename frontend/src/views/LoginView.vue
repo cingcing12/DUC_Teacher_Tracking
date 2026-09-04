@@ -17,7 +17,7 @@
 
     <!-- 💎 LEVITATING EDGE-LIT OBSIDIAN CARD -->
     <div class="w-full max-w-[440px] relative z-10">
-      <div class="animate-float">
+      <div class="sm:animate-float">
         
         <!-- Animated Rotating Edge Glow -->
         <div class="relative p-[1.5px] rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,1)] overflow-hidden group/card">

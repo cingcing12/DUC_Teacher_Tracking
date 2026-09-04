@@ -52,13 +52,13 @@
             </transition>
           </div>
 
-          <!-- Substitute Button -->
+          <!-- Extra Class Button -->
           <button 
-            @click="isSubstituteModalOpen = true" 
+            @click="openBlankExtraClass" 
             :class="['whitespace-nowrap flex-1 sm:flex-none justify-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-black uppercase tracking-widest transition-all duration-300 bg-emerald-50 text-emerald-600 border border-emerald-200/50 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 hover:bg-emerald-100 hover:shadow-md dark:hover:bg-emerald-500/20 sm:ml-2 flex items-center gap-1.5', language === 'kh' ? 'font-khmer' : '']"
           >
-            <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-            {{ language === 'kh' ? 'ជំនួសម៉ោង' : 'Substitute' }}
+            <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+            {{ language === 'kh' ? 'ថែមម៉ោង' : 'Extra Class' }}
           </button>
         </div>
       </div>
@@ -206,6 +206,8 @@
                         ឆមាសទី {{ cls.semester }}
                       </div>
 
+
+
                       <button 
                       v-if="cls.department === '?' || !cls.majorName || cls.majorName === '?' || cls.year === '?' || cls.semester === '?' || !cls.room || cls.room.trim() === ''"
                       @click="showDataError(cls)" 
@@ -220,9 +222,14 @@
                       <h4 class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-khmer leading-snug sm:leading-tight">
                         {{ cleanSubjectName(cls.subject) }}
                       </h4>
-                      <div v-if="cls.lastWeek > 0" class="sm:hidden flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-sm w-max">
-                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                        {{ language === 'kh' ? 'ដល់សប្តាហ៍ទី ' : 'Week ' }}{{ cls.lastWeek }}
+                      <div class="sm:hidden flex flex-wrap items-center gap-2 mt-2">
+                        <div v-if="cls.lastWeek > 0" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-sm w-max">
+                          <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                          {{ language === 'kh' ? 'ដល់សប្តាហ៍ទី ' : 'Week ' }}{{ cls.lastWeek }}
+                        </div>
+                        <div v-if="cls.lastLessonNo" class="flex items-center justify-center px-3 py-1.5 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/30 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-sm w-max font-khmer">
+                          មេរៀនទី {{ cls.lastLessonNo }}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -252,10 +259,15 @@
                       {{ t.history }}
                     </button>
 
-                    <!-- Latest Tracked Week Indicator -->
-                    <div v-if="cls.lastWeek > 0" :class="['hidden sm:flex flex-none items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-sm', language === 'kh' ? 'font-khmer' : '']">
-                      <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                      {{ language === 'kh' ? 'ដល់សប្តាហ៍ទី ' : 'Week ' }}{{ cls.lastWeek }}
+                    <!-- Latest Tracked Week & Lesson Indicator -->
+                    <div class="hidden sm:flex flex-none items-center gap-2">
+                      <div v-if="cls.lastWeek > 0" :class="['flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-sm', language === 'kh' ? 'font-khmer' : '']">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        {{ language === 'kh' ? 'ដល់សប្តាហ៍ទី ' : 'Week ' }}{{ cls.lastWeek }}
+                      </div>
+                      <div v-if="cls.lastLessonNo" class="flex items-center justify-center px-3 sm:px-4 py-2 sm:py-2.5 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/30 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-sm font-khmer">
+                        មេរៀនទី {{ cls.lastLessonNo }}
+                      </div>
                     </div>
                   </div>
 
@@ -293,22 +305,16 @@
       </div>
     </transition>
 
-    <SubstituteModal 
-      :isOpen="isSubstituteModalOpen" 
-      @close="isSubstituteModalOpen = false" 
-    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
-import SubstituteModal from '../components/SubstituteModal.vue';
 
 const router = useRouter();
 const teacher = ref(null);
 const mySchedule = ref([]);
-const isSubstituteModalOpen = ref(false);
 const isLoading = ref(true);
 const hasError = ref(false);
 
@@ -456,7 +462,18 @@ const openTrackingForm = (cls) => {
       year: cls.year,
       semester: cls.semester,
       department: cls.department,
-      majorName: cls.majorName
+      majorName: cls.majorName,
+      lastWeek: cls.lastWeek,
+      lastLessonNo: cls.lastLessonNo
+    }
+  });
+};
+
+const openBlankExtraClass = () => {
+  router.push({
+    path: '/tracking',
+    query: {
+      isExtraClass: 'true'
     }
   });
 };
@@ -512,11 +529,14 @@ const refreshTeacherData = async (showLoader = true) => {
                 );
                 
                 let maxWeek = 0;
+                let lastLessonNo = null;
                 if (relatedHist.length > 0) {
-                  maxWeek = Math.max(...relatedHist.map(h => parseInt(h.week) || 0));
+                  const maxWeekEntry = relatedHist.reduce((max, entry) => (parseInt(entry.week) || 0) > (parseInt(max.week) || 0) ? entry : max, relatedHist[0]);
+                  maxWeek = parseInt(maxWeekEntry.week) || 0;
+                  lastLessonNo = maxWeekEntry.lessonNo || maxWeekEntry.lesson || null;
                 }
                 
-                return { ...cls, lastWeek: maxWeek };
+                return { ...cls, lastWeek: maxWeek, lastLessonNo };
               });
             }
           }

@@ -16,7 +16,7 @@
     </div>
 
     <!-- 🔮 VISION-OS DESKTOP NAVIGATION COMMAND CENTER -->
-    <nav class="hidden sm:flex fixed top-6 left-0 right-0 z-50 justify-center px-4 animate-fade-in-down pointer-events-none">
+    <nav v-if="!isAdminView" class="hidden sm:flex fixed top-6 left-0 right-0 z-50 justify-center px-4 animate-fade-in-down pointer-events-none">
       
       <!-- Ambient Outer Glow -->
       <div class="absolute inset-0 max-w-6xl mx-auto rounded-full bg-gradient-to-r from-indigo-500/20 via-fuchsia-500/20 to-cyan-500/20 blur-2xl opacity-0 transition-opacity duration-700 nav-hover-target"></div>
@@ -185,7 +185,7 @@
     </div>
 
     <!-- 🏝️ DYNAMIC FLOATING ISLAND (MOBILE NAV) -->
-    <div class="sm:hidden fixed bottom-6 left-4 right-4 z-50">
+    <div v-if="!isAdminView" class="sm:hidden fixed bottom-6 left-4 right-4 z-50">
       
       <!-- Outer Glow behind the island -->
       <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-fuchsia-500/20 to-cyan-500/20 rounded-[2.5rem] blur-xl opacity-50"></div>
@@ -251,6 +251,8 @@ import { useRouter, useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 const teacher = ref(null);
+
+const isAdminView = computed(() => route.query.admin === 'true');
 
 const showNotifications = ref(false);
 const showMobileNotifications = ref(false);
