@@ -159,18 +159,15 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
             return { success: false, message: errorMsg };
         }
 
-        const ranges = filteredTabs.map(tab => `'${tab.properties.title}'!A1:AZ200`);
-        const batchResponse = await sheets.spreadsheets.values.batchGet({
-            spreadsheetId: SPREADSHEETS.ATTENDANCE,
-            ranges: ranges
-        });
-        
-        const valueRanges = batchResponse.data.valueRanges || [];
-
         for (let i = 0; i < filteredTabs.length; i++) {
             const tab = filteredTabs[i];
             const tabTitle = tab.properties.title;
-            const rows = valueRanges[i].values || [];
+            
+            const response = await sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEETS.ATTENDANCE,
+                range: `'${tabTitle}'!A1:AZ200`
+            });
+            const rows = response.data.values || [];
             if (rows.length < 7) continue;
 
             let monthRowIndex = -1;
