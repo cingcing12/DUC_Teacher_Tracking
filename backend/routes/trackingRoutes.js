@@ -450,16 +450,18 @@ router.get("/class-history", noCache, async (req, res) => {
 
       if (dbCohort === pureCohort && dbSubject === querySubject) {
         if (!targetTeacher || dbTeacher.includes(targetTeacher)) {
-            history.push({
-              week: parseInt(row[8] || "0", 10),
-              date: String(row[9] || "").replace(/'/g, "").trim(),
-              time: `${row[10] || ""} - ${row[11] || ""}`,
-              lessonNo: String(row[12] || ""),
-              content: String(row[13] || ""),
-              hours: String(row[14] || ""),
-              notes: String(row[15] || ""),
-              room: String(row[16] || "")
-            });
+            if (history.length < 500) {
+                history.push({
+                  week: parseInt(row[8] || "0", 10),
+                  date: String(row[9] || "").replace(/'/g, "").trim(),
+                  time: `${row[10] || ""} - ${row[11] || ""}`,
+                  lessonNo: String(row[12] || ""),
+                  content: String(row[13] || ""),
+                  hours: String(row[14] || ""),
+                  notes: String(row[15] || ""),
+                  room: String(row[16] || "")
+                });
+            }
 
             const hrMatch = String(row[14] || "").match(/(\d+)\s*ម៉ោង/);
             const minMatch = String(row[14] || "").match(/(\d+)\s*នាទី/);
@@ -504,16 +506,18 @@ router.get("/teacher-history", noCache, async (req, res) => {
       const dbTeacher = normalizeText(row[7] || '');
 
       if (targetTeacher && dbTeacher.includes(targetTeacher)) {
-          history.push({
-            major: String(row[1] || "").trim(),
-            generation: String(row[2] || "").trim(),
-            subject: String(row[5] || "").trim(),
-            cohort: String(row[6] || "").trim(),
-            date: String(row[9] || "").replace(/'/g, "").trim(),
-            startTime: String(row[10] || "").trim(),
-            endTime: String(row[11] || "").trim(),
-            hours: String(row[14] || "").trim()
-          });
+          if (history.length < 500) {
+              history.push({
+                major: String(row[1] || "").trim(),
+                generation: String(row[2] || "").trim(),
+                subject: String(row[5] || "").trim(),
+                cohort: String(row[6] || "").trim(),
+                date: String(row[9] || "").replace(/'/g, "").trim(),
+                startTime: String(row[10] || "").trim(),
+                endTime: String(row[11] || "").trim(),
+                hours: String(row[14] || "").trim()
+              });
+          }
       }
     });
 
@@ -810,23 +814,25 @@ router.get("/my-full-history", noCache, async (req, res) => {
 
       // If the teacher's name matches, grab the data regardless of the current schedule
       if (dbTeacher.includes(targetTeacher)) {
-        allHistory.push({
-          department: String(row[0] || ""),
-          major: String(row[1] || ""),
-          generation: String(row[2] || ""),
-          year: String(row[3] || ""),
-          semester: String(row[4] || ""),
-          subject: String(row[5] || ""),
-          cohort: String(row[6] || ""),
-          week: parseInt(row[8] || "0", 10),
-          date: String(row[9] || ""),
-          time: `${row[10] || ""} - ${row[11] || ""}`,
-          lessonNo: String(row[12] || ""),
-          content: String(row[13] || ""),
-          hours: String(row[14] || ""),
-          notes: String(row[15] || ""),
-          room: String(row[16] || "")
-        });
+        if (allHistory.length < 500) {
+            allHistory.push({
+              department: String(row[0] || ""),
+              major: String(row[1] || ""),
+              generation: String(row[2] || ""),
+              year: String(row[3] || ""),
+              semester: String(row[4] || ""),
+              subject: String(row[5] || ""),
+              cohort: String(row[6] || ""),
+              week: parseInt(row[8] || "0", 10),
+              date: String(row[9] || ""),
+              time: `${row[10] || ""} - ${row[11] || ""}`,
+              lessonNo: String(row[12] || ""),
+              content: String(row[13] || ""),
+              hours: String(row[14] || ""),
+              notes: String(row[15] || ""),
+              room: String(row[16] || "")
+            });
+        }
       }
     });
 
