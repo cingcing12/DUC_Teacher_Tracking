@@ -23,21 +23,39 @@ let metaCache = {
 };
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+let isFetchingMaster = null;
+
 const getMasterRows = async (sheets, forceFresh = false) => {
     if (!forceFresh && masterSheetCache.rows && (Date.now() - masterSheetCache.lastFetch < CACHE_TTL)) {
         console.log("⚡ Serving from Fast RAM Cache!");
         return masterSheetCache.rows;
     }
     
-    console.log("📥 Fetching LIVE data from Google Sheets...");
-    const response = await sheets.spreadsheets.values.get({ 
-        spreadsheetId: SPREADSHEETS.TRACKING, 
-        range: `'${MASTER_TAB}'!A2:Q` 
-    });
-    
-    masterSheetCache.rows = response.data.values || [];
-    masterSheetCache.lastFetch = Date.now();
-    return masterSheetCache.rows;
+    // Cache Stampede Protection: If a fetch is already running, wait for it!
+    if (isFetchingMaster) {
+        console.log("⏳ Waiting for in-progress Master fetch...");
+        return await isFetchingMaster;
+    }
+
+    isFetchingMaster = (async () => {
+        try {
+            console.log("📥 Fetching LIVE data from Google Sheets...");
+            const response = await sheets.spreadsheets.values.get({ 
+                spreadsheetId: SPREADSHEETS.TRACKING, 
+                range: `'${MASTER_TAB}'!A2:Q` 
+            });
+            masterSheetCache.rows = response.data.values || [];
+            masterSheetCache.lastFetch = Date.now();
+            return masterSheetCache.rows;
+        } catch (err) {
+            console.error("Error fetching Master rows:", err);
+            throw err;
+        } finally {
+            isFetchingMaster = null; // Clear the lock when done
+        }
+    })();
+
+    return await isFetchingMaster;
 };
 
 // ==========================================
