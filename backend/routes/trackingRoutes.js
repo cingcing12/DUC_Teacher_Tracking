@@ -16,6 +16,11 @@ let avatarCache = {
     map: null,
     lastFetch: 0
 };
+let metaCache = {
+    majors: null,
+    faculties: null,
+    lastFetch: 0
+};
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 const getMasterRows = async (sheets, forceFresh = false) => {
@@ -143,19 +148,29 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
         const cleanSubject = normalizeText(subject);
         const cleanCohort = normalizeText(String(cohort).replace(/^g\d+-/i, ''));
 
-        for (const tab of tabs) {
+        const filteredTabs = tabs.filter(tab => {
+            const normalizedTitle = normalizeText(tab.properties.title);
+            if (targetGenKhmerStr && !normalizedTitle.includes(normalizeText(targetGenKhmerStr))) return false;
+            return true;
+        });
+
+        if (filteredTabs.length === 0) {
+            let errorMsg = `The date ${date} does not match the scheduled days for this class!`;
+            return { success: false, message: errorMsg };
+        }
+
+        const ranges = filteredTabs.map(tab => `'${tab.properties.title}'!A1:AZ200`);
+        const batchResponse = await sheets.spreadsheets.values.batchGet({
+            spreadsheetId: SPREADSHEETS.ATTENDANCE,
+            ranges: ranges
+        });
+        
+        const valueRanges = batchResponse.data.valueRanges || [];
+
+        for (let i = 0; i < filteredTabs.length; i++) {
+            const tab = filteredTabs[i];
             const tabTitle = tab.properties.title;
-            const normalizedTitle = normalizeText(tabTitle);
-
-            if (targetGenKhmerStr && !normalizedTitle.includes(normalizeText(targetGenKhmerStr))) {
-                continue; 
-            }
-
-            const response = await sheets.spreadsheets.values.get({
-                spreadsheetId: SPREADSHEETS.ATTENDANCE,
-                range: `'${tabTitle}'!A1:AZ200`
-            });
-            const rows = response.data.values || [];
+            const rows = valueRanges[i].values || [];
             if (rows.length < 7) continue;
 
             let monthRowIndex = -1;
@@ -341,15 +356,27 @@ router.post("/track-lesson", async (req, res) => {
     else if (formattedYear === "3" || formattedYear === "៣") formattedYear = "3";
     else if (formattedYear === "4" || formattedYear === "៤") formattedYear = "4";
 
+    if (!metaCache.majors || !metaCache.faculties || Date.now() - metaCache.lastFetch > CACHE_TTL) {
+        try {
+            const metaRes = await sheets.spreadsheets.values.batchGet({
+                spreadsheetId: SPREADSHEETS.TRACKING,
+                ranges: ["'Majors'!A2:B", "'Faculties'!A2:B"]
+            });
+            metaCache.majors = metaRes.data.valueRanges[0].values || [];
+            metaCache.faculties = metaRes.data.valueRanges[1].values || [];
+            metaCache.lastFetch = Date.now();
+        } catch (e) {
+            console.error("Error fetching metaCache:", e);
+        }
+    }
+
     try {
-        const majorRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Majors'!A2:B" });
-        const match = majorRes.data.values.find(r => r[0] && pureCohort.includes(String(r[0]).trim()));
+        const match = (metaCache.majors || []).find(r => r[0] && pureCohort.includes(String(r[0]).trim()));
         if (match) fullMajorName = String(match[1]).trim();
     } catch (e) {}
 
     try {
-        const facRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A2:B" });
-        const match = facRes.data.values.find(r => r[0] && pureCohort.includes(String(r[0]).trim()));
+        const match = (metaCache.faculties || []).find(r => r[0] && pureCohort.includes(String(r[0]).trim()));
         if (match) fullFacultyName = String(match[1]).trim();
     } catch (e) {}
 
