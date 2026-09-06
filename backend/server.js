@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { google, auth, SPREADSHEETS } = require("./config/googleClient");
+const connectDB = require("./config/db");
 
 // Import Routers
 const teacherRoutes = require("./routes/teacherRoutes");
@@ -10,6 +11,9 @@ const adminRoutes = require("./routes/adminRoutes");
 const securityRoutes = require("./routes/securityRoutes");
 
 const app = express();
+
+// Connect to MongoDB
+connectDB();
 
 // Middleware
 app.use(cors());

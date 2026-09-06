@@ -280,6 +280,7 @@ const submitEdit = async () => {
     }
 
     const payload = {
+      id: route.query.id,
       cohort: classData.value.group,
       subject: classData.value.subject,
       teacher: teacherName,

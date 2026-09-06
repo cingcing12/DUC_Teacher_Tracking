@@ -688,6 +688,7 @@ const goToEditPage = (lesson) => {
   router.push({
     path: '/edit-lesson',
     query: {
+      id: lesson._id,
       subject: classData.value.subject,
       group: classData.value.group,
       room: classData.value.room,
@@ -744,6 +745,7 @@ const executeDelete = async (lesson) => {
     const teacherName = token ? JSON.parse(token).nameKh || '' : '';
 
     const url = new URL(import.meta.env.VITE_API_URL + '/api/class-history');
+    url.searchParams.append('id', lesson._id);
     url.searchParams.append('cohort', classData.value.group);
     url.searchParams.append('week', lesson.week);
     url.searchParams.append('date', lesson.date); 

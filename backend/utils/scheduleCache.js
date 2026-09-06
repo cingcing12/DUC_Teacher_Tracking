@@ -1,5 +1,8 @@
 const { google, auth, SPREADSHEETS } = require("../config/googleClient");
 const scheduleParser = require("./scheduleParser");
+const Faculty = require("../models/Faculty");
+const Major = require("../models/Major");
+const ClosedClass = require("../models/ClosedClass");
 
 class ScheduleCache {
   constructor() {
@@ -41,26 +44,22 @@ class ScheduleCache {
         let facultiesList = [];
         let majorsList = [];
         try {
-            const facRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A2:B" });
-            facultiesList = facRes.data.values || [];
+            const facs = await Faculty.find();
+            facultiesList = facs.map(f => [f.code, f.fullName]);
         } catch (e) { console.error("Could not fetch Faculties:", e.message); }
         
         try {
-            const majRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Majors'!A2:B" });
-            majorsList = majRes.data.values || [];
+            const majs = await Major.find();
+            majorsList = majs.map(m => [m.code, m.fullName]);
         } catch (e) { console.error("Could not fetch Majors:", e.message); }
 
         // 2. Fetch Closed Classes
         let closedClasses = [];
         try {
-            const response = await sheets.spreadsheets.values.get({
-                spreadsheetId: SPREADSHEETS.TRACKING,
-                range: "'ClosedClasses'!A:A"
-            });
-            const rows = response.data.values || [];
-            closedClasses = rows.map(r => r[0]).filter(c => c && c !== "Class Key");
+            const cClasses = await ClosedClass.find();
+            closedClasses = cClasses.map(c => c.key);
         } catch (e) {
-            console.error("Tab ClosedClasses might not exist yet", e.message);
+            console.error("Could not fetch ClosedClasses", e.message);
         }
 
         // 3. Fetch Tabs

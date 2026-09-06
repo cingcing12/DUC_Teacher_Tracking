@@ -18,6 +18,11 @@ cloudinary.config({
 const upload = multer({ dest: 'uploads/' });
 
 const memCache = require("../utils/memCache");
+const Session = require("../models/Session");
+const Avatar = require("../models/Avatar");
+const Faculty = require("../models/Faculty");
+const Notification = require("../models/Notification");
+const sseEmitter = require("../utils/sseEmitter");
 
 // ==========================================
 // SMART PHONE NORMALIZERS
@@ -49,32 +54,15 @@ const normalizeText = (str) => {
 // ==========================================
 async function getAvatarUrl(sheets, nameKh, phone) {
   try {
-    let rows = memCache.get('avatars_data', 60000);
-    if (!rows) {
-      const res = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        range: "'Avatars'!A2:C500", 
-      });
-      rows = res.data.values || [];
-      memCache.set('avatars_data', rows);
-    }
-    if (!rows) return null;
-
     const cleanInputName = normalizeText(nameKh ? String(nameKh).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '') : "");
-
-    for (const row of rows) {
-      const sheetNameKh = normalizeText(row[0] ? String(row[0]).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '') : "");
-
-      if (sheetNameKh && sheetNameKh === cleanInputName) {
-        return row[2]; 
-      }
+    const avatars = await Avatar.find();
+    for (const av of avatars) {
+      const sheetNameKh = normalizeText(av.nameKh ? String(av.nameKh).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '') : "");
+      if (sheetNameKh && sheetNameKh === cleanInputName) return av.avatarUrl;
     }
     return null;
-  } catch (error) {
-    return null; 
-  }
+  } catch(e) { return null; }
 }
-
 // ==========================================
 // HELPER: PARSE YEAR & SEMESTER
 // ==========================================
@@ -93,23 +81,12 @@ const parseYearSem = (text) => {
 // ==========================================
 router.get("/departments", async (req, res) => {
   try {
-    const cached = memCache.get('departments');
-    if (cached) return res.json({ success: true, data: cached });
-
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
-    const response = await sheets.spreadsheets.get({
-      spreadsheetId: SPREADSHEETS.TEACHER,
-    });
-    const sheetNames = response.data.sheets
-      .map((sheet) => sheet.properties.title)
-      .filter((name) => !name.toLowerCase().includes("schedule") && !name.toLowerCase().includes("year"));
-
-    memCache.set('departments', sheetNames);
+    const facs = await Faculty.find();
+    const sheetNames = facs.map(f => f.code);
     res.json({ success: true, data: sheetNames });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Could not load tabs" });
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
@@ -136,18 +113,10 @@ router.get("/teachers", async (req, res) => {
     if (!rows || rows.length < 5) return res.json({ success: true, data: [] });
 
     let allAvatars = [];
-    try {
-      let rows = memCache.get('avatars_data', 60000);
-      if (!rows) {
-        const avatarRes = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEETS.TRACKING,
-          range: "'Avatars'!A2:C500",
-        });
-        rows = avatarRes.data.values || [];
-        memCache.set('avatars_data', rows);
-      }
-      allAvatars = rows;
-    } catch(e) {}
+        try {
+        const avatars = await Avatar.find();
+        allAvatars = avatars.map(a => [a.nameKh, a.phone, a.avatarUrl]);
+        } catch(e) {}
 
     const dynamicSubjectColumns = [];
     let currentYear = 1;
@@ -606,7 +575,7 @@ router.post("/login", async (req, res) => {
     let allSheetsRes = memCache.get(cacheKeySheets, 600000); // 10 minutes TTL
     
     const promiseList = [
-      getAvatarUrl(sheets, loggedInTeacher.nameKh, loggedInTeacher.phone)
+      getAvatarUrl(loggedInTeacher.nameKh, loggedInTeacher.phone)
     ];
     
     const cacheKey2FA = '2fa_data';
@@ -727,12 +696,15 @@ router.post("/login", async (req, res) => {
       const title = '2FA Login Attempt';
       const message = `A login attempt with your password was made on ${device} from ${location || 'Local Network'}. Waiting for 2FA verification.`;
       
-      sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEETS.SECURITY,
-        range: "'Notifications'!A:H",
-        valueInputOption: "USER_ENTERED",
-        insertDataOption: "INSERT_ROWS",
-        requestBody: { values: [[notifId, loggedInTeacher.email, sessionId, title, message, 'TRUE', timestamp, 'FALSE']] }
+      Notification.create({
+        id: notifId,
+        email: loggedInTeacher.email,
+        sessionId: sessionId,
+        title: title,
+        message: message,
+        isUnread: true,
+        timestamp: timestamp,
+        isDeleted: false
       }).then(() => {
         sseEmitter.emit('session_updated', { 
           teacherName: loggedInTeacher.nameKh,
@@ -770,19 +742,24 @@ router.post("/login", async (req, res) => {
       const message = `Login detected on ${device} from ${location || 'Local Network'}`;
 
       Promise.all([
-        sheets.spreadsheets.values.append({
-          spreadsheetId: SPREADSHEETS.SECURITY,
-          range: "'Sessions'!A:G",
-          valueInputOption: "USER_ENTERED",
-          insertDataOption: "INSERT_ROWS",
-          requestBody: { values: [[sessionId, loggedInTeacher.email, device, ip, location, lastActive, 'ACTIVE']] }
+        Session.create({
+          sessionId: sessionId,
+          email: loggedInTeacher.email,
+          device: device,
+          ip: ip,
+          location: location,
+          lastActive: lastActive,
+          status: 'ACTIVE'
         }),
-        sheets.spreadsheets.values.append({
-          spreadsheetId: SPREADSHEETS.SECURITY,
-          range: "'Notifications'!A:H",
-          valueInputOption: "USER_ENTERED",
-          insertDataOption: "INSERT_ROWS",
-          requestBody: { values: [[notifId, loggedInTeacher.email, sessionId, title, message, 'TRUE', timestamp, 'FALSE']] }
+        Notification.create({
+          id: notifId,
+          email: loggedInTeacher.email,
+          sessionId: sessionId,
+          title: title,
+          message: message,
+          isUnread: true,
+          timestamp: timestamp,
+          isDeleted: false
         })
       ]).then(() => {
         // Notify other devices (and this device, if listening) that the session is in the DB
@@ -820,7 +797,7 @@ router.post("/login", async (req, res) => {
 // ==========================================
 // CHECK STATUS (SSE FOR BLOCKED USER)
 // ==========================================
-const sseEmitter = require('../utils/sseEmitter');
+
 
 router.get("/stream-status", (req, res) => {
   const teacherName = req.query.name;
@@ -920,76 +897,45 @@ router.get("/stream-status", (req, res) => {
 // ==========================================
 router.post("/upload-avatar", upload.single("image"), async (req, res) => {
   try {
-    const { nameKh, phone } = req.body; 
-    if (!req.file) return res.status(400).json({ success: false, message: "No image provided" });
-
-    const inputPhones = getNormalizedPhoneArray(phone);
-    const cleanInputName = nameKh ? String(nameKh).trim() : "";
-
-    const result = await cloudinary.uploader.unsigned_upload(req.file.path, "duc_avatar_upload");
-    fs.unlinkSync(req.file.path);
-    const imageUrl = result.secure_url;
-
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
-    const response = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TRACKING });
-    const allTabs = response.data.sheets;
-    let tabExists = false;
-
-    for (const tab of allTabs) {
-      if (tab.properties.title === "Avatars") { tabExists = true; break; }
+    const { nameKh, phone } = req.body;
+    if (!req.file || !nameKh) {
+      return res.status(400).json({ success: false, message: "Missing image or teacher name." });
     }
 
-    if (!tabExists) {
-      await sheets.spreadsheets.batchUpdate({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        requestBody: { requests: [{ addSheet: { properties: { title: "Avatars" } } }] }
-      });
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        range: "'Avatars'!A1:C1",
-        valueInputOption: "USER_ENTERED",
-        requestBody: { values: [["Name (Khmer)", "Phone Number", "Cloudinary Image URL"]] }
-      });
-    }
+    const bucketName = process.env.R2_BUCKET_NAME;
+    const cleanName = String(nameKh).replace(/\s+/g, "_").replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, "");
+    const ext = req.file.originalname.split(".").pop();
+    const fileName = `avatars/${cleanName}_${Date.now()}.${ext}`;
 
-    const getRes = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEETS.TRACKING,
-      range: "'Avatars'!A2:C500",
-    });
-    const rows = getRes.data.values || [];
-    let rowIndex = -1;
+    const uploadParams = {
+      Bucket: bucketName,
+      Key: fileName,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+      ACL: "public-read", 
+    };
 
-    for (let i = 0; i < rows.length; i++) {
-      const sheetNameKh = rows[i][0] ? String(rows[i][0]).trim() : "";
-      const sheetPhones = getNormalizedPhoneArray(rows[i][1]);
-      const hasPhoneMatch = inputPhones.some(p => sheetPhones.includes(p));
+    const command = new PutObjectCommand(uploadParams);
+    await s3Client.send(command);
 
-      if (sheetNameKh === cleanInputName && hasPhoneMatch) {
-        rowIndex = i + 2; 
-        break;
-      }
-    }
+    const publicUrl = `${process.env.R2_PUBLIC_URL}/${fileName}`;
+    const cleanInputName = normalizeText(String(nameKh).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ""));
 
-    if (rowIndex !== -1) {
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        range: `'Avatars'!C${rowIndex}`,
-        valueInputOption: "USER_ENTERED",
-        requestBody: { values: [[imageUrl]] },
-      });
+    const existing = await Avatar.findOne({ nameKh: cleanInputName });
+    if (existing) {
+      existing.avatarUrl = publicUrl;
+      if (phone) existing.phone = phone;
+      await existing.save();
     } else {
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        range: "'Avatars'!A:C",
-        valueInputOption: "USER_ENTERED",
-        requestBody: { values: [[cleanInputName, phone, imageUrl]] },
-      });
+      await Avatar.create({ nameKh: cleanInputName, phone: phone || "", avatarUrl: publicUrl });
     }
 
-    res.json({ success: true, imageUrl, message: "Avatar updated successfully!" });
+    memCache.del('avatars_data');
+    memCache.del('teachers_data');
+    sseEmitter.emit('profile_updated', { teacherName: nameKh, profile: { avatarUrl: publicUrl } });
+    res.json({ success: true, avatarUrl: publicUrl });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: "Server error during upload" });
   }
 });
@@ -1000,77 +946,26 @@ router.post("/upload-avatar", upload.single("image"), async (req, res) => {
 router.post("/update-avatar-url", async (req, res) => {
   try {
     const { nameKh, phone, avatarUrl } = req.body;
-    if (!nameKh || !phone || !avatarUrl) return res.status(400).json({ success: false, message: "Missing data" });
-
-    const inputPhones = getNormalizedPhoneArray(phone);
-    const cleanInputName = nameKh ? String(nameKh).trim() : "";
-
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
-    const response = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TRACKING });
-    const allTabs = response.data.sheets;
-    let tabExists = false;
-
-    for (const tab of allTabs) {
-      if (tab.properties.title === "Avatars") { tabExists = true; break; }
+    if (!nameKh || !avatarUrl) {
+      return res.status(400).json({ success: false, message: "Missing required fields." });
     }
 
-    if (!tabExists) {
-      await sheets.spreadsheets.batchUpdate({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        requestBody: { requests: [{ addSheet: { properties: { title: "Avatars" } } }] }
-      });
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        range: "'Avatars'!A1:C1",
-        valueInputOption: "USER_ENTERED",
-        requestBody: { values: [["Name (Khmer)", "Phone Number", "Cloudinary Image URL"]] }
-      });
-    }
-
-    const getRes = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEETS.TRACKING,
-      range: "'Avatars'!A2:C500",
-    });
-    const rows = getRes.data.values || [];
-    let rowIndex = -1;
-
-    for (let i = 0; i < rows.length; i++) {
-      const sheetNameKh = rows[i][0] ? String(rows[i][0]).trim() : "";
-      const sheetPhones = getNormalizedPhoneArray(rows[i][1]);
-      const hasPhoneMatch = inputPhones.some(p => sheetPhones.includes(p));
-
-      if (sheetNameKh === cleanInputName && hasPhoneMatch) {
-        rowIndex = i + 2; 
-        break;
-      }
-    }
-
-    if (rowIndex !== -1) {
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        range: `'Avatars'!C${rowIndex}`,
-        valueInputOption: "USER_ENTERED",
-        requestBody: { values: [[avatarUrl]] },
-      });
+    const cleanInputName = normalizeText(String(nameKh).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ""));
+    const existing = await Avatar.findOne({ nameKh: cleanInputName });
+    if (existing) {
+      existing.avatarUrl = avatarUrl;
+      if (phone) existing.phone = phone;
+      await existing.save();
     } else {
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        range: "'Avatars'!A:C",
-        valueInputOption: "USER_ENTERED",
-        requestBody: { values: [[cleanInputName, phone, avatarUrl]] },
-      });
+      await Avatar.create({ nameKh: cleanInputName, phone: phone || "", avatarUrl });
     }
 
-    sseEmitter.emit('profile_updated', {
-      teacherName: cleanInputName,
-      profile: { avatarUrl }
-    });
-
-    res.json({ success: true, message: "App Avatar updated successfully!" });
+    memCache.del('avatars_data');
+    memCache.del('teachers_data');
+    sseEmitter.emit('profile_updated', { teacherName: nameKh, profile: { avatarUrl } });
+    res.json({ success: true, message: "Avatar URL updated successfully" });
   } catch (error) {
-    console.error("Update Avatar URL Error:", error);
+    console.error(error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });

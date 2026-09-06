@@ -322,7 +322,7 @@ const navigateBack = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-const theme = ref(localStorage.getItem('theme') || 'system');
+const theme = ref(localStorage.getItem('theme') || 'dark');
 const enableAnimations = ref(localStorage.getItem('animations') !== 'false');
 const language = ref(localStorage.getItem('app_lang') || 'en');
 

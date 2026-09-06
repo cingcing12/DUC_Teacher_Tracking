@@ -1,62 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const { google, auth, SPREADSHEETS } = require("../config/googleClient");
-
-const MASTER_TAB = "MasterTracking";
 const sseEmitter = require('../utils/sseEmitter');
 
-// ==========================================
-// 🔥 THE "FORCE FRESH" CACHE SYSTEM
-// ==========================================
-let masterSheetCache = {
-    rows: null,
-    lastFetch: 0
-};
-let avatarCache = {
-    map: null,
-    lastFetch: 0
-};
-let metaCache = {
-    majors: null,
-    faculties: null,
-    lastFetch: 0
-};
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-let isFetchingMaster = null;
-
-const getMasterRows = async (sheets, forceFresh = false) => {
-    if (!forceFresh && masterSheetCache.rows && (Date.now() - masterSheetCache.lastFetch < CACHE_TTL)) {
-        console.log("⚡ Serving from Fast RAM Cache!");
-        return masterSheetCache.rows;
-    }
-    
-    // Cache Stampede Protection: If a fetch is already running, wait for it!
-    if (isFetchingMaster) {
-        console.log("⏳ Waiting for in-progress Master fetch...");
-        return await isFetchingMaster;
-    }
-
-    isFetchingMaster = (async () => {
-        try {
-            console.log("📥 Fetching LIVE data from Google Sheets...");
-            const response = await sheets.spreadsheets.values.get({ 
-                spreadsheetId: SPREADSHEETS.TRACKING, 
-                range: `'${MASTER_TAB}'!A2:Q` 
-            });
-            masterSheetCache.rows = response.data.values || [];
-            masterSheetCache.lastFetch = Date.now();
-            return masterSheetCache.rows;
-        } catch (err) {
-            console.error("Error fetching Master rows:", err);
-            throw err;
-        } finally {
-            isFetchingMaster = null; // Clear the lock when done
-        }
-    })();
-
-    return await isFetchingMaster;
-};
+// Import MongoDB Models
+const Tracking = require('../models/Tracking');
+const Avatar = require('../models/Avatar');
+const ClosedClass = require('../models/ClosedClass');
+const Major = require('../models/Major');
+const Faculty = require('../models/Faculty');
 
 // ==========================================
 // SSE STREAM: TRACKING DATA REALTIME UPDATES
@@ -78,26 +30,21 @@ router.get("/tracking-stream", (req, res) => {
     });
 });
 
-// 🔥 UPGRADED: Smart Section Preserver! (Keeps -A or -B, drops teacher names)
 const extractPureCohort = (str) => {
     if (!str) return '';
     let s = String(str).trim();
-    
-    // If it matches DUC format: G1-DSM, G2-ACT-A, etc.
     if (/^G\d+-/i.test(s)) {
         const parts = s.split('-');
         if (parts.length >= 3) {
             let pure = `${parts[0]}-${parts[1]}`;
-            // If the 3rd part is small (1-3 letters, like A, B, M1), KEEP IT!
             if (/^[a-zA-Z0-9]{1,3}$/.test(parts[2])) {
                 pure += `-${parts[2]}`;
             }
             return pure.toUpperCase();
         }
-        return s.toUpperCase(); // For basic formats like G3-DEE
+        return s.toUpperCase(); 
     }
-    
-    return s; // Fallback for non-standard formats
+    return s; 
 };
 
 const calculateHours = (start, end) => {
@@ -119,13 +66,8 @@ const noCache = (req, res, next) => {
     next();
 };
 
-// ==========================================
-// 🔥 HELPER: OBLITERATE SPACES FOR FUZZY MATCHING
-// ==========================================
 const normalizeText = (str) => {
-    return String(str || "")
-        .replace(/[\s\u200B-\u200D\uFEFF]/g, '') 
-        .toLowerCase();
+    return String(str || "").replace(/[\s\u200B-\u200D\uFEFF]/g, '').toLowerCase();
 };
 
 // ==========================================
@@ -160,7 +102,6 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
         let targetRowIndex = -1;
         let targetColIndex = -1;
 
-        // If substituteFor is provided, we search for the original teacher's row
         const targetTeacherName = substituteFor || teacher;
         const cleanTeacher = normalizeText(String(targetTeacherName).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
         const cleanSubject = normalizeText(subject);
@@ -347,10 +288,11 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
 router.post("/track-lesson", async (req, res) => {
   try {
     const { teacherNameKh, department, subject, cohort, room, week, date, startTime, endTime, lessonNo, hours, content, notes, year, semester, substituteFor, isExtraClass } = req.body;
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
+    
+    // Attempt visual attendance marking in Google Sheets
     if (!isExtraClass) {
+        const authClient = await auth.getClient();
+        const sheets = google.sheets({ version: "v4", auth: authClient });
         const attendanceStatus = substituteFor ? "P" : "✓";
         const visualRes = await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, attendanceStatus, substituteFor);
         if (!visualRes.success) {
@@ -371,33 +313,21 @@ router.post("/track-lesson", async (req, res) => {
     else if (formattedYear === "3" || formattedYear === "៣") formattedYear = "3";
     else if (formattedYear === "4" || formattedYear === "៤") formattedYear = "4";
 
-    if (!metaCache.majors || !metaCache.faculties || Date.now() - metaCache.lastFetch > CACHE_TTL) {
-        try {
-            const metaRes = await sheets.spreadsheets.values.batchGet({
-                spreadsheetId: SPREADSHEETS.TRACKING,
-                ranges: ["'Majors'!A2:B", "'Faculties'!A2:B"]
-            });
-            metaCache.majors = metaRes.data.valueRanges[0].values || [];
-            metaCache.faculties = metaRes.data.valueRanges[1].values || [];
-            metaCache.lastFetch = Date.now();
-        } catch (e) {
-            console.error("Error fetching metaCache:", e);
-        }
+    try {
+        const majors = await Major.find();
+        const matchMajor = majors.find(m => m.code && pureCohort.includes(m.code));
+        if (matchMajor) fullMajorName = matchMajor.fullName;
+
+        const faculties = await Faculty.find();
+        const matchFaculty = faculties.find(f => f.code && pureCohort.includes(f.code));
+        if (matchFaculty) fullFacultyName = matchFaculty.fullName;
+    } catch (e) {
+        console.error("Error fetching major/faculty:", e);
     }
 
-    try {
-        const match = (metaCache.majors || []).find(r => r[0] && pureCohort.includes(String(r[0]).trim()));
-        if (match) fullMajorName = String(match[1]).trim();
-    } catch (e) {}
-
-    try {
-        const match = (metaCache.faculties || []).find(r => r[0] && pureCohort.includes(String(r[0]).trim()));
-        if (match) fullFacultyName = String(match[1]).trim();
-    } catch (e) {}
-
-    const safeDate = date ? `'${date}` : "";
-    const safeStartTime = startTime ? `'${startTime}` : "";
-    const safeEndTime = endTime ? `'${endTime}` : "";
+    const safeDate = date ? `${date}` : "";
+    const safeStartTime = startTime ? `${startTime}` : "";
+    const safeEndTime = endTime ? `${endTime}` : "";
 
     let finalNotes = String(notes || "").trim();
     if (substituteFor) {
@@ -410,25 +340,31 @@ router.post("/track-lesson", async (req, res) => {
         finalNotes = finalNotes ? `[ថែមម៉ោង] ${finalNotes}` : `[ថែមម៉ោង]`;
     }
 
-    const rowData = [[
-      fullFacultyName, fullMajorName, generation, formattedYear, semester || "?", subject, pureCohort, teacherNameKh, week, safeDate, safeStartTime, safeEndTime, lessonNo, content, hours, finalNotes, room               
-    ]];
-
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEETS.TRACKING,
-      range: `'${MASTER_TAB}'!A:Q`,
-      valueInputOption: "USER_ENTERED",
-      insertDataOption: "INSERT_ROWS",
-      requestBody: { values: rowData },
+    const newTracking = new Tracking({
+        department: fullFacultyName,
+        major: fullMajorName,
+        generation,
+        year: formattedYear,
+        semester: semester || "?",
+        subject,
+        cohort: pureCohort,
+        teacher: teacherNameKh,
+        week,
+        date: safeDate,
+        startTime: safeStartTime,
+        endTime: safeEndTime,
+        lessonNo,
+        content,
+        hours,
+        notes: finalNotes,
+        room
     });
 
-    // UPDATE CACHE DIRECTLY INSTEAD OF CLEARING
-    if (masterSheetCache.rows) {
-        masterSheetCache.rows.push(rowData[0]);
-    }
+    await newTracking.save();
+
     sseEmitter.emit('tracking_updated');
 
-    res.json({ success: true, message: "Data saved successfully to Master Sheet" });
+    res.json({ success: true, message: "Data saved successfully to Database" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Error saving tracking data" });
@@ -452,37 +388,47 @@ router.get("/class-history", noCache, async (req, res) => {
         if (parts.length >= 4) targetTeacher = normalizeText(parts[3].replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
     }
 
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
-    const forceFresh = req.query.fresh === 'true';
-    const rows = await getMasterRows(sheets, forceFresh); 
+    const query = {};
+    if (pureCohort) {
+        const cPattern = pureCohort.split('').join('\\s*');
+        query.cohort = { $regex: cPattern, $options: 'i' };
+    }
+    if (querySubject) {
+        const sPattern = querySubject.split('').join('\\s*');
+        query.subject = { $regex: sPattern, $options: 'i' };
+    }
+    if (targetTeacher) {
+        const tPattern = targetTeacher.split('').join('\\s*');
+        query.teacher = { $regex: tPattern, $options: 'i' };
+    }
+    const records = await Tracking.find(query).limit(500).lean();
     
     const history = [];
     let totalMinutes = 0;
 
-    rows.forEach(row => {
-      const dbCohort = extractPureCohort(row[6]).trim().toLowerCase();
-      const dbSubject = normalizeText(row[5]); 
-      const dbTeacher = normalizeText(row[7]);
+    records.forEach(row => {
+      const dbCohort = extractPureCohort(row.cohort).trim().toLowerCase();
+      const dbSubject = normalizeText(row.subject); 
+      const dbTeacher = normalizeText(row.teacher);
 
       if (dbCohort === pureCohort && dbSubject === querySubject) {
         if (!targetTeacher || dbTeacher.includes(targetTeacher)) {
             if (history.length < 500) {
                 history.push({
-                  week: parseInt(row[8] || "0", 10),
-                  date: String(row[9] || "").replace(/'/g, "").trim(),
-                  time: `${row[10] || ""} - ${row[11] || ""}`,
-                  lessonNo: String(row[12] || ""),
-                  content: String(row[13] || ""),
-                  hours: String(row[14] || ""),
-                  notes: String(row[15] || ""),
-                  room: String(row[16] || "")
+                  _id: row._id,
+                  week: parseInt(row.week || "0", 10),
+                  date: String(row.date || "").replace(/'/g, "").trim(),
+                  time: `${String(row.startTime || "").replace(/'/g, "")} - ${String(row.endTime || "").replace(/'/g, "")}`,
+                  lessonNo: String(row.lessonNo || ""),
+                  content: String(row.content || ""),
+                  hours: String(row.hours || ""),
+                  notes: String(row.notes || ""),
+                  room: String(row.room || "")
                 });
             }
 
-            const hrMatch = String(row[14] || "").match(/(\d+)\s*ម៉ោង/);
-            const minMatch = String(row[14] || "").match(/(\d+)\s*នាទី/);
+            const hrMatch = String(row.hours || "").match(/(\d+)\s*ម៉ោង/);
+            const minMatch = String(row.hours || "").match(/(\d+)\s*នាទី/);
             if (hrMatch) totalMinutes += parseInt(hrMatch[1], 10) * 60;
             if (minMatch) totalMinutes += parseInt(minMatch[1], 10);
         }
@@ -512,34 +458,33 @@ router.get("/teacher-history", noCache, async (req, res) => {
 
     const targetTeacher = normalizeText(teacher.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
 
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
-    const forceFresh = req.query.fresh === 'true';
-    const rows = await getMasterRows(sheets, forceFresh); 
+    const tPattern = targetTeacher.split('').join('\\s*');
+    const records = await Tracking.find({ teacher: { $regex: tPattern, $options: 'i' } }).limit(500).lean();
     
     const history = [];
 
-    rows.forEach(row => {
-      const dbTeacher = normalizeText(row[7] || '');
+    records.forEach(row => {
+      const dbTeacher = normalizeText(row.teacher || '');
 
       if (targetTeacher && dbTeacher.includes(targetTeacher)) {
           if (history.length < 500) {
               history.push({
-                major: String(row[1] || "").trim(),
-                generation: String(row[2] || "").trim(),
-                subject: String(row[5] || "").trim(),
-                cohort: String(row[6] || "").trim(),
-                date: String(row[9] || "").replace(/'/g, "").trim(),
-                startTime: String(row[10] || "").trim(),
-                endTime: String(row[11] || "").trim(),
-                hours: String(row[14] || "").trim()
+                _id: row._id,
+                major: String(row.major || "").trim(),
+                generation: String(row.generation || "").trim(),
+                subject: String(row.subject || "").trim(),
+                cohort: String(row.cohort || "").trim(),
+                date: String(row.date || "").replace(/'/g, "").trim(),
+                startTime: String(row.startTime || "").replace(/'/g, "").trim(),
+                endTime: String(row.endTime || "").replace(/'/g, "").trim(),
+                hours: String(row.hours || "").trim()
               });
           }
       }
     });
 
-    // Sort by date (descending, assuming simple string compare for now or frontend will handle it)
+    history.sort((a, b) => new Date(b.date) - new Date(a.date));
+
     res.json({ success: true, data: history });
   } catch (error) {
     console.error(error);
@@ -552,83 +497,87 @@ router.get("/teacher-history", noCache, async (req, res) => {
 // ==========================================
 router.put("/class-history", noCache, async (req, res) => {
   try {
-    const { cohort, week, date, lessonNo, content, notes, startTime, endTime, subject, teacher } = req.body;
+    const { id, cohort, week, date, lessonNo, content, notes, startTime, endTime, subject, teacher } = req.body;
     
     const pureCohort = extractPureCohort(cohort).trim().toLowerCase();
     const querySubject = normalizeText(subject);
     let targetTeacher = teacher ? normalizeText(teacher.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '')) : "";
 
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
-    const rows = await getMasterRows(sheets);
-    let rowIndex = -1;
-    let existingData = [];
+    let targetDoc = null;
     let substituteFor = null;
     let isExtraClass = false;
 
-    for (let i = 0; i < rows.length; i++) {
-      const dbCohort = extractPureCohort(rows[i][6]).trim().toLowerCase();
-      const dbSubject = normalizeText(rows[i][5]);
-      const dbTeacher = normalizeText(rows[i][7]);
-
-      if (dbCohort === pureCohort && dbSubject === querySubject && String(rows[i][8]) == String(week)) {
-          if (!targetTeacher || dbTeacher.includes(targetTeacher)) {
-              rowIndex = i + 2; 
-              existingData = rows[i];
-              const noteStr = String(rows[i][15] || "");
-              if (noteStr.includes('បង្រៀនជំនួស')) {
-                  const match = noteStr.match(/បង្រៀនជំនួស:\s*([^\]]+)/);
-                  if (match) substituteFor = match[1].trim();
-              }
-              if (noteStr.includes('[ថែមម៉ោង]')) {
-                  isExtraClass = true;
-              }
-              break;
-          }
-      }
+    if (id && id !== 'undefined' && id !== 'null') {
+       targetDoc = await Tracking.findById(id);
     }
 
-    if (rowIndex === -1) return res.status(404).json({ success: false, message: "Record not found" });
+    if (!targetDoc) {
+       const query = { week: week };
+       if (pureCohort) {
+           const cPattern = pureCohort.split('').join('\\s*');
+           query.cohort = { $regex: cPattern, $options: 'i' };
+       }
+       if (querySubject) {
+           const sPattern = querySubject.split('').join('\\s*');
+           query.subject = { $regex: sPattern, $options: 'i' };
+       }
+       if (targetTeacher) {
+           const tPattern = targetTeacher.split('').join('\\s*');
+           query.teacher = { $regex: tPattern, $options: 'i' };
+       }
+       targetDoc = await Tracking.findOne(query);
+    }
 
-    const newHours = calculateHours(startTime, endTime);
-    const oldDate = String(existingData[9] || "").replace(/'/g, "").trim();
-    const safeDate = date ? `'${date}` : existingData[9] || "";
-    const safeStartTime = startTime ? `'${startTime}` : existingData[10] || "";
-    const safeEndTime = endTime ? `'${endTime}` : existingData[11] || "";
+    if (!targetDoc) {
+      return res.status(404).json({ success: false, message: "Class not found for this week" });
+    }
 
-    const newDate = date ? String(date).trim() : oldDate;
-    const targetStatus = substituteFor ? "P" : "✓";
-    
-    if (!isExtraClass) {
-        if (oldDate && newDate && oldDate !== newDate) {
-            const visualRes = await markVisualAttendance(sheets, cohort, subject, teacher, newDate, targetStatus, substituteFor);
-            if (!visualRes.success) {
-                return res.status(400).json({ success: false, message: visualRes.message });
-            }
-            await markVisualAttendance(sheets, cohort, subject, teacher, oldDate, "A", substituteFor); 
-        } else {
-            await markVisualAttendance(sheets, cohort, subject, teacher, newDate, targetStatus, substituteFor);
+    const noteStr = String(targetDoc.notes || "");
+    if (noteStr.includes('បង្រៀនជំនួស')) {
+        isExtraClass = true;
+        const subMatch = noteStr.match(/បង្រៀនជំនួសs+([ws]+)$/i);
+        if (subMatch && subMatch[1]) {
+            substituteFor = normalizeText(subMatch[1]);
         }
     }
 
-    const updatedRow = [
-      existingData[0] || "", existingData[1] || "", existingData[2] || "", existingData[3] || "", existingData[4] || "", 
-      existingData[5] || subject, existingData[6] || extractPureCohort(cohort), existingData[7] || teacher, String(week), 
-      safeDate, safeStartTime, safeEndTime, String(lessonNo), String(content), newHours, String(notes || ""), existingData[16] || "" 
-    ];
-
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SPREADSHEETS.TRACKING, 
-      range: `'${MASTER_TAB}'!A${rowIndex}:Q${rowIndex}`,
-      valueInputOption: "USER_ENTERED", 
-      requestBody: { values: [updatedRow] },
-    });
-
-    // UPDATE CACHE DIRECTLY
-    if (masterSheetCache.rows && rowIndex - 2 >= 0 && rowIndex - 2 < masterSheetCache.rows.length) {
-        masterSheetCache.rows[rowIndex - 2] = updatedRow;
+    const safeDate = String(date || "");
+    const safeStartTime = String(startTime || "");
+    const safeEndTime = String(endTime || "");
+    
+    let newHours = targetDoc.hours;
+    if (safeStartTime && safeEndTime) {
+        try {
+            const parseTime = (t) => {
+                const [time, modifier] = (t || "").trim().split(' ');
+                if (!time) return 0;
+                let [h, m] = time.split(':');
+                h = parseInt(h, 10) || 0;
+                m = parseInt(m, 10) || 0;
+                if (modifier && modifier.toUpperCase() === 'PM' && h < 12) h += 12;
+                if (modifier && modifier.toUpperCase() === 'AM' && h === 12) h = 0;
+                return h * 60 + m;
+            };
+            const m1 = parseTime(safeStartTime);
+            const m2 = parseTime(safeEndTime);
+            let diff = m2 - m1;
+            if (diff < 0) diff += 24 * 60;
+            if (diff > 0) {
+                newHours = `${Math.floor(diff / 60)} ម៉ោង ${diff % 60} នាទី`;
+            }
+        } catch(e) {}
     }
+
+    targetDoc.date = safeDate;
+    targetDoc.startTime = safeStartTime;
+    targetDoc.endTime = safeEndTime;
+    targetDoc.lessonNo = String(lessonNo || "");
+    targetDoc.content = String(content || "");
+    targetDoc.hours = newHours;
+    targetDoc.notes = String(notes || "");
+
+    await targetDoc.save();
+
     sseEmitter.emit('tracking_updated');
 
     res.json({ success: true, message: "Updated successfully" });
@@ -643,75 +592,59 @@ router.put("/class-history", noCache, async (req, res) => {
 // ==========================================
 router.delete("/class-history", noCache, async (req, res) => {
   try {
-    const { cohort, week, subject, teacher, date } = req.query;
+    const { id, cohort, week, subject, teacher, date } = req.query;
     
     const pureCohort = extractPureCohort(cohort).trim().toLowerCase();
     const querySubject = normalizeText(subject);
     let targetTeacher = teacher ? normalizeText(teacher.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '')) : "";
 
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
-    const rows = await getMasterRows(sheets);
-    let rowIndex = -1;
+    let targetDoc = null;
     let deletedDate = "";
     let substituteFor = null;
     let isExtraClass = false;
 
-    for (let i = 0; i < rows.length; i++) {
-      const dbCohort = extractPureCohort(rows[i][6]).trim().toLowerCase();
-      const dbSubject = normalizeText(rows[i][5]);
-      const dbTeacher = normalizeText(rows[i][7]);
-      const dbDate = String(rows[i][9] || "").replace(/'/g, "").trim(); 
-
-      if (dbCohort === pureCohort && dbSubject === querySubject && String(rows[i][8]) == String(week)) {
-          let isMatch = true;
-          if (targetTeacher && !dbTeacher.includes(targetTeacher)) isMatch = false;
-          
-          const cleanDate = date ? String(date).replace(/'/g, "").trim() : "";
-          if (cleanDate && dbDate !== cleanDate) isMatch = false; 
-
-          if (isMatch) {
-              rowIndex = i + 2; 
-              deletedDate = dbDate;
-              const noteStr = String(rows[i][15] || "");
-              if (noteStr.includes('បង្រៀនជំនួស')) {
-                  const match = noteStr.match(/បង្រៀនជំនួស:\s*([^\]]+)/);
-                  if (match) substituteFor = match[1].trim();
-              }
-              if (noteStr.includes('[ថែមម៉ោង]')) {
-                  isExtraClass = true;
-              }
-              break;
-          }
-      }
+    if (id && id !== 'undefined' && id !== 'null') {
+       targetDoc = await Tracking.findById(id);
     }
 
-    if (rowIndex === -1) return res.status(404).json({ success: false, message: "Record not found" });
+    if (!targetDoc) {
+       const query = { week: week };
+       if (pureCohort) {
+           const cPattern = pureCohort.split('').join('\\s*');
+           query.cohort = { $regex: cPattern, $options: 'i' };
+       }
+       if (querySubject) {
+           const sPattern = querySubject.split('').join('\\s*');
+           query.subject = { $regex: sPattern, $options: 'i' };
+       }
+       if (targetTeacher) {
+           const tPattern = targetTeacher.split('').join('\\s*');
+           query.teacher = { $regex: tPattern, $options: 'i' };
+       }
+       targetDoc = await Tracking.findOne(query);
+    }
 
-    const sheetIdRes = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TRACKING });
-    const masterSheet = sheetIdRes.data.sheets.find(s => s.properties.title === MASTER_TAB);
-
-    await sheets.spreadsheets.batchUpdate({
-        spreadsheetId: SPREADSHEETS.TRACKING,
-        requestBody: {
-            requests: [{
-                deleteDimension: {
-                    range: {
-                        sheetId: masterSheet.properties.sheetId, dimension: "ROWS", startIndex: rowIndex - 1, endIndex: rowIndex        
-                    }
-                }
-            }]
+    if (targetDoc) {
+        deletedDate = String(targetDoc.date || "").replace(/'/g, "").trim();
+        const noteStr = String(targetDoc.notes || "");
+        if (noteStr.includes('បង្រៀនជំនួស')) {
+            isExtraClass = true;
+            const subMatch = noteStr.match(/បង្រៀនជំនួស\s+([\w\s]+)$/i);
+            if (subMatch && subMatch[1]) {
+                substituteFor = normalizeText(subMatch[1]);
+            }
         }
-    });
-
-    // UPDATE CACHE DIRECTLY
-    if (masterSheetCache.rows && rowIndex - 2 >= 0 && rowIndex - 2 < masterSheetCache.rows.length) {
-        masterSheetCache.rows.splice(rowIndex - 2, 1);
     }
+
+    if (!targetDoc) return res.status(404).json({ success: false, message: "Record not found" });
+
+    await Tracking.findByIdAndDelete(targetDoc._id);
+
     sseEmitter.emit('tracking_updated');
 
     if (deletedDate && !isExtraClass) {
+        const authClient = await auth.getClient();
+        const sheets = google.sheets({ version: "v4", auth: authClient });
         await markVisualAttendance(sheets, cohort, subject, teacher, deletedDate, "", substituteFor); 
     }
     
@@ -725,68 +658,54 @@ router.delete("/class-history", noCache, async (req, res) => {
 // ==========================================
 // GET: ADMIN TRACKING DIRECTORY
 // ==========================================
-const fs = require('fs');
-const path = require('path');
-
 router.get('/tracking-directory', noCache, async (req, res) => {
   try {
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
+    const avatars = await Avatar.find();
     let avatarMap = {};
-    const forceFresh = req.query.fresh === 'true';
-
-    try {
-      if (!forceFresh && avatarCache.map && (Date.now() - avatarCache.lastFetch < CACHE_TTL)) {
-        avatarMap = avatarCache.map;
-      } else {
-        const avatarRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Avatars'!A2:C" });
-        const avatarRows = avatarRes.data.values || [];
-        avatarRows.forEach(row => {
-          const name = String(row[0] || '').trim();
-          const imgUrl = String(row[2] || '').trim(); 
-          if (name && imgUrl) {
-            const cleanName = normalizeText(name.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
-            avatarMap[cleanName] = imgUrl;
-            avatarMap[normalizeText(name)] = imgUrl;
-          }
-        });
-        avatarCache.map = avatarMap;
-        avatarCache.lastFetch = Date.now();
+    avatars.forEach(av => {
+      if (av.nameKh && av.avatarUrl) {
+        const cleanName = normalizeText(av.nameKh.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
+        avatarMap[cleanName] = av.avatarUrl;
+        avatarMap[normalizeText(av.nameKh)] = av.avatarUrl;
       }
-    } catch (e) {}
+    });
 
-    const rows = await getMasterRows(sheets, forceFresh);
-    
-    let closedClasses = [];
-    try {
-        const closedFile = path.join(__dirname, '../data/closed_classes.json');
-        if (fs.existsSync(closedFile)) {
-            closedClasses = JSON.parse(fs.readFileSync(closedFile, 'utf8')) || [];
+    const groupedRecords = await Tracking.aggregate([
+      {
+        $group: {
+          _id: { cohort: "$cohort", subject: "$subject", teacher: "$teacher" },
+          department: { $first: "$department" },
+          major: { $first: "$major" },
+          generation: { $first: "$generation" },
+          year: { $first: "$year" },
+          semester: { $first: "$semester" },
+          filledWeeks: { $addToSet: "$week" }
         }
-    } catch (e) {
-        console.error("Error reading closed classes", e);
-    }
+      }
+    ]);
+    
+    const closedDocs = await ClosedClass.find();
+    const closedClasses = closedDocs.map(c => c.key);
 
     const dirMap = {};
 
-    rows.forEach(row => {
-      if (!row[5] || !row[6] || String(row[5]).trim() === "" || String(row[6]).trim() === "") return;
+    groupedRecords.forEach(group => {
+      const row = group._id;
+      const dept = group.department || "Unknown Department";
+      const major = group.major || "Unknown Major";
+      const generation = group.generation || "Unknown Generation";
+      const year = group.year || "?";
+      const semester = group.semester || "?";
+      const subject = String(row.subject).trim();
+      const cohort = extractPureCohort(row.cohort).trim(); 
+      const teacher = String(row.teacher || "Unknown Teacher");
 
-      const dept = String(row[0] || "Unknown Department");
-      const major = String(row[1] || "Unknown Major");
-      const generation = String(row[2] || "Unknown Generation");
-      const year = String(row[3] || "?");
-      const semester = String(row[4] || "?");
-      const subject = String(row[5]).trim();
-      const cohort = extractPureCohort(row[6]).trim(); 
-      const teacher = String(row[7] || "Unknown Teacher");
-      const week = parseInt(row[8], 10);
-
-      const key = `${cohort}_${subject}_${teacher}`;
+      const cleanTeacherName = teacher.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '').trim();
+      const key = `${cohort}_${subject}_${cleanTeacherName}`;
       
+      const parsedWeeks = group.filledWeeks.filter(w => !isNaN(parseInt(w, 10))).map(w => parseInt(w, 10));
+
       if (!dirMap[key]) {
-          let cleanTeacherName = teacher.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '').trim();
           let normalizedTeacher = normalizeText(cleanTeacherName);
           let avatarUrl = avatarMap[normalizedTeacher] || avatarMap[normalizeText(teacher)] || null;
           
@@ -794,18 +713,29 @@ router.get('/tracking-directory', noCache, async (req, res) => {
               key: key,
               tab: `${cohort}-${cleanTeacherName}-${subject}`, 
               cohort: cohort,
-              generation: generation, year: year, semester: semester, department: dept, major: major, subject: subject, teacher: teacher, avatarUrl: avatarUrl, filledWeeks: [],
+              generation: generation, 
+              year: year, 
+              semester: semester, 
+              department: dept, 
+              major: major, 
+              subject: subject, 
+              teacher: cleanTeacherName, 
+              avatarUrl: avatarUrl, 
+              filledWeeks: [...parsedWeeks],
               isClosed: closedClasses.includes(key)
           };
-      }
-      
-      if (!isNaN(week) && !dirMap[key].filledWeeks.includes(week)) {
-          dirMap[key].filledWeeks.push(week);
+      } else {
+          parsedWeeks.forEach(w => {
+              if (!dirMap[key].filledWeeks.includes(w)) {
+                  dirMap[key].filledWeeks.push(w);
+              }
+          });
       }
     });
 
     res.json({ success: true, data: Object.values(dirMap) });
   } catch (error) {
+    console.error("Error loading directory:", error);
     res.status(500).json({ success: false, message: "Error loading directory" });
   }
 });
@@ -819,40 +749,30 @@ router.get("/my-full-history", noCache, async (req, res) => {
 
     const targetTeacher = normalizeText(teacher.replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, ''));
 
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-
-    // Fetch everything from MasterTracking
-    const rows = await getMasterRows(sheets);
+    const regexPattern = targetTeacher.split('').join('\\s*');
+    const records = await Tracking.find({ teacher: { $regex: regexPattern, $options: 'i' } })
+                                  .sort({ createdAt: -1 })
+                                  .limit(500)
+                                  .lean();
     
-    const allHistory = [];
-
-    rows.forEach(row => {
-      const dbTeacher = normalizeText(row[7]);
-
-      // If the teacher's name matches, grab the data regardless of the current schedule
-      if (dbTeacher.includes(targetTeacher)) {
-        if (allHistory.length < 500) {
-            allHistory.push({
-              department: String(row[0] || ""),
-              major: String(row[1] || ""),
-              generation: String(row[2] || ""),
-              year: String(row[3] || ""),
-              semester: String(row[4] || ""),
-              subject: String(row[5] || ""),
-              cohort: String(row[6] || ""),
-              week: parseInt(row[8] || "0", 10),
-              date: String(row[9] || ""),
-              time: `${row[10] || ""} - ${row[11] || ""}`,
-              lessonNo: String(row[12] || ""),
-              content: String(row[13] || ""),
-              hours: String(row[14] || ""),
-              notes: String(row[15] || ""),
-              room: String(row[16] || "")
-            });
-        }
-      }
-    });
+    const allHistory = records.map(row => ({
+      _id: row._id,
+      department: String(row.department || ""),
+      major: String(row.major || ""),
+      generation: String(row.generation || ""),
+      year: String(row.year || ""),
+      semester: String(row.semester || ""),
+      subject: String(row.subject || ""),
+      cohort: String(row.cohort || ""),
+      week: parseInt(row.week || "0", 10),
+      date: String(row.date || "").replace(/'/g, ""),
+      time: `${String(row.startTime || "").replace(/'/g, "")} - ${String(row.endTime || "").replace(/'/g, "")}`,
+      lessonNo: String(row.lessonNo || ""),
+      content: String(row.content || ""),
+      hours: String(row.hours || ""),
+      notes: String(row.notes || ""),
+      room: String(row.room || "")
+    }));
 
     res.json({ success: true, data: allHistory });
   } catch (error) {

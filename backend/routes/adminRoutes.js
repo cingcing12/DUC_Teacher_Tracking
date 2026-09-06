@@ -5,216 +5,122 @@ require("dotenv").config();
 const scheduleCache = require('../utils/scheduleCache');
 const sseEmitter = require('../utils/sseEmitter');
 const memCache = require('../utils/memCache');
+const Faculty = require('../models/Faculty');
+const Major = require('../models/Major');
+const Avatar = require('../models/Avatar');
+const ClosedClass = require('../models/ClosedClass');
 // GET & POST MAJORS
 router.get('/majors', async (req, res) => {
+
   try {
-      const authClient = await auth.getClient();
-      const sheets = google.sheets({ version: "v4", auth: authClient });
-      const response = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Majors'!A2:B" });
-      const rows = response.data.values || [];
-      const majorMap = {};
-      rows.forEach(row => { if (row[0] && row[1]) majorMap[row[0]] = row[1]; });
-      res.json({ success: true, data: majorMap });
+    const majors = await Major.find().sort({ createdAt: -1 });
+    const formatted = {};
+    majors.forEach(m => { formatted[m.code] = m.fullName; });
+    res.json({ success: true, data: formatted });
   } catch (error) { res.status(500).json({ success: false, message: "Error fetching majors" }); }
+
 });
 
 router.post('/majors', async (req, res) => {
+
   try {
-      const { code, fullName } = req.body;
-      const authClient = await auth.getClient();
-      const sheets = google.sheets({ version: "v4", auth: authClient });
-      await sheets.spreadsheets.values.append({
-          spreadsheetId: SPREADSHEETS.TRACKING, range: "'Majors'!A:B", valueInputOption: "USER_ENTERED", insertDataOption: "INSERT_ROWS", requestBody: { values: [[code, fullName]] }
-      });
-      const sseEmitter = require('../utils/sseEmitter');
-      scheduleCache.invalidateCache();
-      sseEmitter.emit('mapping_updated');
-      res.json({ success: true, message: "Major added successfully!" });
+    const { code, fullName } = req.body;
+    if (!code || !fullName) return res.status(400).json({ success: false, message: "Missing data" });
+    
+    await Major.create({ code, fullName });
+    
+    const sseEmitter = require('../utils/sseEmitter');
+    sseEmitter.emit('mapping_updated');
+    res.json({ success: true, message: "Major added" });
   } catch (error) { res.status(500).json({ success: false, message: "Error adding major" }); }
+
 });
 
 // GET & POST FACULTIES
 router.get('/faculties', async (req, res) => {
+
   try {
-      const authClient = await auth.getClient();
-      const sheets = google.sheets({ version: "v4", auth: authClient });
-      const response = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A2:B" });
-      const rows = response.data.values || [];
-      const facultyMap = {};
-      rows.forEach(row => { if (row[0] && row[1]) facultyMap[row[0]] = row[1]; });
-      res.json({ success: true, data: facultyMap });
+    const faculties = await Faculty.find().sort({ createdAt: -1 });
+    const formatted = {};
+    faculties.forEach(f => { formatted[f.code] = f.fullName; });
+    res.json({ success: true, data: formatted });
   } catch (error) { res.status(500).json({ success: false, message: "Error fetching faculties" }); }
+
 });
 
 router.post('/faculties', async (req, res) => {
+
   try {
-      const { code, fullName } = req.body;
-      const authClient = await auth.getClient();
-      const sheets = google.sheets({ version: "v4", auth: authClient });
-      await sheets.spreadsheets.values.append({
-          spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A:B", valueInputOption: "USER_ENTERED", insertDataOption: "INSERT_ROWS", requestBody: { values: [[code, fullName]] }
-      });
-      const sseEmitter = require('../utils/sseEmitter');
-      scheduleCache.invalidateCache();
-      sseEmitter.emit('mapping_updated');
-      res.json({ success: true, message: "Faculty added successfully!" });
+    const { code, fullName } = req.body;
+    if (!code || !fullName) return res.status(400).json({ success: false, message: "Missing data" });
+    
+    await Faculty.create({ code, fullName });
+    
+    const sseEmitter = require('../utils/sseEmitter');
+    sseEmitter.emit('mapping_updated');
+    res.json({ success: true, message: "Faculty added" });
   } catch (error) { res.status(500).json({ success: false, message: "Error adding faculty" }); }
+
 });
 
 // EDIT MAJOR
 router.put('/majors/:code', async (req, res) => {
+
   try {
-      const { code } = req.params;
-      const { newCode, fullName } = req.body;
-      const authClient = await auth.getClient();
-      const sheets = google.sheets({ version: "v4", auth: authClient });
-
-      const response = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Majors'!A:A" });
-      const rows = response.data.values || [];
-      
-      let rowIndex = -1;
-      for (let i = 0; i < rows.length; i++) {
-          if (rows[i][0] && rows[i][0].trim() === code.trim()) {
-              rowIndex = i + 1; // Google Sheets is 1-indexed
-              break;
-          }
-      }
-
-      if (rowIndex === -1) return res.status(404).json({ success: false, message: "Major not found" });
-
-      await sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEETS.TRACKING,
-          range: `'Majors'!A${rowIndex}:B${rowIndex}`,
-          valueInputOption: "USER_ENTERED",
-          requestBody: { values: [[newCode, fullName]] }
-      });
-      
-      const sseEmitter = require('../utils/sseEmitter');
-      const scheduleCache = require('../utils/scheduleCache');
-      scheduleCache.invalidateCache();
-      sseEmitter.emit('mapping_updated');
-      res.json({ success: true, message: "Major updated successfully!", newCode });
+    const { code } = req.params;
+    const { newCode, newFullName } = req.body;
+    
+    await Major.updateOne({ code }, { code: newCode, fullName: newFullName });
+    
+    const sseEmitter = require('../utils/sseEmitter');
+    sseEmitter.emit('mapping_updated');
+    res.json({ success: true, message: "Major updated" });
   } catch (error) { res.status(500).json({ success: false, message: "Error updating major" }); }
+
 });
 
 // DELETE MAJOR
 router.delete('/majors/:code', async (req, res) => {
+
   try {
-      const { code } = req.params;
-      const authClient = await auth.getClient();
-      const sheets = google.sheets({ version: "v4", auth: authClient });
-      
-      const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TRACKING });
-      const targetSheet = sheetMeta.data.sheets.find(s => s.properties.title === 'Majors');
-      if (!targetSheet) return res.status(404).json({ success: false, message: "Tab not found" });
-      const sheetId = targetSheet.properties.sheetId;
-
-      const response = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Majors'!A:A" });
-      const rows = response.data.values || [];
-      
-      let rowIndex = -1;
-      for (let i = 0; i < rows.length; i++) {
-          if (rows[i][0] && rows[i][0].trim() === code.trim()) {
-              rowIndex = i;
-              break;
-          }
-      }
-
-      if (rowIndex === -1) return res.status(404).json({ success: false, message: "Major not found" });
-
-      await sheets.spreadsheets.batchUpdate({
-          spreadsheetId: SPREADSHEETS.TRACKING,
-          requestBody: {
-              requests: [{
-                  deleteDimension: {
-                      range: { sheetId: sheetId, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
-                  }
-              }]
-          }
-      });
-      const sseEmitter = require('../utils/sseEmitter');
-      scheduleCache.invalidateCache();
-      sseEmitter.emit('mapping_updated');
-      res.json({ success: true, message: "Major deleted successfully!" });
+    const { code } = req.params;
+    await Major.deleteOne({ code });
+    
+    const sseEmitter = require('../utils/sseEmitter');
+    sseEmitter.emit('mapping_updated');
+    res.json({ success: true, message: "Major deleted" });
   } catch (error) { res.status(500).json({ success: false, message: "Error deleting major" }); }
+
 });
 
 // EDIT FACULTY
 router.put('/faculties/:code', async (req, res) => {
+
   try {
-      const { code } = req.params;
-      const { newCode, fullName } = req.body;
-      const authClient = await auth.getClient();
-      const sheets = google.sheets({ version: "v4", auth: authClient });
-
-      const response = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A:A" });
-      const rows = response.data.values || [];
-      
-      let rowIndex = -1;
-      for (let i = 0; i < rows.length; i++) {
-          if (rows[i][0] && rows[i][0].trim() === code.trim()) {
-              rowIndex = i + 1; // Google Sheets is 1-indexed
-              break;
-          }
-      }
-
-      if (rowIndex === -1) return res.status(404).json({ success: false, message: "Faculty not found" });
-
-      await sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEETS.TRACKING,
-          range: `'Faculties'!A${rowIndex}:B${rowIndex}`,
-          valueInputOption: "USER_ENTERED",
-          requestBody: { values: [[newCode, fullName]] }
-      });
-      
-      const sseEmitter = require('../utils/sseEmitter');
-      const scheduleCache = require('../utils/scheduleCache');
-      scheduleCache.invalidateCache();
-      sseEmitter.emit('mapping_updated');
-      res.json({ success: true, message: "Faculty updated successfully!", newCode });
+    const { code } = req.params;
+    const { newCode, newFullName } = req.body;
+    
+    await Faculty.updateOne({ code }, { code: newCode, fullName: newFullName });
+    
+    const sseEmitter = require('../utils/sseEmitter');
+    sseEmitter.emit('mapping_updated');
+    res.json({ success: true, message: "Faculty updated" });
   } catch (error) { res.status(500).json({ success: false, message: "Error updating faculty" }); }
+
 });
 
 // DELETE FACULTY
 router.delete('/faculties/:code', async (req, res) => {
+
   try {
-      const { code } = req.params;
-      const authClient = await auth.getClient();
-      const sheets = google.sheets({ version: "v4", auth: authClient });
-      
-      const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEETS.TRACKING });
-      const targetSheet = sheetMeta.data.sheets.find(s => s.properties.title === 'Faculties');
-      if (!targetSheet) return res.status(404).json({ success: false, message: "Tab not found" });
-      const sheetId = targetSheet.properties.sheetId;
-
-      const response = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Faculties'!A:A" });
-      const rows = response.data.values || [];
-      
-      let rowIndex = -1;
-      for (let i = 0; i < rows.length; i++) {
-          if (rows[i][0] && rows[i][0].trim() === code.trim()) {
-              rowIndex = i;
-              break;
-          }
-      }
-
-      if (rowIndex === -1) return res.status(404).json({ success: false, message: "Faculty not found" });
-
-      await sheets.spreadsheets.batchUpdate({
-          spreadsheetId: SPREADSHEETS.TRACKING,
-          requestBody: {
-              requests: [{
-                  deleteDimension: {
-                      range: { sheetId: sheetId, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 }
-                  }
-              }]
-          }
-      });
-      const sseEmitter = require('../utils/sseEmitter');
-      scheduleCache.invalidateCache();
-      sseEmitter.emit('mapping_updated');
-      res.json({ success: true, message: "Faculty deleted successfully!" });
+    const { code } = req.params;
+    await Faculty.deleteOne({ code });
+    
+    const sseEmitter = require('../utils/sseEmitter');
+    sseEmitter.emit('mapping_updated');
+    res.json({ success: true, message: "Faculty deleted" });
   } catch (error) { res.status(500).json({ success: false, message: "Error deleting faculty" }); }
+
 });
 
 // ==========================================
@@ -252,8 +158,8 @@ router.get('/admin/teachers', async (req, res) => {
 
     let avatarMap = {};
     try {
-      const avatarRes = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEETS.TRACKING, range: "'Avatars'!A2:C" });
-      const avatarRows = avatarRes.data.values || [];
+      const avatars = await Avatar.find();
+    const avatarRows = avatars.map(a => [a.nameKh, a.phone, a.avatarUrl]);
       avatarRows.forEach(row => {
         const name = String(row[0] || '').trim();
         const imgUrl = String(row[2] || '').trim(); 
@@ -547,148 +453,67 @@ router.get('/admin/attendance-sheet/tabs', async (req, res) => {
 // ==========================================
 
 router.get('/admin/closed-classes', async (req, res) => {
-    try {
-        const authClient = await auth.getClient();
-        const sheets = google.sheets({ version: "v4", auth: authClient });
-        const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEETS.TRACKING,
-            range: "'ClosedClasses'!A:A"
-        });
-        const rows = response.data.values || [];
-        const classes = rows.map(r => r[0]).filter(c => c && c !== "Class Key");
-        res.json({ success: true, data: classes });
-    } catch (e) {
-        // Tab probably doesn't exist yet
-        res.json({ success: true, data: [] });
-    }
+
+  try {
+    const closed = await ClosedClass.find();
+    res.json({ success: true, data: closed.map(c => c.key) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching closed classes" });
+  }
+
 });
 
 router.post('/admin/closed-classes/toggle', async (req, res) => {
-    const { key } = req.body;
-    if (!key) return res.status(400).json({ success: false, message: "Class key required" });
-    
-    try {
-        const authClient = await auth.getClient();
-        const sheets = google.sheets({ version: "v4", auth: authClient });
-        
-        let classes = [];
-        try {
-            const response = await sheets.spreadsheets.values.get({
-                spreadsheetId: SPREADSHEETS.TRACKING,
-                range: "'ClosedClasses'!A:A"
-            });
-            const rows = response.data.values || [];
-            classes = rows.map(r => r[0]).filter(c => c && c !== "Class Key");
-        } catch (error) {
-            // Tab might not exist, create it
-            if (error.message && error.message.includes("Unable to parse range")) {
-                await sheets.spreadsheets.batchUpdate({
-                    spreadsheetId: SPREADSHEETS.TRACKING,
-                    requestBody: {
-                        requests: [{ addSheet: { properties: { title: "ClosedClasses" } } }]
-                    }
-                });
-            } else {
-                throw error;
-            }
-        }
-        
-        const index = classes.indexOf(key);
-        if (index === -1) {
-            classes.push(key);
-        } else {
-            classes.splice(index, 1);
-        }
-        
-        const updatedValues = [["Class Key"], ...classes.map(c => [c])];
-        
-        await sheets.spreadsheets.values.clear({
-            spreadsheetId: SPREADSHEETS.TRACKING,
-            range: "'ClosedClasses'!A:A"
-        });
-        
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: SPREADSHEETS.TRACKING,
-            range: "'ClosedClasses'!A:A",
-            valueInputOption: "USER_ENTERED",
-            insertDataOption: "OVERWRITE",
-            requestBody: { values: updatedValues }
-        });
-        
-        scheduleCache.updateClosedClasses(classes);
-        sseEmitter.emit('class_toggled', { action: 'toggle', key: key });
 
-        res.json({ success: true, message: "Toggled successfully", isClosed: index === -1 });
-    } catch (e) {
-        console.error("Error toggling closed class:", e);
-        res.status(500).json({ success: false, message: "Error toggling closed class" });
+  try {
+    const { key, action } = req.body;
+    if (!key) return res.status(400).json({ success: false, message: "Class key required" });
+
+    if (action === "close") {
+      await ClosedClass.updateOne({ key }, { key }, { upsert: true });
+    } else {
+      await ClosedClass.deleteOne({ key });
     }
+
+    const closed = await ClosedClass.find();
+    const classes = closed.map(c => c.key);
+    scheduleCache.updateClosedClasses(classes);
+    
+    const sseEmitter = require('../utils/sseEmitter');
+    sseEmitter.emit('class_toggled', { key, isClosed: action === "close" });
+
+    res.json({ success: true, message: action === "close" ? "Class closed successfully" : "Class re-opened successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error toggling class status" });
+  }
+
 });
 
 router.post('/admin/closed-classes/bulk-toggle', async (req, res) => {
+
+  try {
     const { keys, action } = req.body;
     if (!keys || !Array.isArray(keys)) return res.status(400).json({ success: false, message: "Class keys required" });
-    
-    try {
-        const authClient = await auth.getClient();
-        const sheets = google.sheets({ version: "v4", auth: authClient });
-        
-        let classes = [];
-        try {
-            const response = await sheets.spreadsheets.values.get({
-                spreadsheetId: SPREADSHEETS.TRACKING,
-                range: "'ClosedClasses'!A:A"
-            });
-            const rows = response.data.values || [];
-            classes = rows.map(r => r[0]).filter(c => c && c !== "Class Key");
-        } catch (error) {
-            if (error.message && error.message.includes("Unable to parse range")) {
-                await sheets.spreadsheets.batchUpdate({
-                    spreadsheetId: SPREADSHEETS.TRACKING,
-                    requestBody: {
-                        requests: [{ addSheet: { properties: { title: "ClosedClasses" } } }]
-                    }
-                });
-            } else {
-                throw error;
-            }
-        }
-        
-        if (action === 'close') {
-            keys.forEach(key => {
-                if (!classes.includes(key)) {
-                    classes.push(key);
-                }
-            });
-        } else if (action === 'open') {
-            classes = classes.filter(c => !keys.includes(c));
-        }
-        
-        const updatedValues = [["Class Key"], ...classes.map(c => [c])];
-        
-        await sheets.spreadsheets.values.clear({
-            spreadsheetId: SPREADSHEETS.TRACKING,
-            range: "'ClosedClasses'!A:A"
-        });
-        
-        if (updatedValues.length > 0) {
-            await sheets.spreadsheets.values.append({
-                spreadsheetId: SPREADSHEETS.TRACKING,
-                range: "'ClosedClasses'!A:A",
-                valueInputOption: "USER_ENTERED",
-                insertDataOption: "OVERWRITE",
-                requestBody: { values: updatedValues }
-            });
-        }
-        
-        scheduleCache.updateClosedClasses(classes);
-        sseEmitter.emit('class_toggled', { action: 'bulk', keys: keys });
 
-        res.json({ success: true, message: "Bulk toggled successfully" });
-    } catch (e) {
-        console.error("Error bulk toggling closed classes:", e);
-        res.status(500).json({ success: false, message: "Error bulk toggling closed classes" });
+    if (action === "close") {
+      const ops = keys.map(key => ({ updateOne: { filter: { key }, update: { key }, upsert: true } }));
+      await ClosedClass.bulkWrite(ops);
+    } else {
+      await ClosedClass.deleteMany({ key: { $in: keys } });
     }
+
+    const closed = await ClosedClass.find();
+    const classList = closed.map(c => c.key);
+    scheduleCache.updateClosedClasses(classList);
+
+    const sseEmitter = require('../utils/sseEmitter');
+    keys.forEach(key => sseEmitter.emit('class_toggled', { key, isClosed: action === "close" }));
+
+    res.json({ success: true, message: "Bulk action completed" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error performing bulk action" });
+  }
+
 });
 
 module.exports = router;
