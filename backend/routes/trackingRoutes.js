@@ -287,18 +287,35 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
 // ==========================================
 router.post("/track-lesson", async (req, res) => {
   try {
-    const { teacherNameKh, department, subject, cohort, room, week, date, startTime, endTime, lessonNo, hours, content, notes, year, semester, substituteFor, isExtraClass } = req.body;
-    
-    // Attempt visual attendance marking in Google Sheets
-    if (!isExtraClass) {
-        const authClient = await auth.getClient();
-        const sheets = google.sheets({ version: "v4", auth: authClient });
-        const attendanceStatus = substituteFor ? "P" : "✓";
-        const visualRes = await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, attendanceStatus, substituteFor);
-        if (!visualRes.success) {
-            return res.status(400).json({ success: false, message: visualRes.message });
-        }
-    }
+    const { teacherNameKh, department, subject, cohort, room, week, date, startTime, endTime, lessonNo, hours, content, notes, year, semester, substituteFor, isExtraClass, day } = req.body;
+        // Attempt visual attendance marking in Google Sheets in the background
+      if (!isExtraClass) {
+          const dayIndexMap = { 'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6 };
+          const targetName = String(day || "").toLowerCase().trim();
+          const expectedIndex = dayIndexMap[targetName];
+          const selectedIndex = date ? new Date(date).getDay() : -1;
+          const isMatch = (expectedIndex === undefined) || (expectedIndex === selectedIndex);
+
+          const authClient = await auth.getClient();
+          const sheets = google.sheets({ version: "v4", auth: authClient });
+          const attendanceStatus = substituteFor ? "P" : "✓";
+
+          if (isMatch) {
+              (async () => {
+                  try {
+                      await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, attendanceStatus, substituteFor);
+                  } catch (e) {
+                      console.error("Background visual marking failed:", e);
+                  }
+              })();
+          } else {
+              // Synchronous check to extract missing dates and block DB save
+              const visualRes = await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, attendanceStatus, substituteFor);
+              if (!visualRes.success) {
+                  return res.status(400).json({ success: false, message: visualRes.message });
+              }
+          }
+      }
 
     const pureCohort = extractPureCohort(cohort);
     let fullMajorName = pureCohort; 
@@ -634,6 +651,9 @@ router.delete("/class-history", noCache, async (req, res) => {
                 substituteFor = normalizeText(subMatch[1]);
             }
         }
+        if (String(targetDoc.cohort).trim().toLowerCase() === 'unknown') {
+            isExtraClass = true;
+        }
     }
 
     if (!targetDoc) return res.status(404).json({ success: false, message: "Record not found" });
@@ -643,9 +663,15 @@ router.delete("/class-history", noCache, async (req, res) => {
     sseEmitter.emit('tracking_updated');
 
     if (deletedDate && !isExtraClass) {
-        const authClient = await auth.getClient();
-        const sheets = google.sheets({ version: "v4", auth: authClient });
-        await markVisualAttendance(sheets, cohort, subject, teacher, deletedDate, "", substituteFor); 
+        (async () => {
+            try {
+                const authClient = await auth.getClient();
+                const sheets = google.sheets({ version: "v4", auth: authClient });
+                await markVisualAttendance(sheets, targetDoc.cohort, targetDoc.subject, targetDoc.teacher, deletedDate, "", substituteFor); 
+            } catch (e) {
+                console.error("Background visual deletion failed:", e);
+            }
+        })();
     }
     
     res.json({ success: true, message: "Deleted successfully" });
@@ -679,7 +705,8 @@ router.get('/tracking-directory', noCache, async (req, res) => {
           generation: { $first: "$generation" },
           year: { $first: "$year" },
           semester: { $first: "$semester" },
-          filledWeeks: { $addToSet: "$week" }
+          filledWeeks: { $addToSet: "$week" },
+          dates: { $addToSet: "$date" }
         }
       }
     ]);
@@ -722,6 +749,7 @@ router.get('/tracking-directory', noCache, async (req, res) => {
               teacher: cleanTeacherName, 
               avatarUrl: avatarUrl, 
               filledWeeks: [...parsedWeeks],
+              dates: group.dates || [],
               isClosed: closedClasses.includes(key)
           };
       } else {
@@ -730,6 +758,13 @@ router.get('/tracking-directory', noCache, async (req, res) => {
                   dirMap[key].filledWeeks.push(w);
               }
           });
+          if (group.dates) {
+              group.dates.forEach(d => {
+                  if (!dirMap[key].dates.includes(d)) {
+                      dirMap[key].dates.push(d);
+                  }
+              });
+          }
       }
     });
 

@@ -52,7 +52,7 @@ const normalizeText = (str) => {
 // ==========================================
 // HELPER: GET AVATAR URL
 // ==========================================
-async function getAvatarUrl(sheets, nameKh, phone) {
+async function getAvatarUrl(nameKh, phone) {
   try {
     const cleanInputName = normalizeText(nameKh ? String(nameKh).replace(/លោកគ្រូ|អ្នកគ្រូ|Dr\.|Dr/gi, '') : "");
     const avatars = await Avatar.find();

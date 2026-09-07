@@ -121,42 +121,58 @@
             </div>
 
             <div v-else-if="trackingLevel === 3 && !isFetchingDirectory" key="lvl3" class="flex flex-col">
-              <!-- Search Bar with Dropdown -->
-              <div class="mb-6 relative max-w-md z-20">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 z-30">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <!-- Search Bar and Filters -->
+              <div class="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center z-20">
+                <!-- Search Bar with Dropdown -->
+                <div class="relative w-full sm:max-w-md z-20 flex-grow">
+                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 z-30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                  </div>
+                  <input 
+                    v-model="searchQuery" 
+                    @focus="isSearchDropdownOpen = true"
+                    @blur="closeSearchDropdown"
+                    type="text" 
+                    placeholder="Search teachers by name..." 
+                    class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm font-bold text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 transition-all shadow-sm relative z-20"
+                  >
+                  <button v-if="searchQuery" @click="clearSearch" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors z-20">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  </button>
+                  
+                  <!-- Autocomplete Dropdown -->
+                  <transition name="fade">
+                    <ul v-if="isSearchDropdownOpen && filteredTeachers.length > 0" class="absolute w-full mt-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50 py-2">
+                      <li 
+                        v-for="teacher in filteredTeachers" 
+                        :key="teacher.teacher"
+                        @click="selectTeacherFromDropdown(teacher.teacher)"
+                        class="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer flex items-center gap-3 transition-colors"
+                      >
+                        <div v-if="teacher.avatarUrl" class="w-6 h-6 rounded-full overflow-hidden shrink-0">
+                          <img :src="teacher.avatarUrl" class="w-full h-full object-cover">
+                        </div>
+                        <div v-else class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[9px] font-black shrink-0 text-slate-500">
+                          {{ getInitials(teacher.teacher) }}
+                        </div>
+                        <span class="text-sm font-bold text-slate-700 dark:text-slate-200 font-khmer truncate">{{ teacher.teacher }}</span>
+                      </li>
+                    </ul>
+                  </transition>
                 </div>
-                <input 
-                  v-model="searchQuery" 
-                  @focus="isSearchDropdownOpen = true"
-                  @blur="closeSearchDropdown"
-                  type="text" 
-                  placeholder="Search teachers by name..." 
-                  class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm font-bold text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 transition-all shadow-sm relative z-20"
-                >
-                <button v-if="searchQuery" @click="clearSearch" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors z-20">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-                
-                <!-- Autocomplete Dropdown -->
-                <transition name="fade">
-                  <ul v-if="isSearchDropdownOpen && filteredTeachers.length > 0" class="absolute w-full mt-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50 py-2">
-                    <li 
-                      v-for="teacher in filteredTeachers" 
-                      :key="teacher.teacher"
-                      @click="selectTeacherFromDropdown(teacher.teacher)"
-                      class="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer flex items-center gap-3 transition-colors"
-                    >
-                      <div v-if="teacher.avatarUrl" class="w-6 h-6 rounded-full overflow-hidden shrink-0">
-                        <img :src="teacher.avatarUrl" class="w-full h-full object-cover">
-                      </div>
-                      <div v-else class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[9px] font-black shrink-0 text-slate-500">
-                        {{ getInitials(teacher.teacher) }}
-                      </div>
-                      <span class="text-sm font-bold text-slate-700 dark:text-slate-200 font-khmer truncate">{{ teacher.teacher }}</span>
-                    </li>
-                  </ul>
-                </transition>
+
+                <!-- Filters -->
+                <div class="flex gap-2 w-full sm:w-auto z-10 shrink-0">
+                  <select v-model="selectedFilterYear" class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm w-full sm:w-32 cursor-pointer transition-all">
+                    <option value="">All Years</option>
+                    <option v-for="year in availableFilterYears" :key="year" :value="year">{{ year }}</option>
+                  </select>
+                  
+                  <select v-model="selectedFilterMonth" class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm w-full sm:w-36 font-khmer cursor-pointer transition-all">
+                    <option value="">All Months</option>
+                    <option v-for="month in availableFilterMonths" :key="month" :value="month">{{ khmerMonthsMap[month] || month }}</option>
+                  </select>
+                </div>
               </div>
 
               <div v-if="paginatedTeachers.length === 0" class="flex-grow flex flex-col items-center justify-center py-12 text-slate-400">
@@ -499,7 +515,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, onUnmounted } from 'vue';
+import { ref, computed, onMounted, nextTick, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -897,8 +913,14 @@ const triggerInlinePrint = async (teacherNode) => {
     
     printModalData.value = { teacherNode, historyData, fullMajorName, room, daysStr };
     printMode.value = 'class';
-    selectedPrintMonth.value = '';
-    isPrintModalOpen.value = true;
+    
+    if (selectedFilterMonth.value && selectedFilterYear.value) {
+      selectedPrintMonth.value = `${selectedFilterMonth.value}-${selectedFilterYear.value}`;
+    } else {
+      selectedPrintMonth.value = '';
+    }
+    
+    await executePrint();
     
   } catch (error) {
     console.error("Failed to prepare print", error);
@@ -949,8 +971,14 @@ const triggerTeacherPrint = async (teacherItem) => {
     
     printModalData.value = { teacherNode: teacherItem, historyData };
     printMode.value = 'teacher';
-    selectedPrintMonth.value = '';
-    isPrintModalOpen.value = true;
+    
+    if (selectedFilterMonth.value && selectedFilterYear.value) {
+      selectedPrintMonth.value = `${selectedFilterMonth.value}-${selectedFilterYear.value}`;
+    } else {
+      selectedPrintMonth.value = '';
+    }
+    
+    await executePrint();
     
   } catch (error) {
     console.error("Failed to prepare teacher print", error);
@@ -974,6 +1002,15 @@ const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const searchQuery = ref('');
 const isSearchDropdownOpen = ref(false);
+
+const selectedFilterYear = ref('');
+const selectedFilterMonth = ref('');
+
+// Watchers or resets when navigating level
+watch(trackingLevel, () => {
+  selectedFilterYear.value = '';
+  selectedFilterMonth.value = '';
+});
 
 // --- COMPUTED: HIERARCHICAL DIRECTORY ---
 
@@ -1032,9 +1069,75 @@ const availableTeachers = computed(() => {
   })).sort((a, b) => a.teacher.localeCompare(b.teacher));
 });
 
+const availableFilterYears = computed(() => {
+  const years = new Set();
+  availableTeachers.value.forEach(t => {
+    t.classes.forEach(c => {
+      (c.dates || []).forEach(d => {
+        if (d && d.trim() !== '') {
+            const parts = d.trim().split(/[-/ ]+/);
+            if (parts.length >= 3) {
+                if (parts[2].length === 4) years.add(parts[2]);
+                else if (parts[0].length === 4) years.add(parts[0]);
+            }
+        }
+      });
+    });
+  });
+  return Array.from(years).sort((a,b) => b.localeCompare(a));
+});
+
+const availableFilterMonths = computed(() => {
+  const months = new Set();
+  availableTeachers.value.forEach(t => {
+    t.classes.forEach(c => {
+      (c.dates || []).forEach(d => {
+        if (d && d.trim() !== '') {
+            const parts = d.trim().split(/[-/ ]+/);
+            if (parts.length >= 3) {
+                let yr = null, mo = null;
+                if (parts[2].length === 4) { yr = parts[2]; mo = parts[1]; }
+                else if (parts[0].length === 4) { yr = parts[0]; mo = parts[1]; }
+                
+                if (yr && mo && (!selectedFilterYear.value || yr === selectedFilterYear.value)) {
+                    months.add(mo);
+                }
+            }
+        }
+      });
+    });
+  });
+  return Array.from(months).sort();
+});
+
 // --- PAGINATION COMPUTED & METHODS ---
 const filteredTeachers = computed(() => {
   let teachers = availableTeachers.value;
+  
+  if (selectedFilterYear.value || selectedFilterMonth.value) {
+    teachers = teachers.filter(t => {
+      return t.classes.some(c => {
+        if (!c.dates) return false;
+        return c.dates.some(d => {
+          if (!d || d.trim() === '') return false;
+          const parts = d.trim().split(/[-/ ]+/);
+          if (parts.length >= 3) {
+              let yr = null, mo = null;
+              if (parts[2].length === 4) { yr = parts[2]; mo = parts[1]; }
+              else if (parts[0].length === 4) { yr = parts[0]; mo = parts[1]; }
+              
+              if (yr && mo) {
+                const yearMatch = !selectedFilterYear.value || yr === selectedFilterYear.value;
+                const monthMatch = !selectedFilterMonth.value || mo === selectedFilterMonth.value;
+                return yearMatch && monthMatch;
+              }
+          }
+          return false;
+        });
+      });
+    });
+  }
+
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
     teachers = teachers.filter(t => t.teacher.toLowerCase().includes(q));
