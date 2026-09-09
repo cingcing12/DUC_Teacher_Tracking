@@ -349,6 +349,24 @@ onMounted(async () => {
     form.value.notes = `[ថែមម៉ោង]`;
     if (classData.value.lastWeek) {
       form.value.week = (parseInt(classData.value.lastWeek) || 0) + 1;
+    } else {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/my-full-history?teacher=${encodeURIComponent(teacher.value.nameKh)}`);
+        if (res.ok) {
+          const histData = await res.json();
+          if (histData.success && histData.data) {
+            const extraClasses = histData.data.filter(h => h.subject === 'Unknown Subject' || h.cohort === 'Unknown' || (h.notes && h.notes.includes('[ថែមម៉ោង]')));
+            let maxWeek = 0;
+            extraClasses.forEach(h => {
+              const w = parseInt(h.week) || 0;
+              if (w > maxWeek) maxWeek = w;
+            });
+            form.value.week = maxWeek > 0 ? maxWeek + 1 : 1;
+          }
+        }
+      } catch (err) {
+        console.error('Could not fetch extra class history', err);
+      }
     }
   }
 });

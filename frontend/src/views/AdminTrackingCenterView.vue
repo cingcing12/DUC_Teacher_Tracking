@@ -447,7 +447,12 @@
           <div class="flex flex-col items-center text-center mt-4">
             <h2 class="font-moul text-[15px] text-black leading-normal font-normal">
               សរុបម៉ោងបង្រៀនគ្រូបង្រៀន ប្រចាំខែ {{ printData.selectedMonthLabel }}<br>
-              {{ printData.headerYear === 'ឆ្នាំសិក្សាមូលដ្ឋាន' ? 'ថ្នាក់' + printData.headerYear : (printData.headerYear === 'ថ្នាក់មូលដ្ឋាន' ? printData.headerYear : 'ឆ្នាំទី ' + (printData.headerYear || '...')) }} ឆមាសទី {{ printData.headerSemester || '......' }} {{ printData.headerGeneration || '.....................' }}<br>
+              <template v-if="printData.headerGeneration === 'Unknown'">
+                ថ្នាក់ថែមម៉ោង (Extra Classes)<br>
+              </template>
+              <template v-else>
+                {{ printData.headerYear === 'ឆ្នាំសិក្សាមូលដ្ឋាន' ? 'ថ្នាក់' + printData.headerYear : (printData.headerYear === 'ថ្នាក់មូលដ្ឋាន' ? printData.headerYear : 'ឆ្នាំទី ' + (printData.headerYear || '...')) }} ឆមាសទី {{ printData.headerSemester || '......' }} {{ printData.headerGeneration || '.....................' }}<br>
+              </template>
               កម្រិតបរិញ្ញាបត្រ
             </h2>
           </div>
@@ -481,10 +486,10 @@
             <td class="border border-black p-1">{{ formatDateKhmer(lesson.date) }}</td>
             <td class="border border-black p-1 font-sans text-[11px]">{{ lesson.startTime && lesson.endTime ? lesson.startTime + ' - ' + lesson.endTime : '' }}</td>
             <td class="border border-black p-1">{{ lesson.parsedHours > 0 ? lesson.parsedHours : '' }}</td>
-            <td class="border border-black p-1">{{ lesson.generation }}</td>
-            <td class="border border-black p-1">{{ lesson.major }}</td>
-            <td class="border border-black p-1 font-sans text-[11px]">{{ lesson.cohort }}</td>
-            <td class="border border-black p-1 text-left px-2">{{ cleanSubjectName(lesson.subject) }}</td>
+            <td class="border border-black p-1">{{ lesson.generation === 'Unknown' ? 'ថែមម៉ោង' : lesson.generation }}</td>
+            <td class="border border-black p-1">{{ lesson.major === 'Unknown Major' || lesson.major === 'Unknown' ? 'ថែមម៉ោង' : lesson.major }}</td>
+            <td class="border border-black p-1 font-sans text-[11px]">{{ lesson.cohort === 'Unknown' ? 'ថែមម៉ោង' : lesson.cohort }}</td>
+            <td class="border border-black p-1 text-left px-2">{{ cleanSubjectName(lesson.subject) === 'Unknown Subject' || cleanSubjectName(lesson.subject) === 'Unknown' ? 'ថែមម៉ោង' : cleanSubjectName(lesson.subject) }}</td>
             <td class="border border-black p-1">{{ lesson.parsedHours > 0 ? lesson.parsedHours : '' }}</td>
           </tr>
 
