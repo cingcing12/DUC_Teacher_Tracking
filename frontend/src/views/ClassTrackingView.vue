@@ -423,12 +423,12 @@ const submitTrackingData = async () => {
     date: form.value.date,
     startTime: form.value.startTime,
     endTime: form.value.endTime,
+    scheduledTimeblock: classData.value.time,
     lessonNo: form.value.lessonNo,
     hours: computedHoursStr.value, 
     content: form.value.content,
     notes: form.value.notes,
     year: classData.value.year,
-    semester: classData.value.semester,
     substituteFor: substituteFor.value,
     isExtraClass: isExtraClass.value
   };

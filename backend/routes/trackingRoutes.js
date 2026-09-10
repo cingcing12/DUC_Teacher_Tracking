@@ -73,7 +73,7 @@ const normalizeText = (str) => {
 // ==========================================
 // 🔥 HELPER: STRICT VISUAL ATTENDANCE VALIDATOR + PAINTER
 // ==========================================
-const markVisualAttendance = async (sheets, cohort, subject, teacher, date, status, substituteFor = null) => {
+const markVisualAttendance = async (sheets, cohort, subject, teacher, date, status, substituteFor = null, customNote = null) => {
     try {
         const dateObj = new Date(date);
         const monthNum = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -218,23 +218,29 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
 
         let bgRed = 1, bgGreen = 1, bgBlue = 1; 
         let txtRed = 0, txtGreen = 0, txtBlue = 0; 
+        
+        // When status is the edited time, we will make it "✓"
+        let renderedStatus = status;
+        if (status && status.includes('-') && !["✓", "A", "P", ""].includes(status)) {
+             renderedStatus = "✓";
+        }
 
-        if (status === "✓") {
+        if (renderedStatus === "✓") {
             bgRed = 0.2; bgGreen = 0.66; bgBlue = 0.33; 
             txtRed = 1; txtGreen = 1; txtBlue = 1; 
-        } else if (status === "A") {
+        } else if (renderedStatus === "A") {
             bgRed = 0.8; bgGreen = 0.0; bgBlue = 0.0; 
             txtRed = 1; txtGreen = 1; txtBlue = 1; 
-        } else if (status === "P") {
+        } else if (renderedStatus === "P") {
             // Yellow background for Permission/Substitute
             bgRed = 1.0; bgGreen = 0.89; bgBlue = 0.6; 
             txtRed = 0; txtGreen = 0; txtBlue = 0; // Black text
-        } else if (status === "") {
+        } else if (renderedStatus === "") {
             bgRed = 1; bgGreen = 1; bgBlue = 1; 
         }
 
         const cellData = {
-            userEnteredValue: { stringValue: status },
+            userEnteredValue: { stringValue: renderedStatus },
             userEnteredFormat: {
                 backgroundColor: { red: bgRed, green: bgGreen, blue: bgBlue },
                 textFormat: { foregroundColor: { red: txtRed, green: txtGreen, blue: txtBlue }, bold: true },
@@ -243,13 +249,21 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
             }
         };
 
-        if (substituteFor && status !== "" && status !== "A") {
-            cellData.note = `បង្រៀនជំនួសដោយ: ${teacher}`;
-        } else if (status === "" || status === "A") {
+        let finalNote = "";
+        if (substituteFor && renderedStatus !== "" && renderedStatus !== "A") {
+            finalNote = `បង្រៀនជំនួសដោយ: ${teacher}`;
+            if (customNote) finalNote += `\n${customNote}`;
+        } else if (customNote) {
+            finalNote = customNote;
+        }
+
+        if (finalNote) {
+            cellData.note = finalNote;
+        } else if (renderedStatus === "" || renderedStatus === "A") {
             cellData.note = "";
         }
 
-        const fieldsToUpdate = (substituteFor || status === "" || status === "A")
+        const fieldsToUpdate = (finalNote || renderedStatus === "" || renderedStatus === "A")
             ? "userEnteredValue,userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment),note"
             : "userEnteredValue,userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)";
 
@@ -287,34 +301,46 @@ const markVisualAttendance = async (sheets, cohort, subject, teacher, date, stat
 // ==========================================
 router.post("/track-lesson", async (req, res) => {
   try {
-    const { teacherNameKh, department, subject, cohort, room, week, date, startTime, endTime, lessonNo, hours, content, notes, year, semester, substituteFor, isExtraClass, day } = req.body;
+    const { teacherNameKh, department, subject, cohort, room, week, date, startTime, endTime, lessonNo, hours, content, notes, year, semester, substituteFor, isExtraClass, day, scheduledTimeblock } = req.body;
         // Attempt visual attendance marking in Google Sheets in the background
       if (!isExtraClass) {
-          const dayIndexMap = { 'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6 };
-          const targetName = String(day || "").toLowerCase().trim();
-          const expectedIndex = dayIndexMap[targetName];
-          const selectedIndex = date ? new Date(date).getDay() : -1;
-          const isMatch = (expectedIndex === undefined) || (expectedIndex === selectedIndex);
-
           const authClient = await auth.getClient();
           const sheets = google.sheets({ version: "v4", auth: authClient });
-          const attendanceStatus = substituteFor ? "P" : "✓";
-
-          if (isMatch) {
-              (async () => {
-                  try {
-                      await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, attendanceStatus, substituteFor);
-                  } catch (e) {
-                      console.error("Background visual marking failed:", e);
+          
+          let attendanceStatus = substituteFor ? "P" : "✓";
+          let customNote = null;
+          if (!substituteFor && scheduledTimeblock && scheduledTimeblock.includes('-') && startTime && endTime) {
+              const parts = scheduledTimeblock.split('-');
+              const formatTime = (t) => {
+                  if (!t) return '';
+                  let val = t.trim();
+                  const match = val.match(/(\d{1,2})[.:](\d{2})\s*(AM|PM|am|pm)?/);
+                  if (match) {
+                      let h = parseInt(match[1], 10);
+                      const m = match[2];
+                      const ampm = match[3] ? match[3].toUpperCase() : null;
+                      if (ampm === 'PM' && h < 12) h += 12;
+                      if (ampm === 'AM' && h === 12) h = 0;
+                      return `${h.toString().padStart(2, '0')}:${m}`;
                   }
-              })();
-          } else {
-              // Synchronous check to extract missing dates and block DB save
-              const visualRes = await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, attendanceStatus, substituteFor);
-              if (!visualRes.success) {
-                  return res.status(400).json({ success: false, message: visualRes.message });
+                  return '';
+              };
+              const schedStart = formatTime(parts[0]);
+              const schedEnd = formatTime(parts[1]);
+              
+              if (startTime !== schedStart || endTime !== schedEnd) {
+                  customNote = `ម៉ោងបង្រៀនជាក់ស្តែង: ${startTime}-${endTime}`;
               }
           }
+
+          // Always run asynchronously to allow teachers to submit any date
+          (async () => {
+              try {
+                  await markVisualAttendance(sheets, cohort, subject, teacherNameKh, date, attendanceStatus, substituteFor, customNote);
+              } catch (e) {
+                  console.error("Background visual marking failed:", e);
+              }
+          })();
       }
 
     const pureCohort = extractPureCohort(cohort);
