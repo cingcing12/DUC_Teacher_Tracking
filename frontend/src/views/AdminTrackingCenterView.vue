@@ -24,9 +24,11 @@
           
           <div class="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 font-khmer mt-2">
             <button @click="navigateLevel(0)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 0 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">All Generations</button>
-            <template v-if="trackingLevel >= 1"><span class="opacity-50">/</span><button @click="navigateLevel(1)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 1 || (selectedGen === 'Unknown' && trackingLevel === 3) ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">{{ selectedGen === 'Unknown' ? 'ថ្នាក់ថែមម៉ោង (Extra Classes)' : selectedGen }}</button></template>
-            <template v-if="trackingLevel >= 2 && selectedGen !== 'Unknown'"><span class="opacity-50">/</span><button @click="navigateLevel(2)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 2 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">ឆ្នាំទី {{ selectedYear }}</button></template>
-            <template v-if="trackingLevel >= 3 && selectedGen !== 'Unknown'"><span class="opacity-50">/</span><button @click="navigateLevel(3)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 3 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">ឆមាសទី {{ selectedSem }}</button></template>
+            <span class="opacity-50">|</span>
+            <button @click="navigateLevel(4)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 4 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">All Teachers</button>
+            <template v-if="trackingLevel >= 1 && trackingLevel !== 4"><span class="opacity-50">/</span><button @click="navigateLevel(1)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 1 || (selectedGen === 'Unknown' && trackingLevel === 3) ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">{{ selectedGen === 'Unknown' ? 'ថ្នាក់ថែមម៉ោង (Extra Classes)' : selectedGen }}</button></template>
+            <template v-if="trackingLevel >= 2 && trackingLevel !== 4 && selectedGen !== 'Unknown'"><span class="opacity-50">/</span><button @click="navigateLevel(2)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 2 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">ឆ្នាំទី {{ selectedYear }}</button></template>
+            <template v-if="trackingLevel >= 3 && trackingLevel !== 4 && selectedGen !== 'Unknown'"><span class="opacity-50">/</span><button @click="navigateLevel(3)" :class="['hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors', trackingLevel === 3 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg' : '']">ឆមាសទី {{ selectedSem }}</button></template>
           </div>
         </div>
 
@@ -120,7 +122,7 @@
               </div>
             </div>
 
-            <div v-else-if="trackingLevel === 3 && !isFetchingDirectory" key="lvl3" class="flex flex-col">
+            <div v-else-if="(trackingLevel === 3 || trackingLevel === 4) && !isFetchingDirectory" :key="'lvl' + trackingLevel" class="flex flex-col">
               <!-- Search Bar and Filters -->
               <div class="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center z-20">
                 <!-- Search Bar with Dropdown -->
@@ -698,15 +700,49 @@ const executePrint = async () => {
         let headerYear = '........';
         
         if (processedLessons.length > 0) {
-            // Find most frequent generation and semester or just pick the first valid one
-            const gen = processedLessons.find(l => l.generation && l.generation.trim() !== '')?.generation;
-            if (gen) headerGeneration = gen;
-            // Assuming semester might not be directly in history, we can fetch from teacherNode.classes
+            // Pick most frequent generation
+            const genCounts = {};
+            let maxGen = '';
+            let maxGenCount = 0;
+            processedLessons.forEach(l => {
+               const g = l.generation && l.generation.trim() !== '' ? l.generation : null;
+               if (g) {
+                 genCounts[g] = (genCounts[g] || 0) + 1;
+                 if (genCounts[g] > maxGenCount) {
+                    maxGenCount = genCounts[g];
+                    maxGen = g;
+                 }
+               }
+            });
+            if (maxGen) headerGeneration = trackingLevel.value === 4 ? 'គ្រប់ជំនាន់' : maxGen;
+
             if (teacherNode && teacherNode.classes && teacherNode.classes.length > 0) {
-                const sem = teacherNode.classes[0].semester;
-                if (sem && sem !== '?') headerSemester = sem;
-                const yr = teacherNode.classes[0].year;
-                if (yr && yr !== '?') headerYear = yr;
+                const semCounts = {};
+                let maxSem = '';
+                let maxSemCount = 0;
+                const yrCounts = {};
+                let maxYr = '';
+                let maxYrCount = 0;
+                
+                teacherNode.classes.forEach(c => {
+                   if (c.semester && c.semester !== '?') {
+                      semCounts[c.semester] = (semCounts[c.semester] || 0) + 1;
+                      if (semCounts[c.semester] > maxSemCount) {
+                         maxSemCount = semCounts[c.semester];
+                         maxSem = c.semester;
+                      }
+                   }
+                   if (c.year && c.year !== '?') {
+                      yrCounts[c.year] = (yrCounts[c.year] || 0) + 1;
+                      if (yrCounts[c.year] > maxYrCount) {
+                         maxYrCount = yrCounts[c.year];
+                         maxYr = c.year;
+                      }
+                   }
+                });
+                
+                if (maxSem) headerSemester = trackingLevel.value === 4 ? 'ទាំងអស់' : maxSem;
+                if (maxYr) headerYear = trackingLevel.value === 4 ? 'ទាំងអស់' : maxYr;
             }
         }
         
@@ -948,7 +984,7 @@ const triggerTeacherPrint = async (teacherItem) => {
     let historyData = [];
     if (data.success) {
       let rawHistory = data.data || [];
-      if (selectedGen.value) {
+      if (selectedGen.value && trackingLevel.value !== 4) {
           rawHistory = rawHistory.filter(l => l.generation === selectedGen.value);
       }
       historyData = rawHistory;
@@ -1074,9 +1110,37 @@ const availableTeachers = computed(() => {
   })).sort((a, b) => a.teacher.localeCompare(b.teacher));
 });
 
+// LEVEL 4: All Teachers (Global)
+const allGlobalTeachers = computed(() => {
+  const teacherMap = {};
+  trackingDirectory.value.forEach(item => {
+    const teacherKey = (item.teacher || 'Unknown').trim();
+    if (!teacherMap[teacherKey]) {
+      teacherMap[teacherKey] = { 
+        teacher: teacherKey, 
+        avatarUrl: item.avatarUrl,
+        classes: [],
+        departments: new Set(),
+        year: item.year,
+        semester: item.semester
+      };
+    }
+    if (!teacherMap[teacherKey].classes.some(c => c.tab === item.tab && c.subject === item.subject)) {
+      teacherMap[teacherKey].classes.push(item);
+    }
+    if (item.department) teacherMap[teacherKey].departments.add(item.department);
+  });
+
+  return Object.values(teacherMap).map(t => ({
+    ...t,
+    departments: Array.from(t.departments)
+  })).sort((a, b) => a.teacher.localeCompare(b.teacher));
+});
+
 const availableFilterYears = computed(() => {
   const years = new Set();
-  availableTeachers.value.forEach(t => {
+  const sourceTeachers = trackingLevel.value === 4 ? allGlobalTeachers.value : availableTeachers.value;
+  sourceTeachers.forEach(t => {
     t.classes.forEach(c => {
       (c.dates || []).forEach(d => {
         if (d && d.trim() !== '') {
@@ -1094,7 +1158,8 @@ const availableFilterYears = computed(() => {
 
 const availableFilterMonths = computed(() => {
   const months = new Set();
-  availableTeachers.value.forEach(t => {
+  const sourceTeachers = trackingLevel.value === 4 ? allGlobalTeachers.value : availableTeachers.value;
+  sourceTeachers.forEach(t => {
     t.classes.forEach(c => {
       (c.dates || []).forEach(d => {
         if (d && d.trim() !== '') {
@@ -1117,7 +1182,7 @@ const availableFilterMonths = computed(() => {
 
 // --- PAGINATION COMPUTED & METHODS ---
 const filteredTeachers = computed(() => {
-  let teachers = availableTeachers.value;
+  let teachers = trackingLevel.value === 4 ? allGlobalTeachers.value : availableTeachers.value;
   
   if (selectedFilterYear.value || selectedFilterMonth.value) {
     teachers = teachers.filter(t => {
