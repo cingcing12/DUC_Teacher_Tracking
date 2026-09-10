@@ -128,12 +128,15 @@
                 <textarea v-model="form.content" required :class="['flex-grow min-h-[120px] sm:min-h-[150px] w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-slate-800 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer resize-none leading-relaxed']" :placeholder="t.phContent"></textarea>
               </div>
 
-              <div>
+              <div class="relative">
                 <label :class="['block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2 flex items-center justify-between', language === 'kh' ? 'font-khmer' : '']">
                   {{ t.notes }}
                   <span v-if="substituteFor || isExtraClass" class="text-amber-500 text-[8px]">{{ language === 'kh' ? '(កំណត់ដោយស្វ័យប្រវត្តិ)' : '(Auto-set)' }}</span>
                 </label>
-                <input v-model="form.notes" type="text" :disabled="substituteFor !== null || isExtraClass" :class="['w-full border rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer', (substituteFor || isExtraClass) ? 'bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed' : 'bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white']" :placeholder="t.phNotes">
+                <input v-model="form.notes" type="text" list="noteOptions" :disabled="substituteFor !== null || isExtraClass" :class="['w-full border rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-khmer', (substituteFor || isExtraClass) ? 'bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed' : 'bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white']" :placeholder="t.phNotes">
+                <datalist id="noteOptions">
+                  <option value="[ថែមម៉ោង]"></option>
+                </datalist>
               </div>
             </div>
 

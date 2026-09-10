@@ -376,15 +376,18 @@ const fetchClasses = async () => {
 
 const toggleStatus = async (cls) => {
   cls.isToggling = true;
+  const targetAction = cls.isClosed ? 'open' : 'close';
   try {
     const res = await fetch(import.meta.env.VITE_API_URL + '/api/admin/closed-classes/toggle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: cls.key })
+      body: JSON.stringify({ key: cls.key, action: targetAction })
     });
     const data = await res.json();
     if (data.success) {
-      cls.isClosed = data.isClosed;
+      cls.isClosed = (targetAction === 'close');
+    } else {
+      alert("Failed to toggle class status.");
     }
   } catch (error) {
     console.error("Error toggling class:", error);

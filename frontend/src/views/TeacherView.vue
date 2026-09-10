@@ -52,14 +52,7 @@
             </transition>
           </div>
 
-          <!-- Extra Class Button -->
-          <button 
-            @click="openBlankExtraClass" 
-            :class="['whitespace-nowrap flex-1 sm:flex-none justify-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-black uppercase tracking-widest transition-all duration-300 bg-emerald-50 text-emerald-600 border border-emerald-200/50 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 hover:bg-emerald-100 hover:shadow-md dark:hover:bg-emerald-500/20 sm:ml-2 flex items-center gap-1.5', language === 'kh' ? 'font-khmer' : '']"
-          >
-            <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-            {{ language === 'kh' ? 'ថែមម៉ោង' : 'Extra Class' }}
-          </button>
+
         </div>
       </div>
 
