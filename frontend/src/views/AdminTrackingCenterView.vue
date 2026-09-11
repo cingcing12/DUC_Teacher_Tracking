@@ -174,6 +174,11 @@
                     <option value="">All Months</option>
                     <option v-for="month in availableFilterMonths" :key="month" :value="month">{{ khmerMonthsMap[month] || month }}</option>
                   </select>
+                  
+                  <button @click="triggerBulkTeacherPrint" class="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-700/50 rounded-2xl text-sm font-bold shadow-sm hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-all shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Bulk Save PDFs
+                  </button>
                 </div>
               </div>
 
@@ -294,6 +299,18 @@
       </div>
 
     </main>
+
+    <!-- BULK PRINT LOADING OVERLAY -->
+    <transition name="fade">
+      <div v-if="isBulkPrinting" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 w-full max-w-sm shadow-2xl flex flex-col items-center animate-fade-in-up">
+          <div class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
+          <h3 class="text-xl font-black text-slate-800 dark:text-white mb-2">Generating PDFs</h3>
+          <p class="text-sm font-bold text-slate-500 mb-2">Please wait, saving {{ bulkPrintProgress.current }} of {{ bulkPrintProgress.total }}</p>
+          <p class="text-xs text-indigo-500 font-bold font-khmer text-center">{{ bulkPrintProgress.currentTeacher }}</p>
+        </div>
+      </div>
+    </transition>
 
     <!-- PRINT OPTIONS MODAL -->
     <transition name="fade">
@@ -427,7 +444,7 @@
     <!-- ========================================== -->
     <!-- TEACHER MONTHLY SUMMARY PDF TEMPLATE       -->
     <!-- ========================================== -->
-    <div v-if="printData && printMode === 'teacher'" id="print-teacher-area" class="hidden print:block w-full bg-white text-black font-khmer px-2 pb-10">
+    <div v-if="printData && (printMode === 'teacher' || printMode === 'bulk-teacher')" id="print-teacher-area" class="hidden print:block w-full bg-white text-black font-khmer px-2 pb-10">
       <!-- Header Section -->
       <div class="relative w-full mb-6 min-h-[120px]">
         <!-- Left: Logo & University Name -->
@@ -524,8 +541,28 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import html2pdf from 'html2pdf.js';
 
 const router = useRouter();
+
+const isBulkPrinting = ref(false);
+const bulkPrintProgress = ref({ current: 0, total: 0, currentTeacher: '' });
+
+const triggerBulkTeacherPrint = async () => {
+    if (selectedFilterMonth.value && selectedFilterYear.value) {
+      selectedPrintMonth.value = `${selectedFilterMonth.value}-${selectedFilterYear.value}`;
+      const mm = selectedFilterMonth.value;
+      const yyyy = selectedFilterYear.value;
+      const label = `${khmerMonthsMap[mm] || mm} ${yyyy}`;
+      printModalMonths.value = [{ value: selectedPrintMonth.value, label }];
+    } else {
+      selectedPrintMonth.value = '';
+      printModalMonths.value = [];
+    }
+
+    printMode.value = 'bulk-teacher';
+    await executePrint();
+};
 
 // --- INLINE PRINT LOGIC ---
 const printData = ref(null);
@@ -614,6 +651,178 @@ const khmerMonthsMap = {
 };
 
 const executePrint = async () => {
+    if (printMode.value === 'bulk-teacher') {
+        isPrintModalOpen.value = false;
+        isBulkPrinting.value = true;
+        
+        bulkPrintProgress.value = { current: 0, total: filteredTeachers.value.length, currentTeacher: '' };
+
+        if (Object.keys(teachersGenderMap.value).length === 0) {
+            try {
+                const tRes = await fetch(import.meta.env.VITE_API_URL + '/api/admin/teachers');
+                const tData = await tRes.json();
+                if (tData.success) {
+                  const map = {};
+                  (tData.data || []).forEach(t => {
+                    if (t.nameKh) map[normalizeForMatch(t.nameKh)] = t.gender;
+                    if (t.nameEn) map[normalizeForMatch(t.nameEn)] = t.gender;
+                  });
+                  teachersGenderMap.value = map;
+                }
+            } catch (e) {
+                console.error('Print gender fetch failed', e);
+            }
+        }
+
+        for (let i = 0; i < filteredTeachers.value.length; i++) {
+            const teacherNode = filteredTeachers.value[i];
+            bulkPrintProgress.value.current = i + 1;
+            bulkPrintProgress.value.currentTeacher = teacherNode.teacher;
+
+            printData.value = null;
+            try {
+                const url = new URL(import.meta.env.VITE_API_URL + '/api/teacher-history');
+                url.searchParams.append('teacher', teacherNode.teacher);
+
+                const hRes = await fetch(url);
+                const hData = await hRes.json();
+                
+                let historyData = [];
+                if (hData.success) {
+                  let rawHistory = hData.data || [];
+                  if (selectedGen.value && trackingLevel.value !== 4) {
+                      rawHistory = rawHistory.filter(l => l.generation === selectedGen.value);
+                  }
+                  historyData = rawHistory;
+                }
+
+                let filteredHistory = historyData;
+                if (selectedPrintMonth.value) {
+                    const [targetMM, targetYYYY] = selectedPrintMonth.value.split('-');
+                    filteredHistory = historyData.filter(l => {
+                        if (!l.date || l.date.trim() === '') return false;
+                        const parts = l.date.trim().split(/[-/ ]+/);
+                        if (parts.length >= 3) {
+                            if (parts[2].length === 4) return parts[1] === targetMM && parts[2] === targetYYYY;
+                            else if (parts[0].length === 4) return parts[1] === targetMM && parts[0] === targetYYYY;
+                        }
+                        return false;
+                    });
+                }
+
+                let totalHoursNumber = 0;
+                const processedLessons = filteredHistory.map((lesson, index) => {
+                    let parsedHours = 0;
+                    if (lesson.hours) {
+                        const parsedStr = parseNumericHours(lesson.hours);
+                        const num = parseFloat(parsedStr);
+                        if (!isNaN(num)) {
+                            parsedHours = num;
+                            totalHoursNumber += num;
+                        }
+                    }
+                    return { ...lesson, index: index + 1, parsedHours };
+                });
+                
+                let headerGeneration = '...........................................';
+                let headerSemester = '..................';
+                let headerYear = '........';
+                
+                if (processedLessons.length > 0) {
+                    const genCounts = {};
+                    let maxGen = '', maxGenCount = 0;
+                    processedLessons.forEach(l => {
+                       const g = l.generation && l.generation.trim() !== '' ? l.generation : null;
+                       if (g) {
+                         genCounts[g] = (genCounts[g] || 0) + 1;
+                         if (genCounts[g] > maxGenCount) { maxGenCount = genCounts[g]; maxGen = g; }
+                       }
+                    });
+                    if (maxGen) headerGeneration = trackingLevel.value === 4 ? 'គ្រប់ជំនាន់' : maxGen;
+
+                    if (teacherNode && teacherNode.classes && teacherNode.classes.length > 0) {
+                        const semCounts = {}, yrCounts = {};
+                        let maxSem = '', maxSemCount = 0, maxYr = '', maxYrCount = 0;
+                        
+                        teacherNode.classes.forEach(c => {
+                           if (c.semester && c.semester !== '?') {
+                              semCounts[c.semester] = (semCounts[c.semester] || 0) + 1;
+                              if (semCounts[c.semester] > maxSemCount) { maxSemCount = semCounts[c.semester]; maxSem = c.semester; }
+                           }
+                           if (c.year && c.year !== '?') {
+                              yrCounts[c.year] = (yrCounts[c.year] || 0) + 1;
+                              if (yrCounts[c.year] > maxYrCount) { maxYrCount = yrCounts[c.year]; maxYr = c.year; }
+                           }
+                        });
+                        
+                        if (maxSem) headerSemester = trackingLevel.value === 4 ? 'ទាំងអស់' : maxSem;
+                        if (maxYr) headerYear = trackingLevel.value === 4 ? 'ទាំងអស់' : maxYr;
+                    }
+                }
+                
+                const monthLabel = selectedPrintMonth.value 
+                    ? printModalMonths.value.find(m => m.value === selectedPrintMonth.value)?.label 
+                    : 'ទាំងអស់';
+
+                printData.value = {
+                    teacher: teacherNode.teacher,
+                    lessons: processedLessons,
+                    totalHours: totalHoursNumber,
+                    selectedMonthLabel: monthLabel,
+                    headerGeneration,
+                    headerSemester,
+                    headerYear
+                };
+
+                // DO NOT wait here yet, wait after showing it
+
+                let gen = printData.value.headerGeneration || 'Generation';
+                let yr = printData.value.headerYear || 'Year';
+                let sem = printData.value.headerSemester || 'Semester';
+                let tName = printData.value.teacher || 'Teacher';
+                let monthSuffix = 'ទាំងអស់';
+                if (selectedPrintMonth.value) {
+                    const found = printModalMonths.value.find(m => m.value === selectedPrintMonth.value);
+                    monthSuffix = found ? found.label.replace(/\s+/g, '_') : selectedPrintMonth.value;
+                }
+                let cleanName = `${gen}_${yr}_${sem}_${tName}_${monthSuffix}`.replace(/[\/\\]/g, '-');
+
+                await nextTick();
+                const element = document.getElementById('print-teacher-area');
+                element.classList.remove('hidden', 'print:block', 'w-full');
+                element.classList.add('block');
+                element.style.width = '1047px'; // Exact width of A4 landscape minus 10mm side margins at 96dpi
+                element.style.backgroundColor = 'white';
+                element.style.color = 'black';
+                
+                // NOW wait for the browser to reflow and paint the DOM
+                await new Promise(r => setTimeout(r, 600));
+                
+                const opt = {
+                  margin:       [15, 10, 10, 10], // top, left, bottom, right (matches native 1.5cm 1cm 1cm 1cm)
+                  filename:     cleanName + '.pdf',
+                  image:        { type: 'jpeg', quality: 0.98 },
+                  html2canvas:  { scale: 2, useCORS: true, windowWidth: 1047, width: 1047 },
+                  jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                };
+
+                await html2pdf().set(opt).from(element).save();
+
+                element.style.width = '';
+                element.style.backgroundColor = '';
+                element.style.color = '';
+                element.classList.remove('block');
+                element.classList.add('hidden', 'print:block', 'w-full');
+            } catch (err) {
+                console.error(`Failed to generate PDF for ${teacherNode.teacher}`, err);
+            }
+        }
+
+        isBulkPrinting.value = false;
+        printData.value = null;
+        return;
+    }
+
     isPrintModalOpen.value = false;
     
     // Force fetch teachers if map is empty to ensure correct gender title

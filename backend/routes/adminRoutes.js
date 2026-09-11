@@ -29,6 +29,7 @@ router.post('/majors', async (req, res) => {
     
     await Major.create({ code, fullName });
     
+    await scheduleCache.fetchFreshData();
     const sseEmitter = require('../utils/sseEmitter');
     sseEmitter.emit('mapping_updated');
     res.json({ success: true, message: "Major added" });
@@ -56,6 +57,7 @@ router.post('/faculties', async (req, res) => {
     
     await Faculty.create({ code, fullName });
     
+    await scheduleCache.fetchFreshData();
     const sseEmitter = require('../utils/sseEmitter');
     sseEmitter.emit('mapping_updated');
     res.json({ success: true, message: "Faculty added" });
@@ -72,6 +74,7 @@ router.put('/majors/:code', async (req, res) => {
     
     await Major.updateOne({ code }, { code: newCode, fullName: newFullName });
     
+    await scheduleCache.fetchFreshData();
     const sseEmitter = require('../utils/sseEmitter');
     sseEmitter.emit('mapping_updated');
     res.json({ success: true, message: "Major updated" });
@@ -86,6 +89,7 @@ router.delete('/majors/:code', async (req, res) => {
     const { code } = req.params;
     await Major.deleteOne({ code });
     
+    await scheduleCache.fetchFreshData();
     const sseEmitter = require('../utils/sseEmitter');
     sseEmitter.emit('mapping_updated');
     res.json({ success: true, message: "Major deleted" });
@@ -102,6 +106,7 @@ router.put('/faculties/:code', async (req, res) => {
     
     await Faculty.updateOne({ code }, { code: newCode, fullName: newFullName });
     
+    await scheduleCache.fetchFreshData();
     const sseEmitter = require('../utils/sseEmitter');
     sseEmitter.emit('mapping_updated');
     res.json({ success: true, message: "Faculty updated" });
@@ -116,6 +121,7 @@ router.delete('/faculties/:code', async (req, res) => {
     const { code } = req.params;
     await Faculty.deleteOne({ code });
     
+    await scheduleCache.fetchFreshData();
     const sseEmitter = require('../utils/sseEmitter');
     sseEmitter.emit('mapping_updated');
     res.json({ success: true, message: "Faculty deleted" });
